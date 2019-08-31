@@ -1,0 +1,11 @@
+{
+  "name": "ts-closure-library",
+  "version": "2018.9.10",
+  "description": "A fork of the closure library that is patched to work without the google closure compiler and ships with typescript type information",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "CQSE GmbH",
+  "license": "MIT"
+}
