@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class Es6ModuleMasterConverter {
 
-	private static final String INPUT_DIR = "../closure-library";
+	private static final String INPUT_DIR = "../closure-library-es6";
 
 	public static void main(String[] args) throws IOException {
 		ReaderPass readInPass = new ReaderPass();
