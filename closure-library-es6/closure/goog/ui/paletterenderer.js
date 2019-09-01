@@ -72,6 +72,7 @@ goog.ui.PaletteRenderer = class extends goog.ui.ControlRenderer {
    */
   createDom(palette) {
     var classNames = this.getClassNames(palette);
+    palette = /** @type {!goog.ui.Palette} */ (palette);
     var element = palette.getDomHelper().createDom(goog.dom.TagName.DIV, classNames,
         this.createGrid(/** @type {Array<Node>} */ (palette.getContent()), palette.getSize(), palette.getDomHelper()));
     goog.a11y.aria.setRole(element, goog.a11y.aria.Role.GRID);

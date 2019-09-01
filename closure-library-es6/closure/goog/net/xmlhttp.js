@@ -33,6 +33,7 @@ goog.net.XmlHttp = class {
   /**
    * Static class for creating XMLHttpRequest objects.
    * @return {!goog.net.XhrLike.OrNative} A new XMLHttpRequest object.
+   * @suppress {checkTypes}
    */
   constructor() {
     return goog.net.XmlHttp.factory_.createInstance();

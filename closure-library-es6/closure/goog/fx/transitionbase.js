@@ -69,6 +69,7 @@ goog.fx.TransitionBase = class extends goog.events.EventTarget {
    * @param {boolean=} opt_restart Optional parameter to restart the animation.
    * @return {boolean} True iff the animation was started.
    * @override
+   * @suppress {checkTypes} (DV)
    */
   play(opt_restart) {}
 

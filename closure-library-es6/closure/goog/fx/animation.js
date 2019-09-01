@@ -22,7 +22,6 @@
 
 goog.provide('goog.fx.Animation');
 goog.provide('goog.fx.Animation.EventType');
-goog.provide('goog.fx.Animation.State');
 goog.provide('goog.fx.AnimationEvent');
 
 goog.require('goog.array');
@@ -161,6 +160,7 @@ goog.fx.Animation = class extends goog.fx.TransitionBase {
    *     animation from the beginning if it has been paused.
    * @return {boolean} Whether animation was started.
    * @override
+   * @suppress {checkTypes} (DV)
    */
   play(opt_restart) {
     if (opt_restart || this.isStopped()) {
@@ -436,14 +436,6 @@ goog.fx.Animation.EventType = {
  * @deprecated Use goog.fx.anim.TIMEOUT.
  */
 goog.fx.Animation.TIMEOUT = goog.fx.anim.TIMEOUT;
-
-
-/**
- * Enum for the possible states of an animation.
- * @deprecated Use goog.fx.Transition.State instead.
- * @enum {number}
- */
-goog.fx.Animation.State = goog.fx.TransitionBase.State;
 
 /**
    * Class for an animation event object.

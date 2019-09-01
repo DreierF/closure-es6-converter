@@ -295,6 +295,8 @@ goog.ui.ColorPicker.DEFAULT_NUM_COLS = 5;
 /**
  * Constants for event names.
  * @enum {string}
+ * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.ui.ColorPicker.EventType = {
   CHANGE: 'change'

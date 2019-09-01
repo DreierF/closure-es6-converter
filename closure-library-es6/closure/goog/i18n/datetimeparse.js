@@ -913,6 +913,7 @@ goog.i18n.DateTimeParse.MyDate_ = class {
    *
    * @param {number} year 2 digit year value before adjustment.
    * @return {number} disambiguated year.
+   * @suppress {checkTypes}
    * @private
    */
   setTwoDigitYear_(year) {
@@ -935,6 +936,7 @@ goog.i18n.DateTimeParse.MyDate_ = class {
    *     sure it is valid.
    *
    * @return {boolean} false if fields specify a invalid date.
+   * @suppress {checkTypes}
    * @private
    */
   calcDate_(

@@ -553,9 +553,9 @@ goog.debug.Trace_.prototype.startTracer = function(comment, opt_type) {
   event.startTime = event.eventTime = now;
   this.tracerOverheadStart_ += now - tracerStartTime;
   if (this.traceCallbacks_.start) {
-    this.traceCallbacks_.start(event.id, event.toString());
+    this.traceCallbacks_.start(/** @type{number} */ (event.id), event.toString());
   }
-  return event.id;
+  return /** @type {number} */ (event.id);
 };
 
 

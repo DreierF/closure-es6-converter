@@ -329,6 +329,7 @@ goog.scope(function() {
 		 *     request.
 		 * @suppress {deprecated} Use deprecated goog.structs.forEach to allow different
 		 * types of parameters for opt_headers.
+		 * @suppress {checkTypes}
 		 */
 		send(url, opt_method, opt_content, opt_headers) {
 			if (this.xhr_) {
@@ -453,6 +454,7 @@ goog.scope(function() {
 		 * Creates a new XHR object.
 		 * @return {!goog.net.XhrLike.OrNative} The newly created XHR object.
 		 * @protected
+		 * @suppress {checkTypes}
 		 */
 		createXhr() {
 			return this.xmlHttpFactory_ ? this.xmlHttpFactory_.createInstance() : new goog.net.XmlHttp();
@@ -704,6 +706,7 @@ goog.scope(function() {
 		/**
 		 * Make sure the timeout timer isn't running.
 		 * @private
+		 * @suppress {checkTypes}
 		 */
 		cleanUpTimeoutTimer_() {
 			if (this.xhr_ && this.useXhr2Timeout_) {
@@ -837,6 +840,7 @@ goog.scope(function() {
 		 * string as outlined in http://stackoverflow.com/questions/1919972
 		 *
 		 * @return {Object} Binary result from the server or null if not available.
+		 * @suppress {checkTypes}
 		 */
 		getResponseBody() {
 			try {
@@ -911,6 +915,7 @@ goog.scope(function() {
 		 * returned.
 		 *
 		 * @return {*} The response.
+		 * @suppress {checkTypes}
 		 */
 		getResponse() {
 			try {
@@ -1137,6 +1142,7 @@ goog.scope(function() {
 		 * @param {!goog.net.XhrLike.OrNative} xhr The request.
 		 * @return {boolean} True if the request supports level 2 timeout.
 		 * @private
+		 * @suppress {checkTypes}
 		 */
 		static shouldUseXhr2Timeout_(xhr) {
 			return goog.userAgent.IE && goog.userAgent.isVersionOrHigher(9) && goog.isNumber(

@@ -158,6 +158,7 @@ goog.ui.AnimatedZippy = class extends goog.ui.Zippy {
   onAnimate_(e) {
     var contentElement = this.getContentElement();
     var h = contentElement.offsetHeight;
+    e = /** @type {!goog.fx.AnimationEvent} */ (e);
     contentElement.style.marginTop = (e.y - h) + 'px';
   }
 
@@ -203,7 +204,9 @@ goog.tagUnsealableClass(goog.ui.AnimatedZippy);
 /**
  * Constants for event names.
  *
- * @const
+ * @override
+ * @suppress {checkTypes} (DV)
+ * @enum {string}
  */
 goog.ui.AnimatedZippy.Events = {
   // The beginning of the animation when the zippy state toggles.

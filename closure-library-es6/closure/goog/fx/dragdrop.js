@@ -29,6 +29,7 @@ goog.require('goog.fx.DragDropItem');
 
 /**
  * @struct
+ * @abstract
  */
 goog.fx.DragDrop = class extends goog.fx.AbstractDragDrop {
 

@@ -117,6 +117,7 @@ goog.structs.Set = class {
    * @param {T} element The primitive or object to remove.
    * @return {boolean} Whether the element was found and removed.
    * @override
+   * @suppress {checkTypes}
    */
   remove(element) {
     return this.map_.remove(goog.structs.Set.getKey_(element));

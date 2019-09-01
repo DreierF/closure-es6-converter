@@ -286,6 +286,8 @@ goog.tagUnsealableClass(goog.ui.TableSorter);
 /**
  * Table sorter events.
  * @enum {string}
+ * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.ui.TableSorter.EventType = {
   BEFORESORT: 'beforesort',

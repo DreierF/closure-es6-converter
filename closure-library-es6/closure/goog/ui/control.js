@@ -1096,6 +1096,9 @@ goog.ui.Control = class extends goog.ui.Component {
 	 * @param {goog.events.Event} e Mouse event to handle.
 	 */
 	handleMouseDown(e) {
+
+		e = /** @type {!goog.events.BrowserEvent} */ (e);
+
 		if (this.isEnabled()) {
 			// Highlight enabled control on mousedown, regardless of the mouse button.
 			if (this.isAutoState(goog.ui.Component.State.HOVER)) {

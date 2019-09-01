@@ -42,7 +42,6 @@
  */
 
 goog.provide('goog.ui.Menu');
-goog.provide('goog.ui.Menu.EventType');
 
 goog.require('goog.dom.TagName');
 goog.require('goog.math.Coordinate');
@@ -121,7 +120,8 @@ goog.ui.Menu = class extends goog.ui.Container {
    *     the menu.
    */
   containsElement(element) {
-    if (this.getRenderer().containsElement(this, element)) {
+    const renderer = /** @type {!goog.ui.MenuRenderer} */ (this.getRenderer());
+    if (renderer.containsElement(this, element)) {
       return true;
     }
 
@@ -410,28 +410,6 @@ goog.ui.Menu = class extends goog.ui.Container {
 };
 
 goog.tagUnsealableClass(goog.ui.Menu);
-
-
-// TODO(robbyw): Remove this and all references to it.
-// Please ensure that BEFORE_SHOW behavior is not disrupted as a result.
-/**
- * Event types dispatched by the menu.
- * @enum {string}
- * @deprecated Use goog.ui.Component.EventType.
- */
-goog.ui.Menu.EventType = {
-  /** Dispatched before the menu becomes visible */
-  BEFORE_SHOW: goog.ui.Component.EventType.BEFORE_SHOW,
-
-  /** Dispatched when the menu is shown */
-  SHOW: goog.ui.Component.EventType.SHOW,
-
-  /** Dispatched before the menu becomes hidden */
-  BEFORE_HIDE: goog.ui.Component.EventType.HIDE,
-
-  /** Dispatched when the menu is hidden */
-  HIDE: goog.ui.Component.EventType.HIDE
-};
 
 
 // TODO(robbyw): Remove this and all references to it.

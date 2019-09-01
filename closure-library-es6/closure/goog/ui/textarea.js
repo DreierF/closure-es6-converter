@@ -650,6 +650,7 @@ goog.ui.Textarea.prototype.borderBox_;
  * Constants for event names.
  * @enum {string}
  * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.ui.Textarea.EventType = {
   RESIZE: 'resize'

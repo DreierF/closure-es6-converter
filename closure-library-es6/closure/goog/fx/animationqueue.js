@@ -122,7 +122,10 @@ goog.fx.AnimationParallelQueue = class extends goog.fx.AnimationQueue {
     this.finishedCounter_ = 0;
   }
 
-  /** @override */
+  /**
+   * @override
+   * @suppress {checkTypes}
+   */
   play(opt_restart) {
     if (this.queue.length == 0) {
       return false;
@@ -218,7 +221,10 @@ goog.fx.AnimationSerialQueue = class extends goog.fx.AnimationQueue {
     this.current_ = 0;
   }
 
-  /** @override */
+  /**
+   * @override
+   * @suppress {checkTypes}
+   */
   play(opt_restart) {
     if (this.queue.length == 0) {
       return false;

@@ -133,7 +133,6 @@ goog.ui.Slider.Orientation = goog.ui.SliderBase.Orientation;
 /**
  * The prefix we use for the CSS class names for the slider and its elements.
  * @type {string}
- * @override
  */
 goog.ui.Slider.CSS_CLASS_PREFIX = goog.getCssName('goog-slider');
 

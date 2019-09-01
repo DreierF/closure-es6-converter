@@ -1282,7 +1282,10 @@ goog.Promise.Resolver_ = class {
   * @private
    */
   constructor(promise, resolve, reject) {
-    /** @const */
+    /**
+     * @const
+     * @suppress {checkTypes}
+     */
     this.promise = promise;
 
     /** @const */

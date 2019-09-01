@@ -301,6 +301,7 @@ goog.addSingletonGetter(goog.ui.MenuItemRenderer);
 /**
  * CSS class name the renderer applies to menu item elements.
  * @type {string}
+ * @override
  */
 goog.ui.MenuItemRenderer.CSS_CLASS = goog.getCssName('goog-menuitem');
 

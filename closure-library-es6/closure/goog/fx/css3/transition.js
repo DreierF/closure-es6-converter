@@ -107,8 +107,11 @@ goog.fx.css3.Transition = class extends goog.fx.TransitionBase {
     this.transitions_ = goog.isArray(transitions) ? transitions : [transitions];
   }
 
-  /** @override */
-  play() {
+  /**
+   * @override
+   * @suppress {checkTypes}
+   */
+  play(opt_restart) {
     if (this.isPlaying()) {
       return false;
     }

@@ -117,7 +117,8 @@ goog.ui.MenuItem = class extends goog.ui.Control {
 
     var element = this.getElement();
     if (element) {
-      this.getRenderer().setSelectable(this, element, selectable);
+      const renderer = /** @type {!goog.ui.MenuItemRenderer} */ (this.getRenderer());
+      renderer.setSelectable(this, element, selectable);
     }
   }
 
@@ -138,7 +139,8 @@ goog.ui.MenuItem = class extends goog.ui.Control {
   setCheckableInternal_(checkable) {
     var element = this.getElement();
     if (element) {
-      this.getRenderer().setCheckable(this, element, checkable);
+      const renderer = /** @type {!goog.ui.MenuItemRenderer} */ (this.getRenderer());
+      renderer.setCheckable(this, element, checkable);
     }
   }
 
@@ -191,6 +193,7 @@ goog.ui.MenuItem = class extends goog.ui.Control {
       // Clear out the saved opening coords immediately so they're not used twice.
       parentMenu.openingCoords = null;
 
+      e = /** @type {!goog.events.BrowserEvent} */ (e);
       if (oldCoords && goog.isNumber(e.clientX)) {
         var newCoords = new goog.math.Coordinate(e.clientX, e.clientY);
         if (goog.math.Coordinate.equals(oldCoords, newCoords)) {

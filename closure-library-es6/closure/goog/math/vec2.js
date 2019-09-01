@@ -31,12 +31,7 @@ goog.require('goog.math.Coordinate');
 /**
    * Class for a two-dimensional vector object and assorted functions useful for
    * manipulating points.
-   *
-   *
-   *
    * @struct
-   * 
-   * 
    */
 goog.math.Vec2 = class extends goog.math.Coordinate {
   /**
@@ -67,6 +62,7 @@ goog.math.Vec2 = class extends goog.math.Coordinate {
      * @param {number=} opt_sy The scale factor to use for the y dimension.
      * @return {!goog.math.Vec2} This vector after scaling.
      * @override
+     * @suppress {checkTypes}
      */
     this.scale = (goog.math.Coordinate.prototype.scale);
   }
@@ -206,6 +202,7 @@ goog.math.Vec2 = class extends goog.math.Coordinate {
    * @param {!goog.math.Coordinate} a The first vector.
    * @param {!goog.math.Coordinate} b The second vector.
    * @return {!goog.math.Vec2} The sum vector.
+   * @override
    */
   static sum(a, b) {
     return new goog.math.Vec2(a.x + b.x, a.y + b.y);
@@ -216,6 +213,7 @@ goog.math.Vec2 = class extends goog.math.Coordinate {
    * @param {!goog.math.Coordinate} a The first vector.
    * @param {!goog.math.Coordinate} b The second vector.
    * @return {!goog.math.Vec2} The difference vector.
+   * @override
    */
   static difference(a, b) {
     return new goog.math.Vec2(a.x - b.x, a.y - b.y);
@@ -273,6 +271,8 @@ goog.math.Vec2 = class extends goog.math.Coordinate {
  * @param {!goog.math.Coordinate} a The first vector.
  * @param {!goog.math.Coordinate} b The second vector.
  * @return {number} The distance.
+ * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.math.Vec2.distance = goog.math.Coordinate.distance;
 
@@ -282,6 +282,8 @@ goog.math.Vec2.distance = goog.math.Coordinate.distance;
  * @param {!goog.math.Coordinate} a The first vector.
  * @param {!goog.math.Coordinate} b The second vector.
  * @return {number} The squared distance.
+ * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.math.Vec2.squaredDistance = goog.math.Coordinate.squaredDistance;
 
@@ -291,6 +293,8 @@ goog.math.Vec2.squaredDistance = goog.math.Coordinate.squaredDistance;
  * @param {!goog.math.Coordinate} a The first vector.
  * @param {!goog.math.Coordinate} b The second vector.
  * @return {boolean} Whether the vectors have the same x and y coordinates.
+ * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.math.Vec2.equals = goog.math.Coordinate.equals;
 

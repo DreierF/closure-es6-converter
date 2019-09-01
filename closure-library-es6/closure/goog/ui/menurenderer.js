@@ -109,6 +109,7 @@ goog.addSingletonGetter(goog.ui.MenuRenderer);
  * Default CSS class to be applied to the root element of toolbars rendered
  * by this renderer.
  * @type {string}
+ * @override
  */
 goog.ui.MenuRenderer.CSS_CLASS = goog.getCssName('goog-menu');
 

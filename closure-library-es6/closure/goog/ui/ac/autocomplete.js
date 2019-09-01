@@ -702,7 +702,7 @@ goog.ui.ac.AutoComplete = class extends goog.events.EventTarget {
         }
         this.renderer_ = /** @type{!goog.ui.ac.Renderer} */ (this.renderer_);
         this.renderer_.setAnchorElement(anchor);
-        this.renderer_.renderRows(rendRows, this.token_, this.target_);
+        this.renderer_.renderRows(rendRows, /** @type {string} */ (this.token_), this.target_);
 
         var autoHilite = this.autoHilite_;
         if (optionsObj && optionsObj.getAutoHilite() !== undefined) {

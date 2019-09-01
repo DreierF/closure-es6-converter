@@ -852,7 +852,7 @@ goog.ui.Component = class extends goog.events.EventTarget {
   /**
    * Returns the child at the given index, or null if the index is out of bounds.
    * @param {number} index 0-based index.
-   * @return {goog.ui.Component?} The child at the given index; null if none.
+   * @return {?goog.ui.Component} The child at the given index; null if none.
    */
   getChildAt(index) {
     // Use children_ for access by index.

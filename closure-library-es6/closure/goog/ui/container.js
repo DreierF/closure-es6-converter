@@ -1175,6 +1175,8 @@ goog.tagUnsealableClass(goog.ui.Container);
 /**
  * Container-specific events.
  * @enum {string}
+ * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.ui.Container.EventType = {
   /**

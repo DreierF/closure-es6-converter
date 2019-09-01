@@ -853,6 +853,7 @@ goog.style.getClientPositionForElement_ = function(el) {
  * event, then the position of the first changedTouches will be returned.
  * @param {Element|Event|goog.events.Event} el Element or a mouse / touch event.
  * @return {!goog.math.Coordinate} The position.
+ * @suppress {checkTypes}
  */
 goog.style.getClientPosition = function(el) {
   goog.asserts.assert(el);
@@ -860,7 +861,7 @@ goog.style.getClientPosition = function(el) {
     return goog.style.getClientPositionForElement_(
         /** @type {!Element} */ (el));
   } else {
-    el = /** @type {Object} */ (el);
+    el = /** @type {*} */ (el);
     var targetEvent = el.changedTouches ? el.changedTouches[0] : el;
     return new goog.math.Coordinate(targetEvent.clientX, targetEvent.clientY);
   }

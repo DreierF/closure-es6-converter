@@ -42,9 +42,6 @@ goog.require('goog.Disposable');
  * the object passed to it, so simply using this function would defy the
  * purpose of using the pool.
  *
- * @param {number} initialCount Initial number of objects to populate the free
- *     pool at construction time.
- * @param {number} maxCount Maximum number of objects to keep in the free pool.
  * @template T
  */
 goog.structs.SimplePool = class extends goog.Disposable {

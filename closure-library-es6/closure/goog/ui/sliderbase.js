@@ -1317,6 +1317,7 @@ goog.ui.SliderBase.AnimationFactory = class {
  * value and extent together; in this case, they can simply be ignored.
  * @enum {string}
  * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.ui.SliderBase.EventType = {
   /** User started dragging the value thumb */

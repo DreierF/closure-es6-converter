@@ -1007,6 +1007,8 @@ goog.ui.Dialog.SELECT_EVENT = 'dialogselect';
 /**
  * Events dispatched by dialogs.
  * @enum {string}
+ * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.ui.Dialog.EventType = {
   /**

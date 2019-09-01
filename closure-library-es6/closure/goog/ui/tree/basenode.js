@@ -1379,6 +1379,7 @@ goog.ui.tree.BaseNode = class extends goog.ui.Component {
  * The event types dispatched by this class.
  * @enum {string}
  * @override
+ * @suppress {checkTypes} (DV)
  */
 goog.ui.tree.BaseNode.EventType = {
   BEFORE_EXPAND: 'beforeexpand',
