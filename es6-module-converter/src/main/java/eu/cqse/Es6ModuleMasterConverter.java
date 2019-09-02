@@ -24,7 +24,7 @@ public class Es6ModuleMasterConverter {
 
 	private static void validatePass1(ReaderPass pass1) {
 		Preconditions.checkArgument(!pass1.filesByNamespace.keySet().isEmpty(), "No provided namespaces found");
-		Preconditions.checkArgument(!pass1.requiresByFile.keys().isEmpty(), "No goog.requires found in input files");
+		Preconditions.checkArgument(!pass1.requiresByFile.keySet().isEmpty(), "No goog.requires found in input files");
 
 		Collection<GoogRequireOrForwardDeclare> requires = pass1.requiresByFile.values();
 		Set<String> allRequires = requires.stream().map(require -> require.requiredNamespace).collect(toSet());
