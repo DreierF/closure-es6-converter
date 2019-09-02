@@ -8,7 +8,7 @@ Note that this still uses the `goog.require` / `goog.provide` / `goog.module` mo
 
 # Building
 
-You can run the Closure compiler using this bash command: 
+You can run build the library the Closure compiler (current version: `20190820.182245-576`) using this bash command: 
 
 ``` bash
 ./scripts/ci/compile_closure.sh
