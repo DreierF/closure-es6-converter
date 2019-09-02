@@ -30,14 +30,14 @@ class ConvertingPass {
     void process(ReaderPass readerPass) throws IOException {
         for (File file : readerPass.providesByFile.keys()) {
             String content = Files.asCharSource(file, Charsets.UTF_8).read();
-            List<GoogProvideOrModule> provides = readerPass.providesByFile.get(file);
+            List<GoogProvideOrModule> provides = new ArrayList<>(readerPass.providesByFile.get(file));
             boolean isModule = provides.stream().anyMatch(provideOrModule -> provideOrModule.isModule);
             if (isModule) {
                 content = convertGoogleModuleFile(provides.get(0), file, content);
             } else {
                 content = convertGoogProvideFile(provides, file, content);
             }
-            content = replaceRequires(file, content, readerPass.requiresByFile.get(file),
+            content = replaceRequires(file, content, new ArrayList<>(readerPass.requiresByFile.get(file)),
                     readerPass.filesByNamespace);
             content = fixGoogDefineKeywords(content);
             content = replaceSupressedExtraRequires(content);
