@@ -11,7 +11,9 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 class ConvertingPass {
 
@@ -229,18 +231,31 @@ class ConvertingPass {
 
     private String convertGoogleModuleFile(GoogProvideOrModule moduleOrProvide, String content) {
         content = content.replace(moduleOrProvide.fullMatch, "");
-        content = content.replaceAll("goog\\.module\\.declareLegacyNamespace\\(\\);?", "");
+        content = content.replaceAll("goog\\.module\\.declareLegacyNamespace\\(\\);?\n?", "");
 
-        // TODO (DV): This is wrong in case we have inline exports, see GoogModuleExport # isInlineExport
-        content = content.replaceAll("exports\\s*=\\s*\\{.*?};?", "");
-        if (moduleOrProvide.exports.size() > 1) {
+        List<GoogModuleExport> inlineExports = moduleOrProvide.exports.stream().filter(export -> export.isInlineExport).collect(toList());
+        List<GoogModuleExport> globalExports = moduleOrProvide.exports.stream().filter(export -> !export.isInlineExport).collect(toList());
+
+        for (GoogModuleExport export : inlineExports) {
+            // Replace the closure version
+            // 'exports foo ='
+            // with
+            // 'export foo ='
+            content = content.replace(moduleOrProvide.fullMatch, "export " + export.exportName + " =");
+        }
+
+        if (globalExports.isEmpty()) {
+            return content;
+        }
+
+        // Remove Closure's 'exports {...}' and then append ES6's 'export {...}' to the file content
+        content = content.replace(globalExports.get(0).fullMatch, "");
+        if (globalExports.size() > 1) {
             return content + "\n\nexport {"
-                    + moduleOrProvide.exports.stream().map(export -> export.exportName).collect(Collectors.joining(","))
+                    + globalExports.stream().map(export -> export.exportName).collect(joining(","))
                     + "};";
         } else {
-            return content + "\n\nexport {"
-                    + moduleOrProvide.exports.get(0)
-                    + "};";
+            return content + "\n\nexport {" + globalExports.get(0).exportName + "};";
         }
     }
 }

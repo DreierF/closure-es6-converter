@@ -71,6 +71,11 @@ public class ReaderPass extends Es6Processor {
         return provides;
     }
 
+    // TODO (DV) This does not handle Closure exports in this format yet:
+    // exports {
+    //    foo : bar
+    // }
+    // (where foo is the exported name and 'bar' is a function, constant, etc.)
     private static List<GoogModuleExport> extractExportsOfGoogModule(String fileContent) {
         List<GoogModuleExport> googExports = new ArrayList<>();
         Pattern dottedExport = Pattern.compile("(?m)^\\s*exports\\.([\\w_]+)\\s*=");
