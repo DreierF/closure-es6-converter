@@ -97,6 +97,16 @@ goog.ui.Menu = class extends goog.ui.Container {
      * @private
      */
     this.allowHighlightDisabled_ = false;
+
+
+    /**
+     * Coordinates of the mousedown event that caused this menu to be made visible.
+     * Used to prevent the consequent mouseup event due to a simple click from
+     * activating a menu item immediately. Considered protected; should only be used
+     * within this package or by subclasses.
+     * @type {goog.math.Coordinate|undefined}
+     */
+    this.openingCoords = undefined;
   }
 
   /**
@@ -420,14 +430,5 @@ goog.tagUnsealableClass(goog.ui.Menu);
  */
 goog.ui.Menu.CSS_CLASS = goog.ui.MenuRenderer.CSS_CLASS;
 
-
-/**
- * Coordinates of the mousedown event that caused this menu to be made visible.
- * Used to prevent the consequent mouseup event due to a simple click from
- * activating a menu item immediately. Considered protected; should only be used
- * within this package or by subclasses.
- * @type {goog.math.Coordinate|undefined}
- */
-goog.ui.Menu.prototype.openingCoords;
 
 

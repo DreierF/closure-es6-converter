@@ -24,6 +24,50 @@ goog.provide('goog.net.XhrLike');
  */
 goog.net.XhrLike = class {
 
+
+	constructor() {
+
+		/**
+		 * @type {function()|null|undefined}
+		 * @see http://www.w3.org/TR/XMLHttpRequest/#handler-xhr-onreadystatechange
+		 */
+		this.onreadystatechange = null;
+
+
+		/**
+		 * @type {string}
+		 * @see http://www.w3.org/TR/XMLHttpRequest/#the-responsetext-attribute
+		 */
+		this.responseText = '';
+
+
+		/**
+		 * @type {Document}
+		 * @see http://www.w3.org/TR/XMLHttpRequest/#the-responsexml-attribute
+		 */
+		this.responseXML = null;
+
+
+		/**
+		 * @type {number}
+		 * @see http://www.w3.org/TR/XMLHttpRequest/#readystate
+		 */
+		this.readyState = 0;
+
+		/**
+		 * @type {number}
+		 * @see http://www.w3.org/TR/XMLHttpRequest/#status
+		 */
+		this.status = 0;
+
+		/**
+		 * @type {string}
+		 * @see http://www.w3.org/TR/XMLHttpRequest/#statustext
+		 */
+		this.statusText = '';
+	}
+
+
 	/**
 	 * @param {string} method
 	 * @param {string} url
@@ -73,47 +117,4 @@ goog.net.XhrLike = class {
  * @typedef {!goog.net.XhrLike|!XMLHttpRequest}
  */
 goog.net.XhrLike.OrNative;
-
-
-/**
- * @type {function()|null|undefined}
- * @see http://www.w3.org/TR/XMLHttpRequest/#handler-xhr-onreadystatechange
- */
-goog.net.XhrLike.prototype.onreadystatechange;
-
-
-/**
- * @type {string}
- * @see http://www.w3.org/TR/XMLHttpRequest/#the-responsetext-attribute
- */
-goog.net.XhrLike.prototype.responseText;
-
-
-/**
- * @type {Document}
- * @see http://www.w3.org/TR/XMLHttpRequest/#the-responsexml-attribute
- */
-goog.net.XhrLike.prototype.responseXML;
-
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/XMLHttpRequest/#readystate
- */
-goog.net.XhrLike.prototype.readyState;
-
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/XMLHttpRequest/#status
- */
-goog.net.XhrLike.prototype.status;
-
-
-/**
- * @type {string}
- * @see http://www.w3.org/TR/XMLHttpRequest/#statustext
- */
-goog.net.XhrLike.prototype.statusText;
-
 

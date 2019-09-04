@@ -38,6 +38,14 @@ goog.ui.ac.RenderOptions = class {
      * @private
      */
     this.preserveHilited_ = false;
+
+    /**
+     * Whether the first match is to be highlighted.  When undefined the autoHilite
+     * flag of the autocomplete is used.
+     * @type {boolean|undefined}
+     * @private
+     */
+    this.autoHilite_ = undefined;
   }
 
   /**
@@ -68,13 +76,4 @@ goog.ui.ac.RenderOptions = class {
     return this.autoHilite_;
   }
 };
-
-/**
- * Whether the first match is to be highlighted.  When undefined the autoHilite
- * flag of the autocomplete is used.
- * @type {boolean|undefined}
- * @private
- */
-goog.ui.ac.RenderOptions.prototype.autoHilite_;
-
 

@@ -48,7 +48,7 @@ goog.debug.LogBuffer = class {
      * @type {!Array<!goog.debug.LogRecord|undefined>}
      * @private
      */
-    this.buffer_ = undefined;
+    this.buffer_ = [];
 
 
     /**
@@ -56,7 +56,7 @@ goog.debug.LogBuffer = class {
      * @type {number}
      * @private
      */
-    this.curIndex_ = undefined;
+    this.curIndex_ = -1;
 
 
     /**

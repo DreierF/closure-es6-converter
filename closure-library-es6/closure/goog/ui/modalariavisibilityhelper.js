@@ -57,6 +57,13 @@ goog.ui.ModalAriaVisibilityHelper = class {
      * @private {!goog.dom.DomHelper}
      */
     this.dom_ = domHelper;
+
+    /**
+     * The elements set to aria-hidden when the popup was made visible.
+     * @type {Array<!Element>}
+     * @private
+     */
+    this.hiddenElements_ = [];
   }
 
   /**
@@ -86,12 +93,5 @@ goog.ui.ModalAriaVisibilityHelper = class {
   }
 };
 
-
-/**
- * The elements set to aria-hidden when the popup was made visible.
- * @type {Array<!Element>}
- * @private
- */
-goog.ui.ModalAriaVisibilityHelper.prototype.hiddenElements_;
 
 

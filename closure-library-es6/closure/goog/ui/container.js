@@ -42,6 +42,9 @@ goog.require('goog.ui.ComponentUtil');
 goog.require('goog.ui.ContainerRenderer');
 goog.require('goog.ui.Control');
 
+/**
+ * @abstract
+ */
 goog.ui.Container = class extends goog.ui.Component {
   /**
    * Base class for containers.  Extends {@link goog.ui.Component} by adding
@@ -1167,6 +1170,30 @@ goog.ui.Container = class extends goog.ui.Component {
   setMouseButtonPressed(pressed) {
     this.mouseButtonPressed_ = pressed;
   }
+
+
+  /**
+   * Overrides {@link goog.ui.Container#getChild} to make it clear that it
+   * only returns {@link goog.ui.Control}s.
+   * @param {string} id Child component ID.
+   * @return {goog.ui.Control} The child with the given ID; null if none.
+   * @override
+   */
+  getChild(id) {
+    return null;
+  }
+
+
+  /**
+   * Overrides {@link goog.ui.Container#getChildAt} to make it clear that it
+   * only returns {@link goog.ui.Control}s.
+   * @param {number} index 0-based index.
+   * @return {goog.ui.Control} The child with the given ID; null if none.
+   * @override
+   */
+  getChildAt(index) {
+    return null;
+  }
 };
 
 goog.tagUnsealableClass(goog.ui.Container);
@@ -1213,24 +1240,6 @@ goog.ui.Container.Orientation = {
 
 // Child component management.
 
-/**
- * Overrides {@link goog.ui.Container#getChild} to make it clear that it
- * only returns {@link goog.ui.Control}s.
- * @param {string} id Child component ID.
- * @return {goog.ui.Control} The child with the given ID; null if none.
- * @override
- */
-goog.ui.Container.prototype.getChild;
-
-
-/**
- * Overrides {@link goog.ui.Container#getChildAt} to make it clear that it
- * only returns {@link goog.ui.Control}s.
- * @param {number} index 0-based index.
- * @return {goog.ui.Control} The child with the given ID; null if none.
- * @override
- */
-goog.ui.Container.prototype.getChildAt;
 
 // Container state management.
 

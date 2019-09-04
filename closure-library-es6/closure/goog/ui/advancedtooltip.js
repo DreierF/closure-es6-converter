@@ -33,11 +33,6 @@ goog.require('goog.userAgent');
    * Advanced tooltip widget with cursor tracking abilities. Works like a regular
    * tooltip but can track the cursor position and direction to determine if the
    * tooltip should be dismissed or remain open.
-   *
-   *
-   *
-   *
-   * 
    * 
    */
 goog.ui.AdvancedTooltip = class extends goog.ui.Tooltip {
@@ -70,6 +65,7 @@ goog.ui.AdvancedTooltip = class extends goog.ui.Tooltip {
      * @private
      */
     this.cursorTrackingHideDelayMs_ = 100;
+
     /**
      * Whether the cursor tracking is active.
      *
@@ -77,12 +73,32 @@ goog.ui.AdvancedTooltip = class extends goog.ui.Tooltip {
      * @private
      */
     this.tracking_ = false;
+
     /**
-     * Forces the recalculation of the hotspot on the next mouse over event.
-     * @deprecated Not ever necessary to call this function. Hot spot is calculated
-     *     as necessary.
+     * Box object representing a margin around the tooltip where the cursor is
+     * allowed without dismissing the tooltip.
+     *
+     * @type {goog.math.Box}
+     * @private
      */
-    this.resetHotSpot = goog.nullFunction;
+    this.hotSpotPadding_ = null;
+
+
+    /**
+     * Bounding box.
+     *
+     * @type {goog.math.Box}
+     * @private
+     */
+    this.boundingBox_ = null;
+
+    /**
+     * Anchor bounding box.
+     *
+     * @type {goog.math.Box}
+     * @private
+     */
+    this.anchorBox_ = null;
   }
 
   /**
@@ -307,31 +323,5 @@ goog.ui.AdvancedTooltip = class extends goog.ui.Tooltip {
 
 goog.tagUnsealableClass(goog.ui.AdvancedTooltip);
 
-/**
- * Box object representing a margin around the tooltip where the cursor is
- * allowed without dismissing the tooltip.
- *
- * @type {goog.math.Box}
- * @private
- */
-goog.ui.AdvancedTooltip.prototype.hotSpotPadding_;
-
-
-/**
- * Bounding box.
- *
- * @type {goog.math.Box}
- * @private
- */
-goog.ui.AdvancedTooltip.prototype.boundingBox_;
-
-
-/**
- * Anchor bounding box.
- *
- * @type {goog.math.Box}
- * @private
- */
-goog.ui.AdvancedTooltip.prototype.anchorBox_;
 
 

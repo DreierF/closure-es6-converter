@@ -71,6 +71,39 @@ goog.ui.ac.Renderer = class extends goog.events.EventTarget {
     super();
 
     /**
+     * The anchor element to position the rendered autocompleter against.
+     * @type {Element}
+     * @private
+     */
+    this.anchorElement_ = null;
+
+
+    /**
+     * The anchor element to position the rendered autocompleter against.
+     * @protected {Element|undefined}
+     */
+    this.target_ = null;
+
+
+    /**
+     * The element on which to base the width of the autocomplete.
+     * @protected {Node}
+     */
+    this.widthProvider_ = null;
+
+    /**
+     * The element on which to base the max width of the autocomplete.
+     * @protected {!Node|undefined}
+     */
+    this.maxWidthProvider_ = undefined;
+
+    /**
+     * A flag used to make sure we highlight only one match in the rendered row.
+     * @private {boolean}
+     */
+    this.wasHighlightedAtLeastOnce_ = false;
+
+    /**
      * Reference to the parent element that will hold the autocomplete elements
      * @type {Element}
      * @private
@@ -254,6 +287,9 @@ goog.ui.ac.Renderer = class extends goog.events.EventTarget {
      * @private {number}
      */
     this.borderWidth_ = 0;
+
+
+
   }
 
   /**
@@ -978,41 +1014,6 @@ goog.ui.ac.Renderer = class extends goog.events.EventTarget {
   }
 };
 
-
-
-/**
- * The anchor element to position the rendered autocompleter against.
- * @type {Element}
- * @private
- */
-goog.ui.ac.Renderer.prototype.anchorElement_;
-
-
-/**
- * The anchor element to position the rendered autocompleter against.
- * @protected {Element|undefined}
- */
-goog.ui.ac.Renderer.prototype.target_;
-
-
-/**
- * The element on which to base the width of the autocomplete.
- * @protected {Node}
- */
-goog.ui.ac.Renderer.prototype.widthProvider_;
-
-
-/**
- * The element on which to base the max width of the autocomplete.
- * @protected {!Node|undefined}
- */
-goog.ui.ac.Renderer.prototype.maxWidthProvider_;
-
-/**
- * A flag used to make sure we highlight only one match in the rendered row.
- * @private {boolean}
- */
-goog.ui.ac.Renderer.prototype.wasHighlightedAtLeastOnce_;
 
 
 /**

@@ -92,6 +92,11 @@ goog.ui.Dialog = class extends goog.ui.ModalPopup {
      */
     this.class_ = opt_class || goog.getCssName('modal-dialog');
 
+    /**
+     * Button set.  Default to Ok/Cancel.
+     * @type {goog.ui.Dialog.ButtonSet}
+     * @private
+     */
     this.buttons_ = goog.ui.Dialog.ButtonSet.createOkCancel();
     /**
      * Whether the escape key closes this dialog.
@@ -959,13 +964,6 @@ goog.ui.Dialog = class extends goog.ui.ModalPopup {
 
 goog.tagUnsealableClass(goog.ui.Dialog);
 
-
-/**
- * Button set.  Default to Ok/Cancel.
- * @type {goog.ui.Dialog.ButtonSet}
- * @private
- */
-goog.ui.Dialog.prototype.buttons_;
 
 /**
    * Dialog event class.

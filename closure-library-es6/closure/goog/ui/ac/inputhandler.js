@@ -136,6 +136,47 @@ goog.ui.ac.InputHandler = class extends goog.Disposable {
    */
   constructor(opt_separators, opt_literals, opt_multi, opt_throttleTime) {
     super();
+
+
+    /**
+     * The AutoComplete instance this inputhandler is associated with.
+     * @type {goog.ui.ac.AutoComplete}
+     */
+    this.ac_ = null;
+
+
+    /**
+     * Characters that can be used to split multiple entries in an input string
+     * @type {string}
+     * @private
+     */
+    this.separators_ = '';
+
+
+    /**
+     * The separator we use to reconstruct the string
+     * @type {string}
+     * @private
+     */
+    this.defaultSeparator_ = '';
+
+
+    /**
+     * Regular expression used from trimming tokens or null for no trimming.
+     * @type {?RegExp}
+     * @private
+     */
+    this.trimmer_ = null;
+
+
+    /**
+     * Regular expression to test whether a separator exists
+     * @type {?RegExp}
+     * @private
+     */
+    this.separatorCheck_ = null;
+
+
     var throttleTime = opt_throttleTime || 150;
 
     /**
@@ -1207,43 +1248,5 @@ goog.ui.ac.InputHandler.STANDARD_LIST_SEPARATORS = ',;';
  */
 goog.ui.ac.InputHandler.QUOTE_LITERALS = '"';
 
-
-/**
- * The AutoComplete instance this inputhandler is associated with.
- * @type {goog.ui.ac.AutoComplete}
- */
-goog.ui.ac.InputHandler.prototype.ac_;
-
-
-/**
- * Characters that can be used to split multiple entries in an input string
- * @type {string}
- * @private
- */
-goog.ui.ac.InputHandler.prototype.separators_;
-
-
-/**
- * The separator we use to reconstruct the string
- * @type {string}
- * @private
- */
-goog.ui.ac.InputHandler.prototype.defaultSeparator_;
-
-
-/**
- * Regular expression used from trimming tokens or null for no trimming.
- * @type {?RegExp}
- * @private
- */
-goog.ui.ac.InputHandler.prototype.trimmer_;
-
-
-/**
- * Regular expression to test whether a separator exists
- * @type {?RegExp}
- * @private
- */
-goog.ui.ac.InputHandler.prototype.separatorCheck_;
 
 

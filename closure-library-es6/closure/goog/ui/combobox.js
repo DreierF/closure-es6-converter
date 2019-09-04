@@ -65,7 +65,7 @@ goog.ui.ComboBox = class extends goog.ui.Component {
   *
    */
   constructor(opt_domHelper, opt_menu, opt_labelInput) {
-    super( opt_domHelper);
+    super(opt_domHelper);
 
     /**
      * A LabelInput control that manages the focus/blur state of the input box.
@@ -73,6 +73,12 @@ goog.ui.ComboBox = class extends goog.ui.Component {
      * @private
      */
     this.labelInput_ = opt_labelInput || new goog.ui.LabelInput();
+
+    /**
+     * Whether the combo box is enabled.
+     * @type {boolean}
+     * @private
+     */
     this.enabled_ = true;
 
     // TODO(user): Allow lazy creation of menus/menu items
@@ -154,6 +160,13 @@ goog.ui.ComboBox = class extends goog.ui.Component {
      * @private
      */
     this.useDropdownArrow_ = false;
+
+    /**
+     * Keyboard event handler to manage key events dispatched by the input element.
+     * @type {goog.events.KeyHandler}
+     * @private
+     */
+    this.keyHandler_ = null;
   }
 
   /**
@@ -799,21 +812,6 @@ goog.tagUnsealableClass(goog.ui.ComboBox);
  * @type {number}
  */
 goog.ui.ComboBox.BLUR_DISMISS_TIMER_MS = 250;
-
-/**
- * Whether the combo box is enabled.
- * @type {boolean}
- * @private
- */
-goog.ui.ComboBox.prototype.enabled_;
-
-
-/**
- * Keyboard event handler to manage key events dispatched by the input element.
- * @type {goog.events.KeyHandler}
- * @private
- */
-goog.ui.ComboBox.prototype.keyHandler_;
 
 /**
  * Class for combo box items.

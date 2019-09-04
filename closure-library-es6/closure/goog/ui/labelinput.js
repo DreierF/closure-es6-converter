@@ -93,6 +93,20 @@ goog.ui.LabelInput = class extends goog.ui.Component {
      * value.
      */
     this.labelCssClassName = goog.getCssName('label-input-label');
+
+
+    /** @private {boolean} */
+    this.inFocusAndSelect_ = false;
+
+
+    /** @private {boolean} */
+    this.formAttached_ = false;
+
+    /**
+     * @type {goog.events.EventHandler}
+     * @private
+     */
+    this.eventHandler_ = null;
   }
 
   /**
@@ -535,14 +549,6 @@ goog.ui.LabelInput = class extends goog.ui.Component {
 
 goog.tagUnsealableClass(goog.ui.LabelInput);
 
-/** @private {boolean} */
-goog.ui.LabelInput.prototype.inFocusAndSelect_;
-
-
-/** @private {boolean} */
-goog.ui.LabelInput.prototype.formAttached_;
-
-
 /**
  * Indicates whether the browser supports the placeholder attribute, new in
  * HTML5.
@@ -551,10 +557,5 @@ goog.ui.LabelInput.prototype.formAttached_;
  */
 goog.ui.LabelInput.supportsPlaceholder_;
 
-/**
- * @type {goog.events.EventHandler}
- * @private
- */
-goog.ui.LabelInput.prototype.eventHandler_;
 
 
