@@ -29,7 +29,7 @@ goog.require('goog.debug.LogRecord');
 
 /**
    * Creates the log buffer.
-   * 
+   *
    * @final
    */
 goog.debug.LogBuffer = class {
@@ -41,6 +41,30 @@ goog.debug.LogBuffer = class {
     goog.asserts.assert(goog.debug.LogBuffer.isBufferingEnabled(),
         'Cannot use goog.debug.LogBuffer without defining ' + 'goog.debug.LogBuffer.CAPACITY.');
     this.clear();
+
+
+    /**
+     * The array to store the records.
+     * @type {!Array<!goog.debug.LogRecord|undefined>}
+     * @private
+     */
+    this.buffer_ = undefined;
+
+
+    /**
+     * The index of the most recently added record or -1 if there are no records.
+     * @type {number}
+     * @private
+     */
+    this.curIndex_ = undefined;
+
+
+    /**
+     * Whether the buffer is at capacity.
+     * @type {boolean}
+     * @private
+     */
+    this.isFull_ = false;
   }
 
   /**
@@ -118,28 +142,5 @@ goog.debug.LogBuffer = class {
  */
 goog.define('goog.debug.LogBuffer.CAPACITY', 0);
 
-
-/**
- * The array to store the records.
- * @type {!Array<!goog.debug.LogRecord|undefined>}
- * @private
- */
-goog.debug.LogBuffer.prototype.buffer_;
-
-
-/**
- * The index of the most recently added record or -1 if there are no records.
- * @type {number}
- * @private
- */
-goog.debug.LogBuffer.prototype.curIndex_;
-
-
-/**
- * Whether the buffer is at capacity.
- * @type {boolean}
- * @private
- */
-goog.debug.LogBuffer.prototype.isFull_;
 
 
