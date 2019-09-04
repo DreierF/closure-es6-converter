@@ -47,6 +47,27 @@ goog.ui.Textarea = class extends goog.ui.Control {
   constructor(content, opt_renderer, opt_domHelper) {
     super( content, opt_renderer || goog.ui.TextareaRenderer.getInstance(), opt_domHelper);
 
+
+    /**
+     * For storing the padding box size during enterDocument, to prevent possible
+     * measurement differences that can happen after text zooming.
+     * Note: runtime padding changes will cause problems with this.
+     * @type {goog.math.Box}
+     * @private
+     */
+    this.paddingBox_ = null;
+
+
+    /**
+     * For storing the border box size during enterDocument, to prevent possible
+     * measurement differences that can happen after text zooming.
+     * Note: runtime border width changes will cause problems with this.
+     * @type {goog.math.Box}
+     * @private
+     */
+    this.borderBox_ = null;
+
+
     this.setHandleMouseEvents(false);
     this.setAllowTextSelection(true);
     this.hasUserInput_ = (content != '');
@@ -626,25 +647,6 @@ goog.tagUnsealableClass(goog.ui.Textarea);
  */
 goog.ui.Textarea.NEEDS_HELP_SHRINKING_ =
     !(goog.userAgent.IE && !goog.userAgent.isDocumentModeOrHigher(11));
-
-/**
- * For storing the padding box size during enterDocument, to prevent possible
- * measurement differences that can happen after text zooming.
- * Note: runtime padding changes will cause problems with this.
- * @type {goog.math.Box}
- * @private
- */
-goog.ui.Textarea.prototype.paddingBox_;
-
-
-/**
- * For storing the border box size during enterDocument, to prevent possible
- * measurement differences that can happen after text zooming.
- * Note: runtime border width changes will cause problems with this.
- * @type {goog.math.Box}
- * @private
- */
-goog.ui.Textarea.prototype.borderBox_;
 
 /**
  * Constants for event names.

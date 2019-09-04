@@ -899,7 +899,85 @@ goog.i18n.DateTimeParse.MyDate_ = class {
   *
   * @private
    */
-  constructor() {}
+  constructor() {
+
+
+    /**
+     * The date's era.
+     * @type {?number}
+     */
+    this.era = null;
+
+
+    /**
+     * The date's year.
+     * @type {?number}
+     */
+    this.year  = null;
+
+
+    /**
+     * The date's month.
+     * @type {?number}
+     */
+    this.month  = null;
+
+
+    /**
+     * The date's day of month.
+     * @type {?number}
+     */
+    this.day  = null;
+
+
+    /**
+     * The date's hour.
+     * @type {?number}
+     */
+    this.hours  = null;
+
+
+    /**
+     * The date's before/afternoon denominator.
+     * @type {?number}
+     */
+    this.ampm  = null;
+
+
+    /**
+     * The date's minutes.
+     * @type {?number}
+     */
+    this.minutes  = null;
+
+
+    /**
+     * The date's seconds.
+     * @type {?number}
+     */
+    this.seconds  = null;
+
+
+    /**
+     * The date's milliseconds.
+     * @type {?number}
+     */
+    this.milliseconds  = null;
+
+
+    /**
+     * The date's timezone offset.
+     * @type {?number}
+     */
+    this.tzOffset  = null;
+
+
+    /**
+     * The date's day of week. Sunday is 0, Saturday is 6.
+     * @type {?number}
+     */
+    this.dayOfWeek  = null;
+  }
 
   /**
    * 2 digit year special handling. Assuming for example that the
@@ -1055,82 +1133,5 @@ goog.i18n.DateTimeParse.MyDate_ = class {
     return true;
   }
 };
-
-
-/**
- * The date's era.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.era;
-
-
-/**
- * The date's year.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.year;
-
-
-/**
- * The date's month.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.month;
-
-
-/**
- * The date's day of month.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.day;
-
-
-/**
- * The date's hour.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.hours;
-
-
-/**
- * The date's before/afternoon denominator.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.ampm;
-
-
-/**
- * The date's minutes.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.minutes;
-
-
-/**
- * The date's seconds.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.seconds;
-
-
-/**
- * The date's milliseconds.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.milliseconds;
-
-
-/**
- * The date's timezone offset.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.tzOffset;
-
-
-/**
- * The date's day of week. Sunday is 0, Saturday is 6.
- * @type {?number}
- */
-goog.i18n.DateTimeParse.MyDate_.prototype.dayOfWeek;
 
 

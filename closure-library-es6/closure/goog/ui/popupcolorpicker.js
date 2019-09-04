@@ -46,6 +46,10 @@ goog.ui.PopupColorPicker = class extends goog.ui.Component {
   constructor(opt_domHelper, opt_colorPicker) {
     super(opt_domHelper);
 
+
+    /** @private {boolean} */
+    this.rememberSelection_ = false;
+
     /**
      * Instance of a color picker control.
      * @type {goog.ui.ColorPicker}
@@ -415,7 +419,5 @@ goog.ui.PopupColorPicker = class extends goog.ui.Component {
 
 goog.tagUnsealableClass(goog.ui.PopupColorPicker);
 
-/** @private {boolean} */
-goog.ui.PopupColorPicker.prototype.rememberSelection_;
 
 

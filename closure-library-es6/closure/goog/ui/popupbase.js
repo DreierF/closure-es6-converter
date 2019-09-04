@@ -56,6 +56,23 @@ goog.ui.PopupBase = class extends goog.events.EventTarget {
   constructor(opt_element, opt_type) {
     super();
 
+
+    /**
+     * Transition to play on showing the popup.
+     * @type {goog.fx.Transition|undefined}
+     * @private
+     */
+    this.showTransition_ = undefined;
+
+
+    /**
+     * Transition to play on hiding the popup.
+     * @type {goog.fx.Transition|undefined}
+     * @private
+     */
+    this.hideTransition_ = undefined;
+
+
     /**
      * An event handler to manage the events easily
      * @type {goog.events.EventHandler<!goog.ui.PopupBase>}
@@ -764,22 +781,6 @@ goog.ui.PopupBase.Type = {
   TOGGLE_DISPLAY: 'toggle_display',
   MOVE_OFFSCREEN: 'move_offscreen'
 };
-
-/**
- * Transition to play on showing the popup.
- * @type {goog.fx.Transition|undefined}
- * @private
- */
-goog.ui.PopupBase.prototype.showTransition_;
-
-
-/**
- * Transition to play on hiding the popup.
- * @type {goog.fx.Transition|undefined}
- * @private
- */
-goog.ui.PopupBase.prototype.hideTransition_;
-
 
 /**
  * Constants for event type fired by Popup

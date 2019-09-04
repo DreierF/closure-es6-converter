@@ -62,6 +62,47 @@ goog.ui.ModalPopup = class extends goog.ui.Component {
   constructor(opt_useIframeMask, opt_domHelper) {
     super( opt_domHelper);
 
+
+    /**
+     * Transition to show the popup.
+     * @type {goog.fx.Transition}
+     * @private
+     */
+    this.popupShowTransition_ = null;
+
+
+    /**
+     * Transition to hide the popup.
+     * @type {goog.fx.Transition}
+     * @private
+     */
+    this.popupHideTransition_ = null;
+
+
+    /**
+     * Transition to show the background.
+     * @type {goog.fx.Transition}
+     * @private
+     */
+    this.bgShowTransition_ = null;
+
+
+    /**
+     * Transition to hide the background.
+     * @type {goog.fx.Transition}
+     * @private
+     */
+    this.bgHideTransition_ = null;
+
+
+    /**
+     * Helper object to control aria visibility of the rest of the page.
+     * @type {goog.ui.ModalAriaVisibilityHelper}
+     * @private
+     */
+    this.modalAriaVisibilityHelper_ = null;
+
+
     /**
      * Whether the modal popup should use an iframe as the background
      * element to work around z-order issues.
@@ -637,44 +678,5 @@ goog.ui.ModalPopup = class extends goog.ui.Component {
 };
 
 goog.tagUnsealableClass(goog.ui.ModalPopup);
-
-/**
- * Transition to show the popup.
- * @type {goog.fx.Transition}
- * @private
- */
-goog.ui.ModalPopup.prototype.popupShowTransition_;
-
-
-/**
- * Transition to hide the popup.
- * @type {goog.fx.Transition}
- * @private
- */
-goog.ui.ModalPopup.prototype.popupHideTransition_;
-
-
-/**
- * Transition to show the background.
- * @type {goog.fx.Transition}
- * @private
- */
-goog.ui.ModalPopup.prototype.bgShowTransition_;
-
-
-/**
- * Transition to hide the background.
- * @type {goog.fx.Transition}
- * @private
- */
-goog.ui.ModalPopup.prototype.bgHideTransition_;
-
-
-/**
- * Helper object to control aria visibility of the rest of the page.
- * @type {goog.ui.ModalAriaVisibilityHelper}
- * @private
- */
-goog.ui.ModalPopup.prototype.modalAriaVisibilityHelper_;
 
 

@@ -89,6 +89,85 @@ goog.ui.SliderBase = class extends goog.ui.Component {
   constructor(opt_domHelper, opt_labelFn) {
     super( opt_domHelper);
 
+
+    /** @private {goog.fx.AnimationParallelQueue} */
+    this.currentAnimation_ = null;
+
+
+    /** @private {?goog.Timer} */
+    this.incTimer_;
+
+
+    /** @private {boolean} */
+    this.incrementing_ = false;
+
+
+    /** @private {number} */
+    this.lastMousePosition_ = 0;
+
+    /**
+     * The minThumb dom-element, pointing to the start of the selected range.
+     * @type {HTMLDivElement}
+     * @protected
+     */
+    this.valueThumb = null;
+
+
+    /**
+     * The maxThumb dom-element, pointing to the end of the selected range.
+     * @type {HTMLDivElement}
+     * @protected
+     */
+    this.extentThumb = null;
+
+
+    /**
+     * The dom-element highlighting the selected range.
+     * @type {HTMLDivElement}
+     * @protected
+     */
+    this.rangeHighlight = null;
+
+
+    /**
+     * The thumb that we should be moving (only relevant when timed move is active).
+     * @type {HTMLDivElement}
+     * @private
+     */
+    this.thumbToMove_ = null;
+
+
+    /**
+     * The object handling keyboard events.
+     * @type {goog.events.KeyHandler}
+     * @private
+     */
+    this.keyHandler_ = null;
+
+
+    /**
+     * The object handling mouse wheel events.
+     * @type {goog.events.MouseWheelHandler}
+     * @private
+     */
+    this.mouseWheelHandler_ = null;
+
+
+    /**
+     * The Dragger for dragging the valueThumb.
+     * @type {goog.fx.Dragger}
+     * @private
+     */
+    this.valueDragger_ = null;
+
+
+    /**
+     * The Dragger for dragging the extentThumb.
+     * @type {goog.fx.Dragger}
+     * @private
+     */
+    this.extentDragger_ = null;
+
     /**
      * The factory to use to generate additional animations when animating to a
      * new value.
@@ -1352,21 +1431,6 @@ goog.ui.SliderBase.Orientation = {
   HORIZONTAL: 'horizontal'
 };
 
-/** @private {goog.fx.AnimationParallelQueue} */
-goog.ui.SliderBase.prototype.currentAnimation_;
-
-
-/** @private {!goog.Timer} */
-goog.ui.SliderBase.prototype.incTimer_;
-
-
-/** @private {boolean} */
-goog.ui.SliderBase.prototype.incrementing_;
-
-
-/** @private {number} */
-goog.ui.SliderBase.prototype.lastMousePosition_;
-
 
 /**
  * When the user holds down the mouse on the slider background, the closest
@@ -1385,69 +1449,6 @@ goog.ui.SliderBase.MOUSE_DOWN_INCREMENT_INTERVAL_ = 200;
  */
 goog.ui.SliderBase.ANIMATION_INTERVAL_ = 100;
 
-
-/**
- * The minThumb dom-element, pointing to the start of the selected range.
- * @type {HTMLDivElement}
- * @protected
- */
-goog.ui.SliderBase.prototype.valueThumb;
-
-
-/**
- * The maxThumb dom-element, pointing to the end of the selected range.
- * @type {HTMLDivElement}
- * @protected
- */
-goog.ui.SliderBase.prototype.extentThumb;
-
-
-/**
- * The dom-element highlighting the selected range.
- * @type {HTMLDivElement}
- * @protected
- */
-goog.ui.SliderBase.prototype.rangeHighlight;
-
-
-/**
- * The thumb that we should be moving (only relevant when timed move is active).
- * @type {HTMLDivElement}
- * @private
- */
-goog.ui.SliderBase.prototype.thumbToMove_;
-
-
-/**
- * The object handling keyboard events.
- * @type {goog.events.KeyHandler}
- * @private
- */
-goog.ui.SliderBase.prototype.keyHandler_;
-
-
-/**
- * The object handling mouse wheel events.
- * @type {goog.events.MouseWheelHandler}
- * @private
- */
-goog.ui.SliderBase.prototype.mouseWheelHandler_;
-
-
-/**
- * The Dragger for dragging the valueThumb.
- * @type {goog.fx.Dragger}
- * @private
- */
-goog.ui.SliderBase.prototype.valueDragger_;
-
-
-/**
- * The Dragger for dragging the extentThumb.
- * @type {goog.fx.Dragger}
- * @private
- */
-goog.ui.SliderBase.prototype.extentDragger_;
 
 // TODO: Make this return a base CSS class (without orientation), in subclasses.
 

@@ -40,6 +40,14 @@ goog.events.Listener = class {
   *
    */
   constructor(listener, proxy, src, type, capture, opt_handler) {
+
+    /**
+     * If monitoring the goog.events.Listener instances is enabled, stores the
+     * creation stack trace of the Disposable instance.
+     * @type {string}
+     */
+    this.creationStack = '';
+
     if (goog.events.Listener.ENABLE_MONITORING) {
       this.creationStack = new Error().stack;
     }
@@ -123,11 +131,5 @@ goog.events.Listener = class {
 goog.define('goog.events.Listener.ENABLE_MONITORING', false);
 
 
-/**
- * If monitoring the goog.events.Listener instances is enabled, stores the
- * creation stack trace of the Disposable instance.
- * @type {string}
- */
-goog.events.Listener.prototype.creationStack;
 
 

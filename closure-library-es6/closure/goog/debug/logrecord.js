@@ -24,7 +24,7 @@ goog.provide('goog.debug.LogRecord');
 /**
    * LogRecord objects are used to pass logging requests between
    * the logging framework and individual log Handlers.
-   * 
+   *
    *
    *
    *
@@ -46,6 +46,39 @@ goog.debug.LogRecord = class {
   *     should only be passed in when restoring a log record from persistence.
    */
   constructor(level, msg, loggerName, opt_time, opt_sequenceNumber) {
+
+
+    /**
+     * Time the LogRecord was created.
+     * @type {number}
+     * @private
+     */
+    this.time_ = 0;
+
+
+    /**
+     * Level of the LogRecord
+     * @type {goog.debug.Logger.Level}
+     * @private
+     */
+    this.level_ = null;
+
+
+    /**
+     * Message associated with the record
+     * @type {string}
+     * @private
+     */
+    this.msg_ = '';
+
+
+    /**
+     * Name of the logger that created the record.
+     * @type {string}
+     * @private
+     */
+    this.loggerName_ = '';
+
     this.reset(level, msg, loggerName, opt_time, opt_sequenceNumber);
     /**
      * Sequence number for the LogRecord. Each record has a unique sequence number
@@ -186,36 +219,6 @@ goog.debug.LogRecord = class {
 };
 
 
-/**
- * Time the LogRecord was created.
- * @type {number}
- * @private
- */
-goog.debug.LogRecord.prototype.time_;
-
-
-/**
- * Level of the LogRecord
- * @type {goog.debug.Logger.Level}
- * @private
- */
-goog.debug.LogRecord.prototype.level_;
-
-
-/**
- * Message associated with the record
- * @type {string}
- * @private
- */
-goog.debug.LogRecord.prototype.msg_;
-
-
-/**
- * Name of the logger that created the record.
- * @type {string}
- * @private
- */
-goog.debug.LogRecord.prototype.loggerName_;
 
 /**
  * @define {boolean} Whether to enable log sequence numbers.

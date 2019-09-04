@@ -3481,79 +3481,85 @@ goog.i18n.DateTimeSymbols_zu = {
  * @record
  * @struct
  */
-goog.i18n.DateTimeSymbolsType = function() {};
+goog.i18n.DateTimeSymbolsType = class {
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.ERAS;
+  constructor() {
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.ERANAMES;
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.NARROWMONTHS;
+    /** @type {!Array<string>} */
+    this.ERAS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.STANDALONENARROWMONTHS;
+    /** @type {!Array<string>} */
+    this.ERANAMES  = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.MONTHS;
+    /** @type {!Array<string>} */
+    this.NARROWMONTHS  = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.STANDALONEMONTHS;
+    /** @type {!Array<string>} */
+    this.STANDALONENARROWMONTHS  = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.SHORTMONTHS;
+    /** @type {!Array<string>} */
+    this.MONTHS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.STANDALONESHORTMONTHS;
+    /** @type {!Array<string>} */
+    this.STANDALONEMONTHS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.WEEKDAYS;
+    /** @type {!Array<string>} */
+    this.SHORTMONTHS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.SHORTWEEKDAYS;
+    /** @type {!Array<string>} */
+    this.STANDALONESHORTMONTHS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.STANDALONESHORTWEEKDAYS;
+    /** @type {!Array<string>} */
+    this.WEEKDAYS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.STANDALONEWEEKDAYS;
+    /** @type {!Array<string>} */
+    this.SHORTWEEKDAYS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.NARROWWEEKDAYS;
+    /** @type {!Array<string>} */
+    this.STANDALONESHORTWEEKDAYS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.STANDALONENARROWWEEKDAYS;
+    /** @type {!Array<string>} */
+    this.STANDALONEWEEKDAYS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.SHORTQUARTERS;
+    /** @type {!Array<string>} */
+    this.NARROWWEEKDAYS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.QUARTERS;
+    /** @type {!Array<string>} */
+    this.STANDALONENARROWWEEKDAYS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.AMPMS;
+    /** @type {!Array<string>} */
+    this.SHORTQUARTERS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.DATEFORMATS;
+    /** @type {!Array<string>} */
+    this.QUARTERS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.TIMEFORMATS;
+    /** @type {!Array<string>} */
+    this.AMPMS = [];
 
-/** @type {!Array<string>} */
-goog.i18n.DateTimeSymbolsType.prototype.DATETIMEFORMATS;
+    /** @type {!Array<string>} */
+    this.DATEFORMATS = [];
 
-/** @type {number|undefined} */
-goog.i18n.DateTimeSymbolsType.prototype.ZERODIGIT;
+    /** @type {!Array<string>} */
+    this.TIMEFORMATS = [];
 
-/** @type {number} */
-goog.i18n.DateTimeSymbolsType.prototype.FIRSTDAYOFWEEK;
+    /** @type {!Array<string>} */
+    this.DATETIMEFORMATS = [];
 
-/** @type {!Array<number>} */
-goog.i18n.DateTimeSymbolsType.prototype.WEEKENDRANGE;
+    /** @type {number|undefined} */
+    this.ZERODIGIT = [];
 
-/** @type {number} */
-goog.i18n.DateTimeSymbolsType.prototype.FIRSTWEEKCUTOFFDAY;
+    /** @type {number} */
+    this.FIRSTDAYOFWEEK = [];
+
+    /** @type {!Array<number>} */
+    this.WEEKENDRANGE = [];
+
+    /** @type {number} */
+    this.FIRSTWEEKCUTOFFDAY = [];
+  }
+
+};
 
 
 /** @type {!goog.i18n.DateTimeSymbolsType} */
