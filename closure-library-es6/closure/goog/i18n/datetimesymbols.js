@@ -3547,16 +3547,16 @@ goog.i18n.DateTimeSymbolsType = class {
     this.DATETIMEFORMATS = [];
 
     /** @type {number|undefined} */
-    this.ZERODIGIT = [];
+    this.ZERODIGIT = undefined;
 
     /** @type {number} */
-    this.FIRSTDAYOFWEEK = [];
+    this.FIRSTDAYOFWEEK = 0;
 
     /** @type {!Array<number>} */
     this.WEEKENDRANGE = [];
 
     /** @type {number} */
-    this.FIRSTWEEKCUTOFFDAY = [];
+    this.FIRSTWEEKCUTOFFDAY = 0;
   }
 
 };
