@@ -71,6 +71,14 @@ goog.ui.Popup = class extends goog.ui.PopupBase {
      * @private {goog.positioning.AbstractPosition|undefined}
      */
     this.position_ = opt_position || undefined;
+
+    /**
+     * Margin for the popup used in positioning algorithms.
+     *
+     * @type {goog.math.Box|undefined}
+     * @private
+     */
+    this.margin_ = undefined;
   }
 
   /**
@@ -172,14 +180,4 @@ goog.ui.Popup = class extends goog.ui.PopupBase {
 };
 
 goog.tagUnsealableClass(goog.ui.Popup);
-
-
-/**
- * Margin for the popup used in positioning algorithms.
- *
- * @type {goog.math.Box|undefined}
- * @private
- */
-goog.ui.Popup.prototype.margin_;
-
 

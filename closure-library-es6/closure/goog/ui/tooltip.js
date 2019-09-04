@@ -168,7 +168,45 @@ goog.ui.Tooltip = class extends goog.ui.Popup {
      * @type {number|undefined}
      * @protected
      */
-    this.hideTimer;
+    this.hideTimer = undefined;
+
+
+    /**
+     * Whether the anchor has seen the cursor move or has received focus since the
+     * tooltip was last shown. Used to ignore mouse over events triggered by view
+     * changes and UI updates.
+     * @type {boolean|undefined}
+     * @private
+     */
+    this.seenInteraction_ = undefined;
+
+
+    /**
+     * Whether the cursor must have moved before the tooltip will be shown.
+     * @type {boolean|undefined}
+     * @private
+     */
+    this.requireInteraction_ = undefined;
+
+
+    /**
+     * If this tooltip's element contains another tooltip that becomes active, this
+     * property identifies that tooltip so that we can check if this tooltip should
+     * not be hidden because the nested tooltip is active.
+     * @type {goog.ui.Tooltip}
+     * @private
+     */
+    this.childTooltip_ = undefined;
+
+
+    /**
+     * If this tooltip is inside another tooltip's element, then it may have
+     * prevented that tooltip from hiding.  When this tooltip hides, we'll need
+     * to check if the parent should be hidden as well.
+     * @type {goog.ui.Tooltip}
+     * @private
+     */
+    this.parentTooltip_ = undefined;
   }
 
   /**
@@ -824,44 +862,6 @@ goog.ui.Tooltip.Activation = {
   CURSOR: 0,
   FOCUS: 1
 };
-
-
-/**
- * Whether the anchor has seen the cursor move or has received focus since the
- * tooltip was last shown. Used to ignore mouse over events triggered by view
- * changes and UI updates.
- * @type {boolean|undefined}
- * @private
- */
-goog.ui.Tooltip.prototype.seenInteraction_;
-
-
-/**
- * Whether the cursor must have moved before the tooltip will be shown.
- * @type {boolean|undefined}
- * @private
- */
-goog.ui.Tooltip.prototype.requireInteraction_;
-
-
-/**
- * If this tooltip's element contains another tooltip that becomes active, this
- * property identifies that tooltip so that we can check if this tooltip should
- * not be hidden because the nested tooltip is active.
- * @type {goog.ui.Tooltip}
- * @private
- */
-goog.ui.Tooltip.prototype.childTooltip_;
-
-
-/**
- * If this tooltip is inside another tooltip's element, then it may have
- * prevented that tooltip from hiding.  When this tooltip hides, we'll need
- * to check if the parent should be hidden as well.
- * @type {goog.ui.Tooltip}
- * @private
- */
-goog.ui.Tooltip.prototype.parentTooltip_;
 
 /**
    * Popup position implementation that positions the popup (the tooltip in this
