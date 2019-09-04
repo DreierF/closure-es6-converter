@@ -193,20 +193,20 @@ goog.ui.Tooltip = class extends goog.ui.Popup {
      * If this tooltip's element contains another tooltip that becomes active, this
      * property identifies that tooltip so that we can check if this tooltip should
      * not be hidden because the nested tooltip is active.
-     * @type {goog.ui.Tooltip}
+     * @type {?goog.ui.Tooltip}
      * @private
      */
-    this.childTooltip_ = undefined;
+    this.childTooltip_ = null;
 
 
     /**
      * If this tooltip is inside another tooltip's element, then it may have
      * prevented that tooltip from hiding.  When this tooltip hides, we'll need
      * to check if the parent should be hidden as well.
-     * @type {goog.ui.Tooltip}
+     * @type {?goog.ui.Tooltip}
      * @private
      */
-    this.parentTooltip_ = undefined;
+    this.parentTooltip_ = null;
   }
 
   /**
