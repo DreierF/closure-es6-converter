@@ -142,6 +142,33 @@ goog.ui.Tooltip = class extends goog.ui.Popup {
      * @private
      */
     this.hideDelayMs_ = 0;
+
+    /**
+     * Element that triggered the tooltip.  Note that if a second element triggers
+     * this tooltip, anchor becomes that second element, even if its show is
+     * cancelled and the original tooltip survives.
+     *
+     * @type {Element|undefined}
+     * @protected
+     */
+    this.anchor = undefined;
+
+    /**
+     * Timer for when to show.
+     *
+     * @type {number|undefined}
+     * @protected
+     */
+    this.showTimer = undefined;
+
+
+    /**
+     * Timer for when to hide.
+     *
+     * @type {number|undefined}
+     * @protected
+     */
+    this.hideTimer;
   }
 
   /**
@@ -761,9 +788,10 @@ goog.ui.Tooltip = class extends goog.ui.Popup {
     delete this.dom_;
     super.disposeInternal();
   }
-};
+}
 
 goog.tagUnsealableClass(goog.ui.Tooltip);
+
 
 
 /**
@@ -774,34 +802,6 @@ goog.tagUnsealableClass(goog.ui.Tooltip);
  * @private
  */
 goog.ui.Tooltip.activeInstances_ = [];
-
-/**
- * Timer for when to show.
- *
- * @type {number|undefined}
- * @protected
- */
-goog.ui.Tooltip.prototype.showTimer;
-
-/**
- * Timer for when to hide.
- *
- * @type {number|undefined}
- * @protected
- */
-goog.ui.Tooltip.prototype.hideTimer;
-
-
-/**
- * Element that triggered the tooltip.  Note that if a second element triggers
- * this tooltip, anchor becomes that second element, even if its show is
- * cancelled and the original tooltip survives.
- *
- * @type {Element|undefined}
- * @protected
- */
-goog.ui.Tooltip.prototype.anchor;
-
 
 /**
  * Possible states for the tooltip to be in.
