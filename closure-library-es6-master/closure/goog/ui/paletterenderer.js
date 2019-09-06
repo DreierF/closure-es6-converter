@@ -63,12 +63,6 @@ goog.ui.PaletteRenderer = class extends goog.ui.ControlRenderer {
     super();
   }
 
-/**
- * Data attribute to store grid width from palette control.
- * @const {string}
- */
-goog.ui.PaletteRenderer.GRID_WIDTH_ATTRIBUTE = 'gridWidth';
-
 
   /**
    * Returns the palette items arranged in a table wrapped in a DIV, with the
@@ -351,6 +345,13 @@ maybeUpdateAriaLabel_(cell) {
     return goog.ui.PaletteRenderer.CSS_CLASS;
   }
 };
+
+
+/**
+ * Data attribute to store grid width from palette control.
+ * @const {string}
+ */
+goog.ui.PaletteRenderer.GRID_WIDTH_ATTRIBUTE = 'gridWidth';
 
 goog.addSingletonGetter(goog.ui.PaletteRenderer);
 

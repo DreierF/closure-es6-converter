@@ -28,7 +28,6 @@ goog.require('goog.debug.Error');
 goog.require('goog.debug.Trace');
 
 
-
 /**
  * The ErrorHandler can be used to to wrap functions with a try/catch
  * statement. If an exception is thrown, the given error handler function will
@@ -45,326 +44,326 @@ goog.require('goog.debug.Trace');
  */
 goog.debug.ErrorHandler = class extends goog.Disposable {
 
-  /**
-   * @param {Function} handler Handler for exceptions.
-   */
-  constructor(handler) {
-    super();
+    /**
+     * @param {Function} handler Handler for exceptions.
+     */
+    constructor(handler) {
+        super();
+
+        /**
+         * Handler for exceptions, which can do logging, reporting, etc.
+         * @type {Function}
+         * @private
+         */
+        this.errorHandlerFn_ = handler;
+
+        /**
+         * Whether errors should be wrapped in
+         * goog.debug.ErrorHandler.ProtectedFunctionError before rethrowing.
+         * @type {boolean}
+         * @private
+         */
+        this.wrapErrors_ = true;  // TODO(user) Change default.
+
+        /**
+         * Whether to add a prefix to all error messages. The prefix is
+         * goog.debug.ErrorHandler.ProtectedFunctionError.MESSAGE_PREFIX. This option
+         * only has an effect if this.wrapErrors_  is set to false.
+         * @type {boolean}
+         * @private
+         */
+        this.prefixErrorMessages_ = false;
+
+
+        /**
+         * Whether to add tracers when instrumenting entry points.
+         * @type {boolean}
+         * @private
+         */
+        this.addTracersToProtectedFunctions_ = false;
+    };
+
 
     /**
-     * Handler for exceptions, which can do logging, reporting, etc.
-     * @type {Function}
-     * @private
+     * Enable tracers when instrumenting entry points.
+     * @param {boolean} newVal See above.
      */
-    this.errorHandlerFn_ = handler;
+    setAddTracersToProtectedFunctions(
+        newVal) {
+        this.addTracersToProtectedFunctions_ = newVal;
+    };
 
-    /**
-     * Whether errors should be wrapped in
-     * goog.debug.ErrorHandler.ProtectedFunctionError before rethrowing.
-     * @type {boolean}
-     * @private
-     */
-    this.wrapErrors_ = true;  // TODO(user) Change default.
 
-    /**
-     * Whether to add a prefix to all error messages. The prefix is
-     * goog.debug.ErrorHandler.ProtectedFunctionError.MESSAGE_PREFIX. This option
-     * only has an effect if this.wrapErrors_  is set to false.
-     * @type {boolean}
-     * @private
-     */
-    this.prefixErrorMessages_ = false;
+    /** @override */
+    wrap(fn) {
+        return this.protectEntryPoint(goog.asserts.assertFunction(fn));
+    };
+
+
+    /** @override */
+    unwrap(fn) {
+        goog.asserts.assertFunction(fn);
+        return fn[this.getFunctionIndex_(false)] || fn;
+    };
 
 
     /**
-     * Whether to add tracers when instrumenting entry points.
-     * @type {boolean}
+     * Private helper function to return a span that can be clicked on to display
+     * an alert with the current stack trace. Newlines are replaced with a
+     * placeholder so that they will not be html-escaped.
+     * @param {string} stackTrace The stack trace to create a span for.
+     * @return {string} A span which can be clicked on to show the stack trace.
      * @private
      */
-    this.addTracersToProtectedFunctions_ = false;
-  };
+    getStackTraceHolder_(stackTrace) {
+        var buffer = [];
+        buffer.push('##PE_STACK_START##');
+        buffer.push(stackTrace.replace(/(\r\n|\r|\n)/g, '##STACK_BR##'));
+        buffer.push('##PE_STACK_END##');
+        return buffer.join('');
+    };
 
 
-  /**
-   * Enable tracers when instrumenting entry points.
-   * @param {boolean} newVal See above.
-   */
-  setAddTracersToProtectedFunctions(
-      newVal) {
-    this.addTracersToProtectedFunctions_ = newVal;
-  };
+    /**
+     * Get the index for a function. Used for internal indexing.
+     * @param {boolean} wrapper True for the wrapper; false for the wrapped.
+     * @return {string} The index where we should store the function in its
+     *     wrapper/wrapped function.
+     * @private
+     */
+    getFunctionIndex_(wrapper) {
+        return (wrapper ? '__wrapper_' : '__protected_') + goog.getUid(this) + '__';
+    };
 
 
-  /** @override */
-  wrap(fn) {
-    return this.protectEntryPoint(goog.asserts.assertFunction(fn));
-  };
+    /**
+     * Installs exception protection for an entry point function. When an exception
+     * is thrown from a protected function, a handler will be invoked to handle it.
+     *
+     * @param {Function} fn An entry point function to be protected.
+     * @return {!Function} A protected wrapper function that calls the entry point
+     *     function.
+     */
+    protectEntryPoint(fn) {
+        var protectedFnName = this.getFunctionIndex_(true);
+        if (!fn[protectedFnName]) {
+            var wrapper = fn[protectedFnName] = this.getProtectedFunction(fn);
+            wrapper[this.getFunctionIndex_(false)] = fn;
+        }
+        return fn[protectedFnName];
+    };
 
 
-  /** @override */
-  unwrap(fn) {
-    goog.asserts.assertFunction(fn);
-    return fn[this.getFunctionIndex_(false)] || fn;
-  };
+    /**
+     * Helps {@link #protectEntryPoint} by actually creating the protected
+     * wrapper function, after {@link #protectEntryPoint} determines that one does
+     * not already exist for the given function.  Can be overridden by subclasses
+     * that may want to implement different error handling, or add additional
+     * entry point hooks.
+     * @param {!Function} fn An entry point function to be protected.
+     * @return {!Function} protected wrapper function.
+     * @protected
+     */
+    getProtectedFunction(fn) {
+        var that = this;
+        var tracers = this.addTracersToProtectedFunctions_;
+        if (tracers) {
+            var stackTrace = goog.debug.getStacktraceSimple(15);
+        }
+        var googDebugErrorHandlerProtectedFunction = function () {
+            var self = /** @type {?} */ (this);
+            if (that.isDisposed()) {
+                return fn.apply(self, arguments);
+            }
+
+            if (tracers) {
+                var tracer = goog.debug.Trace.startTracer(
+                    'protectedEntryPoint: ' + that.getStackTraceHolder_(stackTrace));
+            }
+            try {
+                return fn.apply(self, arguments);
+            } catch (e) {
+                that.handleError_(e);
+            } finally {
+                if (tracers) {
+                    goog.debug.Trace.stopTracer(tracer);
+                }
+            }
+        };
+        googDebugErrorHandlerProtectedFunction[this.getFunctionIndex_(false)] = fn;
+        return googDebugErrorHandlerProtectedFunction;
+    };
 
 
-  /**
-   * Private helper function to return a span that can be clicked on to display
-   * an alert with the current stack trace. Newlines are replaced with a
-   * placeholder so that they will not be html-escaped.
-   * @param {string} stackTrace The stack trace to create a span for.
-   * @return {string} A span which can be clicked on to show the stack trace.
-   * @private
-   */
-  getStackTraceHolder_(stackTrace) {
-    var buffer = [];
-    buffer.push('##PE_STACK_START##');
-    buffer.push(stackTrace.replace(/(\r\n|\r|\n)/g, '##STACK_BR##'));
-    buffer.push('##PE_STACK_END##');
-    return buffer.join('');
-  };
-
-
-  /**
-   * Get the index for a function. Used for internal indexing.
-   * @param {boolean} wrapper True for the wrapper; false for the wrapped.
-   * @return {string} The index where we should store the function in its
-   *     wrapper/wrapped function.
-   * @private
-   */
-  getFunctionIndex_(wrapper) {
-    return (wrapper ? '__wrapper_' : '__protected_') + goog.getUid(this) + '__';
-  };
-
-
-  /**
-   * Installs exception protection for an entry point function. When an exception
-   * is thrown from a protected function, a handler will be invoked to handle it.
-   *
-   * @param {Function} fn An entry point function to be protected.
-   * @return {!Function} A protected wrapper function that calls the entry point
-   *     function.
-   */
-  protectEntryPoint(fn) {
-    var protectedFnName = this.getFunctionIndex_(true);
-    if (!fn[protectedFnName]) {
-      var wrapper = fn[protectedFnName] = this.getProtectedFunction(fn);
-      wrapper[this.getFunctionIndex_(false)] = fn;
-    }
-    return fn[protectedFnName];
-  };
-
-
-  /**
-   * Helps {@link #protectEntryPoint} by actually creating the protected
-   * wrapper function, after {@link #protectEntryPoint} determines that one does
- * not already exist for the given function.  Can be overridden by subclasses
-   * that may want to implement different error handling, or add additional
-   * entry point hooks.
-   * @param {!Function} fn An entry point function to be protected.
-   * @return {!Function} protected wrapper function.
-   * @protected
-   */
-  getProtectedFunction(fn) {
-    var that = this;
-    var tracers = this.addTracersToProtectedFunctions_;
-    if (tracers) {
-      var stackTrace = goog.debug.getStacktraceSimple(15);
-    }
-    var googDebugErrorHandlerProtectedFunction = function() {
-      var self = /** @type {?} */ (this);
-      if (that.isDisposed()) {
-        return fn.apply(self, arguments);
-      }
-
-      if (tracers) {
-        var tracer = goog.debug.Trace.startTracer(
-            'protectedEntryPoint: ' + that.getStackTraceHolder_(stackTrace));
-      }
-      try {
-        return fn.apply(self, arguments);
-      } catch (e) {
-      that.handleError_(e);
-    } finally {
-      if (tracers) {
-        goog.debug.Trace.stopTracer(tracer);
-      }
-    }
-  };
-  googDebugErrorHandlerProtectedFunction[this.getFunctionIndex_(false)] = fn;
-  return googDebugErrorHandlerProtectedFunction;
-};
-
-
-/**
- * Internal error handler.
- * @param {?} e The error string or an Error-like object.
- * @private
- */
-goog.debug.ErrorHandler.prototype.handleError_ = function(e) {
-  // Don't re-report errors that have already been handled by this code.
-  var MESSAGE_PREFIX =
-      goog.debug.ErrorHandler.ProtectedFunctionError.MESSAGE_PREFIX;
-  if ((e && typeof e === 'object' && e.message &&
-       e.message.indexOf(MESSAGE_PREFIX) == 0) ||
-      (typeof e === 'string' && e.indexOf(MESSAGE_PREFIX) == 0)) {
-    return;
-  }
-  this.errorHandlerFn_(e);
-  if (!this.wrapErrors_) {
-    // Add the prefix to the existing message.
-    if (this.prefixErrorMessages_) {
-      if (typeof e === 'object' && e && 'message' in e) {
-        e.message = MESSAGE_PREFIX + e.message;
-      } else {
-        e = MESSAGE_PREFIX + e;
-      }
-    }
-    if (goog.DEBUG) {
-      // Work around for https://code.google.com/p/v8/issues/detail?id=2625
-      // and https://code.google.com/p/chromium/issues/detail?id=237059
-      // Custom errors and errors with custom stack traces show the wrong
-      // stack trace
-      // If it has a stack and Error.captureStackTrace is supported (only
-      // supported in V8 as of May 2013) log the stack to the console.
-      if (e && e.stack && Error.captureStackTrace && goog.global['console']) {
-        goog.global['console']['error'](e.message, e.stack);
-      }
-    }
-    // Re-throw original error. This is great for debugging as it makes
-    // browser JS dev consoles show the correct error and stack trace.
-    throw e;
-  }
-  // Re-throw it since this may be expected by the caller.
-  throw new goog.debug.ErrorHandler.ProtectedFunctionError(e);
-  };
+    /**
+     * Internal error handler.
+     * @param {?} e The error string or an Error-like object.
+     * @private
+     */
+    handleError_(e) {
+        // Don't re-report errors that have already been handled by this code.
+        var MESSAGE_PREFIX =
+            goog.debug.ErrorHandler.ProtectedFunctionError.MESSAGE_PREFIX;
+        if ((e && typeof e === 'object' && e.message &&
+            e.message.indexOf(MESSAGE_PREFIX) == 0) ||
+            (typeof e === 'string' && e.indexOf(MESSAGE_PREFIX) == 0)) {
+            return;
+        }
+        this.errorHandlerFn_(e);
+        if (!this.wrapErrors_) {
+            // Add the prefix to the existing message.
+            if (this.prefixErrorMessages_) {
+                if (typeof e === 'object' && e && 'message' in e) {
+                    e.message = MESSAGE_PREFIX + e.message;
+                } else {
+                    e = MESSAGE_PREFIX + e;
+                }
+            }
+            if (goog.DEBUG) {
+                // Work around for https://code.google.com/p/v8/issues/detail?id=2625
+                // and https://code.google.com/p/chromium/issues/detail?id=237059
+                // Custom errors and errors with custom stack traces show the wrong
+                // stack trace
+                // If it has a stack and Error.captureStackTrace is supported (only
+                // supported in V8 as of May 2013) log the stack to the console.
+                if (e && e.stack && Error.captureStackTrace && goog.global['console']) {
+                    goog.global['console']['error'](e.message, e.stack);
+                }
+            }
+            // Re-throw original error. This is great for debugging as it makes
+            // browser JS dev consoles show the correct error and stack trace.
+            throw e;
+        }
+        // Re-throw it since this may be expected by the caller.
+        throw new goog.debug.ErrorHandler.ProtectedFunctionError(e);
+    };
 
 
 // TODO(mknichel): Allow these functions to take in the window to protect.
-  /**
-   * Installs exception protection for window.setTimeout to handle exceptions.
-   */
-  protectWindowSetTimeout() {
-    this.protectWindowFunctionsHelper_('setTimeout');
-  };
-
-
-  /**
-   * Install exception protection for window.setInterval to handle exceptions.
-   */
-  protectWindowSetInterval() {
-    this.protectWindowFunctionsHelper_('setInterval');
-  };
-
-
-/**
- * Install an unhandledrejection event listener that reports rejected promises.
- * Note: this will only work with Chrome 49+ and friends, but so far is the only
- * way to report uncaught errors in aysnc/await functions.
- */
-goog.debug.ErrorHandler.prototype.catchUnhandledRejections = function() {
-  if ('onunhandledrejection' in goog.global) {
-    goog.global.onunhandledrejection = (event) => {
-      // event.reason contains the rejection reason. When an Error is
-      // thrown, this is the Error object. If it is undefined, create a new
-      // error object.
-      const e =
-          event && event.reason ? event.reason : new Error('uncaught error');
-      this.handleError_(e);
+    /**
+     * Installs exception protection for window.setTimeout to handle exceptions.
+     */
+    protectWindowSetTimeout() {
+        this.protectWindowFunctionsHelper_('setTimeout');
     };
-  }
-};
 
 
-  /**
-   * Install exception protection for window.requestAnimationFrame to handle
-   * exceptions.
-   */
-  protectWindowRequestAnimationFrame() {
-	var win = goog.getObjectByName('window');
-	var fnNames = [
-	  'requestAnimationFrame', 'mozRequestAnimationFrame', 'webkitAnimationFrame',
-	  'msRequestAnimationFrame'
-	];
-	for (var i = 0; i < fnNames.length; i++) {
-	  var fnName = fnNames[i];
-	  if (fnNames[i] in win) {
-		this.protectWindowFunctionsHelper_(fnName);
-	  }
-	}
-  }
+    /**
+     * Install exception protection for window.setInterval to handle exceptions.
+     */
+    protectWindowSetInterval() {
+        this.protectWindowFunctionsHelper_('setInterval');
+    };
 
 
-  /**
-   * Helper function for protecting a function that causes a function to be
-   * asynchronously called, for example setTimeout or requestAnimationFrame.
-   * @param {string} fnName The name of the function to protect.
-   * @private
-   */
-  protectWindowFunctionsHelper_(
-      fnName) {
-    var win = goog.getObjectByName('window');
-    var originalFn = win[fnName];
-    var that = this;
-    win[fnName] = function(fn, time) {
-      // Don't try to protect strings. In theory, we could try to globalEval
-      // the string, but this seems to lead to permission errors on IE6.
-      if (goog.isString(fn)) {
-        fn = goog.partial(goog.globalEval, fn);
-      }
-      arguments[0] = fn = that.protectEntryPoint(fn);
-
-      // IE doesn't support .call for setInterval/setTimeout, but it
-      // also doesn't care what "this" is, so we can just call the
-      // original function directly
-      if (originalFn.apply) {
-        return originalFn.apply(/** @type {?} */ (this), arguments);
-      } else {
-        var callback = fn;
-        if (arguments.length > 2) {
-          var args = Array.prototype.slice.call(arguments, 2);
-          callback = function() {
-            fn.apply(/** @type {?} */ (this), args);
-          };
+    /**
+     * Install an unhandledrejection event listener that reports rejected promises.
+     * Note: this will only work with Chrome 49+ and friends, but so far is the only
+     * way to report uncaught errors in aysnc/await functions.
+     */
+    catchUnhandledRejections() {
+        if ('onunhandledrejection' in goog.global) {
+            goog.global.onunhandledrejection = (event) => {
+                // event.reason contains the rejection reason. When an Error is
+                // thrown, this is the Error object. If it is undefined, create a new
+                // error object.
+                const e =
+                    event && event.reason ? event.reason : new Error('uncaught error');
+                this.handleError_(e);
+            };
         }
-        return originalFn(callback, time);
-      }
     };
-    win[fnName][this.getFunctionIndex_(false)] = originalFn;
-  };
 
 
-  /**
-   * Set whether to wrap errors that occur in protected functions in a
-   * goog.debug.ErrorHandler.ProtectedFunctionError.
-   * @param {boolean} wrapErrors Whether to wrap errors.
-   */
-  setWrapErrors(wrapErrors) {
-    this.wrapErrors_ = wrapErrors;
-  };
+    /**
+     * Install exception protection for window.requestAnimationFrame to handle
+     * exceptions.
+     */
+    protectWindowRequestAnimationFrame() {
+        var win = goog.getObjectByName('window');
+        var fnNames = [
+            'requestAnimationFrame', 'mozRequestAnimationFrame', 'webkitAnimationFrame',
+            'msRequestAnimationFrame'
+        ];
+        for (var i = 0; i < fnNames.length; i++) {
+            var fnName = fnNames[i];
+            if (fnNames[i] in win) {
+                this.protectWindowFunctionsHelper_(fnName);
+            }
+        }
+    }
 
 
-  /**
-   * Set whether to add a prefix to all error messages that occur in protected
-   * functions.
-   * @param {boolean} prefixErrorMessages Whether to add a prefix to error
-   *     messages.
-   */
-  setPrefixErrorMessages(
-      prefixErrorMessages) {
-    this.prefixErrorMessages_ = prefixErrorMessages;
-  };
+    /**
+     * Helper function for protecting a function that causes a function to be
+     * asynchronously called, for example setTimeout or requestAnimationFrame.
+     * @param {string} fnName The name of the function to protect.
+     * @private
+     */
+    protectWindowFunctionsHelper_(
+        fnName) {
+        var win = goog.getObjectByName('window');
+        var originalFn = win[fnName];
+        var that = this;
+        win[fnName] = function (fn, time) {
+            // Don't try to protect strings. In theory, we could try to globalEval
+            // the string, but this seems to lead to permission errors on IE6.
+            if (goog.isString(fn)) {
+                fn = goog.partial(goog.globalEval, fn);
+            }
+            arguments[0] = fn = that.protectEntryPoint(fn);
+
+            // IE doesn't support .call for setInterval/setTimeout, but it
+            // also doesn't care what "this" is, so we can just call the
+            // original function directly
+            if (originalFn.apply) {
+                return originalFn.apply(/** @type {?} */ (this), arguments);
+            } else {
+                var callback = fn;
+                if (arguments.length > 2) {
+                    var args = Array.prototype.slice.call(arguments, 2);
+                    callback = function () {
+                        fn.apply(/** @type {?} */ (this), args);
+                    };
+                }
+                return originalFn(callback, time);
+            }
+        };
+        win[fnName][this.getFunctionIndex_(false)] = originalFn;
+    };
 
 
-  /** @override */
-  disposeInternal() {
-    // Try to unwrap window.setTimeout and window.setInterval.
-    var win = goog.getObjectByName('window');
-    win.setTimeout = this.unwrap(win.setTimeout);
-    win.setInterval = this.unwrap(win.setInterval);
+    /**
+     * Set whether to wrap errors that occur in protected functions in a
+     * goog.debug.ErrorHandler.ProtectedFunctionError.
+     * @param {boolean} wrapErrors Whether to wrap errors.
+     */
+    setWrapErrors(wrapErrors) {
+        this.wrapErrors_ = wrapErrors;
+    };
 
-    goog.debug.ErrorHandler.base(this, 'disposeInternal');
-  };
+
+    /**
+     * Set whether to add a prefix to all error messages that occur in protected
+     * functions.
+     * @param {boolean} prefixErrorMessages Whether to add a prefix to error
+     *     messages.
+     */
+    setPrefixErrorMessages(
+        prefixErrorMessages) {
+        this.prefixErrorMessages_ = prefixErrorMessages;
+    };
+
+
+    /** @override */
+    disposeInternal() {
+        // Try to unwrap window.setTimeout and window.setInterval.
+        var win = goog.getObjectByName('window');
+        win.setTimeout = this.unwrap(win.setTimeout);
+        win.setInterval = this.unwrap(win.setInterval);
+
+        goog.debug.ErrorHandler.base(this, 'disposeInternal');
+    };
 
 
 };
@@ -377,27 +376,27 @@ goog.debug.ErrorHandler.prototype.catchUnhandledRejections = function() {
  */
 goog.debug.ErrorHandler.ProtectedFunctionError = class extends goog.debug.Error {
 
-  /**
-   * @param {*} cause The error thrown by the entry point.
-   */
-  constructor(cause) {
-    /** @suppress {missingProperties} message may not be defined. */
-    var message = goog.debug.ErrorHandler.ProtectedFunctionError.MESSAGE_PREFIX +
-        (cause && cause.message ? String(cause.message) : String(cause));
-    super(message);
-
     /**
-     * The error thrown by the entry point.
-     * @type {*}
+     * @param {*} cause The error thrown by the entry point.
      */
-    this.cause = cause;
+    constructor(cause) {
+        /** @suppress {missingProperties} message may not be defined. */
+        var message = goog.debug.ErrorHandler.ProtectedFunctionError.MESSAGE_PREFIX +
+            (cause && cause.message ? String(cause.message) : String(cause));
+        super(message);
 
-    /** @suppress {missingProperties} stack may not be defined. */
-    var stack = cause && cause.stack;
-    if (stack && goog.isString(stack)) {
-      this.stack = /** @type {string} */ (stack);
+        /**
+         * The error thrown by the entry point.
+         * @type {*}
+         */
+        this.cause = cause;
+
+        /** @suppress {missingProperties} stack may not be defined. */
+        var stack = cause && cause.stack;
+        if (stack && goog.isString(stack)) {
+            this.stack = /** @type {string} */ (stack);
+        }
     }
-  }
 };
 
 

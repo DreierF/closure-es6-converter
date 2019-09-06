@@ -151,21 +151,6 @@ goog.crypt.Aes = class {
   testAfterAddRoundKey_(roundNum, state) {}
 
   /**
-   * Tests can populate this with a callback, and that callback will get called
-   * before each round on the round key.  *Gets called in both the encrypt() and
-   * decrypt() functions.*
-   * @param {number} roundNum Round number.
-   * @param {Array<!Array<number>>} schedule Computed key schedule.
-   * @param {number} index The index into the key schedule to test. This is not
-   *     necessarily roundNum because the key schedule is used in reverse
-   *     in the case of decryption.
-   * @private
-   */
-goog.crypt.Aes.ENABLE_TEST_MODE =
-    goog.define('goog.crypt.Aes.ENABLE_TEST_MODE', false);
-
-
-  /**
    * @override
    */
   encrypt(input) {
@@ -515,12 +500,19 @@ goog.crypt.Aes.ENABLE_TEST_MODE =
  */
 goog.crypt.Aes.BLOCK_SIZE_IN_WORDS_ = goog.crypt.Aes.prototype.BLOCK_SIZE / 4;
 
-
 /**
- * @define {boolean} Whether to call test method stubs.  This can be enabled
- *     for unit testing.
+ * Tests can populate this with a callback, and that callback will get called
+ * before each round on the round key.  *Gets called in both the encrypt() and
+ * decrypt() functions.*
+ * @param {number} roundNum Round number.
+ * @param {Array<!Array<number>>} schedule Computed key schedule.
+ * @param {number} index The index into the key schedule to test. This is not
+ *     necessarily roundNum because the key schedule is used in reverse
+ *     in the case of decryption.
+ * @private
  */
-goog.define('goog.crypt.Aes.ENABLE_TEST_MODE', false);
+goog.crypt.Aes.ENABLE_TEST_MODE =
+    goog.define('goog.crypt.Aes.ENABLE_TEST_MODE', false);
 
 // clang-format off
 /**

@@ -22,14 +22,15 @@
  */
 
 
+goog.provide('goog.async.Deferred');
+goog.provide('goog.async.Deferred.AlreadyCalledError');
+goog.provide('goog.async.Deferred.CanceledError');
 
-
-
-import * as Goog_Promise from '../../../../../closure/goog/promise/promise.js';
-import * as Thenable from '../../../../../closure/goog/promise/thenable.js';
-import * as goog_array from '../../../../../closure/goog/array/array.js';
-import * as asserts from '../../../../../closure/goog/asserts/asserts.js';
-import * as DebugError from '../../../../../closure/goog/debug/error.js';
+goog.require('goog.Promise');
+goog.require('goog.Thenable');
+goog.require('goog.array');
+goog.require('goog.asserts');
+goog.require('goog.debug.Error');
 
 /**
  * @implements {Thenable<VALUE>}
@@ -193,23 +194,6 @@ goog.async.Deferred = class {
       }
     }
 }
-
-
-/**
- * @define {boolean} Whether unhandled errors should always get rethrown to the
- * global scope. Defaults to false.
- */
-goog.async.Deferred.STRICT_ERRORS =
-    goog.define('goog.async.Deferred.STRICT_ERRORS', false);
-
-
-/**
- * @define {boolean} Whether to attempt to make stack traces long.  Defaults to
- * false.
- */
-goog.async.Deferred.LONG_STACK_TRACES =
-    goog.define('goog.async.Deferred.LONG_STACK_TRACES', false);
-
 
   /**
    * Cancels a Deferred that has not yet been fired, or is blocked on another
@@ -812,18 +796,21 @@ goog.async.Deferred.LONG_STACK_TRACES =
 };
 
 
+
 /**
  * @define {boolean} Whether unhandled errors should always get rethrown to the
  * global scope. Defaults to false.
  */
-goog.define('goog.async.Deferred.STRICT_ERRORS', false);
+goog.async.Deferred.STRICT_ERRORS =
+    goog.define('goog.async.Deferred.STRICT_ERRORS', false);
 
 
 /**
  * @define {boolean} Whether to attempt to make stack traces long.  Defaults to
  * false.
  */
-goog.define('goog.async.Deferred.LONG_STACK_TRACES', false);
+goog.async.Deferred.LONG_STACK_TRACES =
+    goog.define('goog.async.Deferred.LONG_STACK_TRACES', false);
 
 goog.Thenable.addImplementation(goog.async.Deferred);
 
@@ -932,12 +919,3 @@ goog.async.Deferred.Error_ = class {
  * @private {!Object<(number|string), goog.async.Deferred.Error_>}
  */
 goog.async.Deferred.errorMap_ = {};
-
-
-
-
-export {AlreadyCalledError, CanceledError, Deferred};
-
-export {AlreadyCalledError, CanceledError, Deferred};
-
-export {AlreadyCalledError, CanceledError, Deferred};
