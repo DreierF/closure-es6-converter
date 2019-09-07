@@ -1199,10 +1199,10 @@ goog.iter.permutations = function(iterable, opt_length) {
   var length = goog.isNumber(opt_length) ? opt_length : elements.length;
 
   var sets = goog.array.repeat(elements, length);
-  var product = goog.iter.product.apply(undefined, sets);
+  var productVar = goog.iter.product.apply(undefined, sets);
 
   return goog.iter.filter(
-      product, function(arr) { return !goog.iter.hasDuplicates_(arr); });
+      productVar, function(arr) { return !goog.iter.hasDuplicates_(arr); });
 };
 
 

@@ -630,10 +630,10 @@ goog.debug.fnNameCache_ = {};
 
 /**
  * Resolves functions to their names.  Resolved function names will be cached.
- * @type {function(Function):string}
+ * @type {function(Function):string|undefined}
  * @private
  */
-goog.debug.fnNameResolver_;
+goog.debug.fnNameResolver_ = undefined;
 
 
 /**

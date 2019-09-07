@@ -57,13 +57,6 @@ goog.net.XmlHttpDefines = {};
 
 
 /**
- * @define {boolean} Whether to assume XMLHttpRequest exists. Setting this to
- *     true eliminates the ActiveX probing code.
- */
-goog.define('goog.net.XmlHttpDefines.ASSUME_NATIVE_XHR', false);
-
-
-/**
  * Gets the options to use with the XMLHttpRequest objects obtained using
  * the static methods.
  * @return {Object} The options.
@@ -197,7 +190,7 @@ goog.net.DefaultXmlHttpFactory = class extends goog.net.XmlHttpFactory {
    * @private
    */
   getProgId_() {
-    if (goog.net.XmlHttp.ASSUME_NATIVE_XHR || goog.net.XmlHttpDefines.ASSUME_NATIVE_XHR) {
+    if (goog.net.XmlHttp.ASSUME_NATIVE_XHR) {
       return '';
     }
 

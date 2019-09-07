@@ -92,7 +92,7 @@ goog.dom.getDomHelper = function(opt_element) {
  * @type {!goog.dom.DomHelper|undefined}
  * @private
  */
-goog.dom.defaultDomHelper_;
+goog.dom.defaultDomHelper_ = undefined;
 
 
 /**
