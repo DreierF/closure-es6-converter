@@ -1,5 +1,6 @@
 package eu.cqse;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,7 +22,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 class ConvertingPass {
@@ -52,10 +53,33 @@ class ConvertingPass {
 			}
 			content = replaceRequires(file, content, new ArrayList<>(readerPass.requiresByFile.get(file)),
 					readerPass.filesByNamespace, shortExports);
-			content = fixGoogDefineKeywords(content);
 			content = replaceSupressedExtraRequires(content);
+			content = removeUsageOfProvidedNamespaces(content, provides);
 			Files.asCharSink(file, Charsets.UTF_8).write(content);
 		}
+	}
+
+	private String removeUsageOfProvidedNamespaces(String content, List<GoogProvideOrModule> provides) {
+		for (GoogProvideOrModule provide : provides) {
+			content = content.replaceAll("(?m)^" + Pattern.quote(provide.namespace) + "\\.(\\w+)\\s*=", "let $1 =");
+			content = removePartialQualifiedCall(content, provide.namespace);
+		}
+		return content;
+	}
+
+	private static String removePartialQualifiedCall(String content, String partialQualifiedCall) {
+		Matcher matcher = Pattern.compile("([^\\w])" + Pattern.quote(partialQualifiedCall) + "\\.(\\w+)([^\\w])").matcher(content);
+		String[] invalidChars = {",", "'", "\""};
+		while (matcher.find()) {
+			String prefix = matcher.group(1);
+			String privateFunction = matcher.group(2);
+			String suffix = matcher.group(3);
+			if (StringUtils.equalsOneOf(prefix, invalidChars) || StringUtils.equalsOneOf(suffix, invalidChars)) {
+				continue;
+			}
+			content = content.replace(matcher.group(), prefix + privateFunction + suffix);
+		}
+		return content;
 	}
 
 	/**
@@ -68,11 +92,19 @@ class ConvertingPass {
 	/**
 	 * let FOO = goog.define(...) is invalid an needs to use 'const' instead.
 	 */
-	private String fixGoogDefineKeywords(String content) {
-		Matcher matcher = Pattern.compile("let\\s+([A-Za-z_0-9]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(")
+	@VisibleForTesting
+	static String fixGoogDefineKeywords(String content, Collection<String> exportedNamespaces) {
+		Matcher matcher = Pattern.compile("let\\s+([\\w\\d]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(")
 				.matcher(content);
 		while (matcher.find()) {
 			content = content.replace(matcher.group(), "const " + matcher.group(1) + " = goog.define(");
+			exportedNamespaces.add(matcher.group(1));
+		}
+		matcher = Pattern.compile("(?m)^[\\s\\n]*goog\\s*\\.\\s*define\\s*\\('([^)]+\\.([^).]+))',").matcher(content);
+		while (matcher.find()) {
+			content = content.replace(matcher.group(), "const " + matcher.group(2) + " = " + matcher.group());
+			content = replaceFullyQualifiedCallWith(content, matcher.group(1), matcher.group(2));
+			exportedNamespaces.add(matcher.group(2));
 		}
 		return content;
 	}
@@ -80,6 +112,7 @@ class ConvertingPass {
 	private String replaceRequires(File file, String content, List<GoogRequireOrForwardDeclare> requires,
 								   Map<String, File> filesByNamespace, List<String> shortExports) {
 		Set<String> usedShortReferencesInFile = new HashSet<>(shortExports);
+		requires.sort((require1, require2) -> require2.requiredNamespace.length() - require1.requiredNamespace.length());
 		for (GoogRequireOrForwardDeclare require : requires) {
 			File requiredFile = filesByNamespace.get(require.requiredNamespace);
 			if (requiredFile == null || !requiredFile.isFile() || !requiredFile.canRead()) {
@@ -115,8 +148,8 @@ class ConvertingPass {
 		return relativePath;
 	}
 
-	public static String findSafeReferenceForGoogRequire(String documentText, String requiredNamespace,
-														 Set<String> forbiddenShortReferences) {
+	private static String findSafeReferenceForGoogRequire(String documentText, String requiredNamespace,
+														  Set<String> forbiddenShortReferences) {
 		String[] namespaceParts = requiredNamespace.split("\\.");
 		String newShortName = namespaceParts[namespaceParts.length - 1];
 
@@ -124,7 +157,7 @@ class ConvertingPass {
 
 		int namespacePartIndex = namespaceParts.length - 1;
 
-		while (forbiddenShortReferences.contains(newShortName)) {
+		while (forbiddenShortReferences.contains(newShortName) || isShadedByVariableDefinition(documentText, newShortName)) {
 
 			if (DEFAULT_REPLACEMENTS.containsKey(newShortName)) {
 				newShortName = DEFAULT_REPLACEMENTS.get(newShortName);
@@ -156,11 +189,16 @@ class ConvertingPass {
 		return newShortName;
 	}
 
+	private static boolean isShadedByVariableDefinition(String documentText, String newShortName) {
+		return documentText.contains("var " + newShortName) || documentText.contains("let " + newShortName) || documentText.contains("const " + newShortName);
+	}
+
 	private String convertGoogProvideFile(List<GoogProvideOrModule> provides, File file,
 										  final String originalContent, List<String> shortExports) {
-
 		String content = originalContent;
 		Set<String> exports = new TreeSet<>();
+
+		content = fixGoogDefineKeywords(content, exports);
 
 		provides.sort((provide1, provide2) -> provide2.namespace.length() - provide1.namespace.length());
 		for (GoogProvideOrModule provide : provides) {
@@ -188,14 +226,27 @@ class ConvertingPass {
 			} else {
 				// Prepare export of non-private methods
 				Pattern methodOrConstantPattern = Pattern
-						.compile("(?m)^" + Pattern.quote(namespace) + "\\.([a-z_A-Z\\d]+[a-zA-Z\\d]+)\\s*=[^=]");
+						.compile("(?m)^" + Pattern.quote(namespace) + "\\.([\\w\\d]+[\\w\\d]+)(\\s*=[^=])");
 				Matcher matcher = methodOrConstantPattern.matcher(content);
 				while (matcher.find()) {
 					String methodOrConstantName = matcher.group(1);
 					exports.add(methodOrConstantName);
-					content = content.replace(matcher.group(), "let " + methodOrConstantName + " =");
-					content = replaceFullyQualifiedCallWith(content, namespace + methodOrConstantName,
+					content = content.replaceAll("(?m)^" + Pattern.quote(matcher.group()), "let " + methodOrConstantName + matcher.group(2));
+					content = replaceFullyQualifiedCallWith(content, namespace + "." + methodOrConstantName,
 							methodOrConstantName);
+				}
+				// Prepare export of typedefs and constants
+				Pattern typedefPattern = Pattern
+						.compile("(?m)^" + Pattern.quote(namespace) + "\\.([\\w\\d]+[\\w\\d]+);");
+				matcher = typedefPattern.matcher(content);
+				while (matcher.find()) {
+					String typeName = matcher.group(1);
+					if (!typeName.endsWith("_")) {
+						exports.add(typeName);
+					}
+					content = content.replace(matcher.group(), "let " + typeName + ";");
+					content = replaceFullyQualifiedCallWith(content, namespace + typeName,
+							typeName);
 				}
 			}
 
@@ -213,9 +264,9 @@ class ConvertingPass {
 		}
 	}
 
-	private String replaceFullyQualifiedCallWith(String content, String fullyQualifiedCall, String newCall) {
+	private static String replaceFullyQualifiedCallWith(String content, String fullyQualifiedCall, String newCall) {
 		Matcher matcher = Pattern.compile("([^\\w])" + Pattern.quote(fullyQualifiedCall) + "([^\\w])").matcher(content);
-		String[] invalidChars = {".", ",", "'", "\""};
+		String[] invalidChars = {"'", "\""};
 		while (matcher.find()) {
 			String prefix = matcher.group(1);
 			String suffix = matcher.group(2);
@@ -250,8 +301,11 @@ class ConvertingPass {
 			// with
 			// 'export foo ='
 			content = content.replace(export.fullMatch, "export " + export.exportName + " =");
-			content = content.replace("export " + export.exportName + " = "+export.exportName, "export {" + export.exportName + "}");
+			content = content.replace("export " + export.exportName + " = " + export.exportName, "export {" + export.exportName + "}");
 		}
+
+		List<String> exportedNames = globalExports.stream().map(export -> export.exportName).collect(toList());
+		content = fixGoogDefineKeywords(content, exportedNames);
 
 		if (globalExports.isEmpty()) {
 			return content;
@@ -259,12 +313,6 @@ class ConvertingPass {
 
 		// Remove Closure's 'exports {...}' and then append ES6's 'export {...}' to the file content
 		content = content.replace(globalExports.get(0).fullMatch, "");
-		if (globalExports.size() > 1) {
-			return content + "\n\nexport {"
-					+ globalExports.stream().map(export -> export.exportName).collect(joining(","))
-					+ "};";
-		} else {
-			return content + "\n\nexport {" + globalExports.get(0).exportName + "};";
-		}
+		return content + "\n\nexport {" + StringUtils.concat(exportedNames, ",") + "};";
 	}
 }
