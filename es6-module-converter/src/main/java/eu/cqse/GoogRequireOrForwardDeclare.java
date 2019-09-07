@@ -7,7 +7,7 @@ import java.util.Objects;
 class GoogRequireOrForwardDeclare {
 
 	@Nullable
-	final String shortReference;
+	 String shortReference;
 
 	@Nullable
 	final String importedFunction;

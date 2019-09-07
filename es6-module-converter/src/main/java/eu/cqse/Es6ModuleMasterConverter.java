@@ -20,6 +20,8 @@ public class Es6ModuleMasterConverter {
 		readInPass.process(INPUT_DIR);
 		validatePass1(readInPass);
 		new ConvertingPass().process(readInPass);
+
+		System.out.println("\n==== Finished ====");
 	}
 
 	private static void validatePass1(ReaderPass pass1) {

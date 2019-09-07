@@ -22,8 +22,6 @@ public abstract class Es6Processor {
 				processJsFile(file);
 			}
 		}
-
-		System.out.println("\n==== Finished ====");
 	}
 
 	private boolean isRelevantJsFile(File file) {
