@@ -21,7 +21,6 @@
 goog.provide('goog.events.BrowserFeature');
 
 goog.require('goog.userAgent');
-goog.scope(function() {
 
 
 
@@ -139,4 +138,3 @@ goog.events.BrowserFeature = {
 function purify(fn) {
   return ({valueOf: fn}).valueOf();
 }
-});  // goog.scope

@@ -22,7 +22,6 @@
  */
 
 
-goog.provide('goog.Delay');
 goog.provide('goog.async.Delay');
 
 goog.require('goog.Disposable');
@@ -174,16 +173,5 @@ goog.async.Delay = class extends goog.Disposable {
     }
   }
 };
-
-
-
-
-/**
- * A deprecated alias.
- * @deprecated Use goog.async.Delay instead.
- * @constructor
- * @final
- */
-goog.Delay = goog.async.Delay;
 
 

@@ -3563,12 +3563,6 @@ goog.i18n.DateTimeSymbolsType = class {
 
 
 /** @type {!goog.i18n.DateTimeSymbolsType} */
-goog.i18n.DateTimeSymbols;
-
-
-/**
- * Selected date/time formatting symbols by locale.
- */
 goog.i18n.DateTimeSymbols = goog.i18n.DateTimeSymbols_en;
 
 switch (goog.LOCALE) {
