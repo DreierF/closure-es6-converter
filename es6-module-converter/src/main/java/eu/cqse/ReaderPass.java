@@ -86,19 +86,23 @@ public class ReaderPass extends Es6Processor {
 			String identifier = dottedExportMatcher.group(1).trim();
 			googExports.add(new GoogModuleExport(identifier, true, dottedExportMatcher.group()));
 		}
-		Pattern defaultExportPattern = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?([\\w_,\\s+:]+)}?;?");
+		Pattern defaultExportPattern = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?([\\w_,\\s+:/*@]+)}?;?");
 		Matcher defaultExportMatcher = defaultExportPattern.matcher(fileContent);
 		while (defaultExportMatcher.find()) {
 			String rawContent = defaultExportMatcher.group(1).trim();
 			List<String> exportedNames = new ArrayList<>();
 			if (rawContent.contains(",")) {
-				exportedNames.addAll(Arrays.stream(rawContent.split(",")).map(ns -> ns.split(":")[0]).map(String::trim).collect(Collectors.toList()));
+				exportedNames.addAll(Arrays.stream(rawContent.split(",")).map(ReaderPass::normalizeExportEntry).collect(Collectors.toList()));
 			} else {
-				exportedNames.add(rawContent.split(":")[0].trim());
+				exportedNames.add(normalizeExportEntry(rawContent));
 			}
 			exportedNames.forEach(exportedName -> googExports.add(new GoogModuleExport(exportedName, false, defaultExportMatcher.group())));
 		}
 		return googExports;
+	}
+
+	private static String normalizeExportEntry(String ns) {
+		return ns.split(":")[0].replaceAll("/\\**[^/]*(?<=\\*)/", "").trim();
 	}
 
 	private static List<GoogRequireOrForwardDeclare> parseGoogRequires(String content) {
