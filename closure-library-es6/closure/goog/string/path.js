@@ -72,9 +72,9 @@ goog.string.path.dirname = function(path) {
 goog.string.path.extension = function(path) {
   var separator = '.';
   // Combining all adjacent periods in the basename to a single period.
-  var baseName = goog.string.path.baseName(path).replace(/\.+/g, separator);
-  var separatorIndex = baseName.lastIndexOf(separator);
-  return separatorIndex <= 0 ? '' : baseName.substr(separatorIndex + 1);
+  var baseNameVar = goog.string.path.baseName(path).replace(/\.+/g, separator);
+  var separatorIndex = baseNameVar.lastIndexOf(separator);
+  return separatorIndex <= 0 ? '' : baseNameVar.substr(separatorIndex + 1);
 };
 
 
