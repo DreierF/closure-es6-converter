@@ -86,12 +86,7 @@ goog.Thenable = class {
     // won't create a 'var ctor;' extern when the "create externs from exports"
     // mode is enabled.
     ctor.prototype['then'] = ctor.prototype.then;
-    if (COMPILED) {
-      ctor.prototype[goog.Thenable.IMPLEMENTED_BY_PROP] = true;
-    } else {
-      // Avoids dictionary access in uncompiled mode.
-      ctor.prototype.$goog_Thenable = true;
-    }
+    ctor.prototype[Thenable.IMPLEMENTED_BY_PROP] = true;
   }
 
   /**
@@ -104,10 +99,7 @@ goog.Thenable = class {
       return false;
     }
     try {
-      if (COMPILED) {
-        return !!object[goog.Thenable.IMPLEMENTED_BY_PROP];
-      }
-      return !!object.$goog_Thenable;
+      return !!object[goog.Thenable.IMPLEMENTED_BY_PROP];
     } catch (e) {
       // Property access seems to be forbidden.
       return false;

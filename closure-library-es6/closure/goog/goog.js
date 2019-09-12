@@ -27,12 +27,6 @@
 
 goog.provide('goog');
 
-
-/**
- * @define {boolean} Overridden to true by the compiler.
- */
-var COMPILED = false;
-
 /**
  * Reference to the global context.  In most cases this will be 'window'.
  * @const
@@ -167,26 +161,10 @@ goog.exportPath_ = function(name, opt_object, opt_objectToExportTo) {
  *
  * @param {string} name The distinguished name to provide.
  * @param {string|number|boolean} defaultValue
+ * @return {string|number|boolean}
  */
 goog.define = function(name, defaultValue) {
-  var value = defaultValue;
-  if (!COMPILED) {
-    var uncompiledDefines = goog.global.CLOSURE_UNCOMPILED_DEFINES;
-    var defines = goog.global.CLOSURE_DEFINES;
-    if (uncompiledDefines &&
-        // Anti DOM-clobbering runtime check (b/37736576).
-        /** @type {?} */ (uncompiledDefines).nodeType === undefined &&
-        Object.prototype.hasOwnProperty.call(uncompiledDefines, name)) {
-      value = uncompiledDefines[name];
-    } else if (
-        defines &&
-        // Anti DOM-clobbering runtime check (b/37736576).
-        /** @type {?} */ (defines).nodeType === undefined &&
-        Object.prototype.hasOwnProperty.call(defines, name)) {
-      value = defines[name];
-    }
-  }
-  goog.exportPath_(name, value);
+  return defaultValue;
 };
 
 
@@ -254,7 +232,7 @@ goog.define('goog.STRICT_MODE_COMPATIBLE', false);
  * @define {boolean} Whether code that calls {@link goog.setTestOnly} should
  *     be disallowed in the compilation unit.
  */
-goog.define('goog.DISALLOW_TEST_ONLY_CODE', COMPILED && !goog.DEBUG);
+goog.define('goog.DISALLOW_TEST_ONLY_CODE', true && !goog.DEBUG);
 
 
 /**
@@ -1229,13 +1207,6 @@ goog.setCssNameMapping = function(mapping, opt_style) {
  * @type {!Object<string, string>|undefined}
  */
 goog.global.CLOSURE_CSS_NAME_MAPPING;
-
-
-if (!COMPILED && goog.global.CLOSURE_CSS_NAME_MAPPING) {
-  // This does not call goog.setCssNameMapping() because the JSCompiler
-  // requires that goog.setCssNameMapping() be called with an object literal.
-  goog.cssNameMapping_ = goog.global.CLOSURE_CSS_NAME_MAPPING;
-}
 
 
 /**
