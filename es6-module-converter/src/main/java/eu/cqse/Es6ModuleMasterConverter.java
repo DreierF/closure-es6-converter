@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import static java.lang.String.join;
 import static java.util.stream.Collectors.toSet;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,13 +14,15 @@ import java.util.Set;
 
 public class Es6ModuleMasterConverter {
 
-	private static final String INPUT_DIR = "../closure-library-es6";
+	private static final String INPUT_DIR = "../closure-library";
 
 	public static void main(String[] args) throws IOException {
-		ReaderPass readInPass = new ReaderPass();
-		readInPass.process(INPUT_DIR);
-		validatePass1(readInPass);
-		new ConvertingPass().process(readInPass);
+		SelectionPass selectionPass = new SelectionPass();
+		selectionPass.process(new File(INPUT_DIR, "closure/goog/deps.js"), new File("../needed.txt"), true);
+//		ReaderPass readInPass = new ReaderPass();
+//		readInPass.process(INPUT_DIR);
+//		validatePass1(readInPass);
+//		new ConvertingPass().process(readInPass);
 
 		System.out.println("\n==== Finished ====");
 	}

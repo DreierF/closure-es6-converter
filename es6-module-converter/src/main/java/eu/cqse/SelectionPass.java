@@ -2,87 +2,91 @@ package eu.cqse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.Types;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class ReaderPass {
+public class SelectionPass {
 
 	private static final Pattern PROVIDE_OR_MODULE_PATTERN = Pattern
 			.compile("(?m)^goog\\s*\\.\\s*(?:provide|module)\\s*\\(['\"]([\\w.]+)['\"]\\s*\\)\\s*;?");
 
-	final Map<String, File> filesByNamespace = new HashMap<>();
+	private static final JsonAdapter<List<ClosureDependency>> JSON_ADAPTER = new Moshi.Builder().build()
+			.adapter(Types.newParameterizedType(List.class, ClosureDependency.class));
 
-	final Multimap<File, GoogRequireOrForwardDeclare> requiresByFile = ArrayListMultimap.create();
-	final Multimap<File, GoogProvideOrModule> providesByFile = ArrayListMultimap.create();
+	Set<String> process(File depsFile, File neededNamespacesFile, boolean includeTests) throws IOException {
+		HashMap<String, ClosureDependency> depsByProvide = getStringClosureDependencies(depsFile);
+		if (depsByProvide == null) return null;
 
-	void process(String inputDirPath) throws IOException {
-		File inputDir = new File(inputDirPath);
+		return calculateTransitiveClosure(neededNamespacesFile, depsByProvide, includeTests);
+	}
 
-		if (!inputDir.isDirectory()) {
-			throw new IOException("Input dir not found");
-		}
+	private Set<String> calculateTransitiveClosure(File neededNamespacesFile, HashMap<String, ClosureDependency> depsByProvide, boolean includeTests) throws IOException {
+		ImmutableList<String> neededNamespaces = Files.asCharSource(neededNamespacesFile, Charsets.UTF_8).readLines();
 
-		for (File file : Files.fileTraverser().breadthFirst(inputDir)) {
-			if (isRelevantJsFile(file)) {
-				processJsFile(file);
+		Set<String> transitivelyRequiredClosureFiles = new HashSet<>();
+		Set<String> unsatisfiedDependencies = new HashSet<>(neededNamespaces);
+		Set<String> processedDependencies = new HashSet<>();
+		for (String unsatisfiedDependency : unsatisfiedDependencies) {
+			ClosureDependency closureDependency = depsByProvide.get(unsatisfiedDependency);
+			transitivelyRequiredClosureFiles.add(closureDependency.file);
+			processedDependencies.add(unsatisfiedDependency);
+			for (String require : closureDependency.requires) {
+				if (!processedDependencies.contains(require)) {
+					unsatisfiedDependencies.add(require);
+				}
+			}
+			ClosureDependency closureTestDependency = depsByProvide.get(unsatisfiedDependency + "Test");
+			if (includeTests && closureTestDependency != null) {
+				transitivelyRequiredClosureFiles.add(closureTestDependency.file);
+				processedDependencies.add(unsatisfiedDependency);
+				for (String require : closureTestDependency.requires) {
+					if (!processedDependencies.contains(require)) {
+						unsatisfiedDependencies.add(require);
+					}
+				}
 			}
 		}
+		return transitivelyRequiredClosureFiles;
 	}
 
-	private boolean isRelevantJsFile(File file) {
-		String lowerCaseFileName = file.getName().toLowerCase();
-		Set<String> absolutePathSegments = Sets.newHashSet(Splitter.on(File.separatorChar).split(file.getAbsolutePath()));
-		return lowerCaseFileName.endsWith(".js")
-				&& !(absolutePathSegments.contains("less") || absolutePathSegments.contains("js-cache") || absolutePathSegments.contains("testing"))
-				&& StringUtils.containsOneOf(file.getAbsolutePath(), "closure-library", "src-js",
-				"third_party/closure/")
-				&& !StringUtils.endsWithOneOf(lowerCaseFileName, "_test.js", "_perf.js", "tester.js",
-				"alltests.js", "testhelpers.js", "testing.js", "relativecommontests.js", "mockiframeio.js");
-	}
+	private HashMap<String, ClosureDependency> getStringClosureDependencies(File depsFile) throws IOException {
+		String content = Files.asCharSource(depsFile, Charsets.UTF_8).read();
+		String jsonRepresentation = "[" + content.replaceAll("//.*", "")
+				.replaceAll("goog.addDependency\\(([^,]+), ([^]]+]),([^]]+]), ([^)]+)\\);", "{'file': $1, 'provides': $2, 'requires': $3, 'info': $4},")
+				.stripTrailing()
+				.replace('\'', '"');
+		jsonRepresentation = jsonRepresentation.substring(0, jsonRepresentation.length() - 1) + "]";
 
-	protected void processJsFile(File jsFile) throws IOException {
-		String content = Files.asCharSource(jsFile, Charsets.UTF_8).read();
-
-		if (content.contains("goog.setTestOnly();")) {
-			System.out.println("WARN: " + jsFile.getName() + " (" + jsFile.getAbsolutePath() + ") seems to be test-only, skipping file.");
-			return;
+		List<ClosureDependency> closureDependencies = JSON_ADAPTER.fromJson(jsonRepresentation);
+		if (closureDependencies == null) {
+			System.err.println("Failed to parse json!");
+			return null;
 		}
 
-		List<GoogProvideOrModule> providesOrModules = getProvidedNamespaces(content);
-		if (providesOrModules.isEmpty()) {
-			System.out.println(
-					"INFO: " + jsFile.getAbsolutePath() + " does not seem to goog.provide or goog.module anything");
-			return;
-		}
-
-		providesByFile.putAll(jsFile, providesOrModules);
-
-		for (GoogProvideOrModule provideOrModule : providesOrModules) {
-			if (filesByNamespace.containsKey(provideOrModule.namespace)) {
-				throw new UnsupportedOperationException("Namespace " + provideOrModule.namespace + " is already provided by more than one file: " + jsFile.getName() + ", " + filesByNamespace.get(provideOrModule.namespace));
+		HashMap<String, ClosureDependency> depsByProvide = new HashMap<>();
+		for (ClosureDependency dependency : closureDependencies) {
+			for (String provide : dependency.provides) {
+				depsByProvide.put(provide, dependency);
 			}
-			filesByNamespace.put(provideOrModule.namespace, jsFile);
 		}
-
-		List<GoogRequireOrForwardDeclare> googRequires = parseGoogRequires(content);
-		googRequires.addAll(parseImplicitRequires(content, jsFile));
-		requiresByFile.putAll(jsFile, googRequires);
+		return depsByProvide;
 	}
+
 
 	private List<GoogRequireOrForwardDeclare> parseImplicitRequires(String content, File jsFile) {
 		List<GoogRequireOrForwardDeclare> requires = new ArrayList<>();
@@ -131,7 +135,7 @@ public class ReaderPass {
 			String rawContent = defaultExportMatcher.group(1).trim();
 			List<String> exportedNames = new ArrayList<>();
 			if (rawContent.contains(",")) {
-				exportedNames.addAll(Arrays.stream(rawContent.split(",")).map(ReaderPass::normalizeExportEntry).collect(Collectors.toList()));
+				exportedNames.addAll(Arrays.stream(rawContent.split(",")).map(SelectionPass::normalizeExportEntry).collect(Collectors.toList()));
 			} else {
 				exportedNames.add(normalizeExportEntry(rawContent));
 			}
