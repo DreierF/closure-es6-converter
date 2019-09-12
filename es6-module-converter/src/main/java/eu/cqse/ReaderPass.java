@@ -30,6 +30,8 @@ public class ReaderPass {
 	final Multimap<File, GoogRequireOrForwardDeclare> requiresByFile = ArrayListMultimap.create();
 	final Multimap<File, GoogProvideOrModule> providesByFile = ArrayListMultimap.create();
 
+	public static final String GOOG_JS = "goog.js";
+
 	void process(String inputDirPath) throws IOException {
 		File inputDir = new File(inputDirPath);
 
@@ -89,7 +91,7 @@ public class ReaderPass {
 		if (content.contains("goog.dispose(") && !jsFile.getName().equals("disposable.js")) {
 			requires.add(new GoogRequireOrForwardDeclare(null, "goog.dispose", null, "dispose", false));
 		}
-		if (!jsFile.getName().equals("base.js")) {
+		if (!jsFile.getName().equals(GOOG_JS)) {
 			requires.add(new GoogRequireOrForwardDeclare(null, "goog", "goog", null, false));
 		}
 		return requires;

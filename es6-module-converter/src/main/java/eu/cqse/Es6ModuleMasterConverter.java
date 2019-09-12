@@ -17,12 +17,12 @@ public class Es6ModuleMasterConverter {
 	private static final String INPUT_DIR = "../closure-library";
 
 	public static void main(String[] args) throws IOException {
-		SelectionPass selectionPass = new SelectionPass();
-		selectionPass.process(new File(INPUT_DIR, "closure/goog/deps.js"), new File("../needed.txt"), true);
-//		ReaderPass readInPass = new ReaderPass();
-//		readInPass.process(INPUT_DIR);
-//		validatePass1(readInPass);
-//		new ConvertingPass().process(readInPass);
+//		SelectionPass selectionPass = new SelectionPass();
+//		selectionPass.process(new File(INPUT_DIR, "closure/goog/deps.js"), new File("../needed.txt"), true);
+		ReaderPass readInPass = new ReaderPass();
+		readInPass.process(INPUT_DIR);
+		validatePass1(readInPass);
+		new ConvertingPass().process(readInPass);
 
 		System.out.println("\n==== Finished ====");
 	}
