@@ -2,19 +2,18 @@ package eu.cqse;
 
 import com.google.common.base.Preconditions;
 
-import static java.lang.String.join;
-import static java.util.stream.Collectors.toSet;
-
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import static java.lang.String.join;
+import static java.util.stream.Collectors.toSet;
+
 public class Es6ModuleMasterConverter {
 
-	private static final String INPUT_DIR = "../closure-library";
+	private static final String INPUT_DIR = "../closure-library-es6";
 
 	public static void main(String[] args) throws IOException {
 //		SelectionPass selectionPass = new SelectionPass();

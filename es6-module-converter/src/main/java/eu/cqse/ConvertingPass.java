@@ -43,6 +43,9 @@ class ConvertingPass {
 
 	void process(ReaderPass readerPass) throws IOException {
 		for (File file : readerPass.providesByFile.keySet()) {
+			if (file.getName().equals(ReaderPass.GOOG_JS)) {
+				continue;
+			}
 			String content = Files.asCharSource(file, Charsets.UTF_8).read();
 			List<GoogProvideOrModule> provides = new ArrayList<>(readerPass.providesByFile.get(file));
 			boolean isModule = provides.stream().anyMatch(provideOrModule -> provideOrModule.isModule);
@@ -57,7 +60,7 @@ class ConvertingPass {
 					readerPass.filesByNamespace, shortExports);
 			content = replaceSupressedExtraRequires(content);
 			content = removeUsageOfProvidedNamespaces(content, provides);
-			content = content.replace("* as goog from","* as g from").replaceAll("goog\\.(\\w+)\\(", "g.$1(");
+			content = content.replaceAll("(\\W)COMPILED(\\W)", "$1true$2");
 			Files.asCharSink(file, Charsets.UTF_8).write(content);
 		}
 	}
