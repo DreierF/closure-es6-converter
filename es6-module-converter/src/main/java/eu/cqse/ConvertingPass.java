@@ -51,8 +51,13 @@ class ConvertingPass {
 			boolean isModule = provides.stream().anyMatch(provideOrModule -> provideOrModule.isModule);
 			List<String> shortExports = new ArrayList<>();
 			if (isModule) {
-				content = convertGoogleModuleFile(provides.get(0), content);
-				shortExports.addAll(provides.get(0).exports.stream().map(e -> e.exportName).collect(Collectors.toList()));
+				GoogProvideOrModule googModule = provides.get(0);
+				if (googModule.fullMatch == null) {
+					// Skip classes that are already in ES6 format
+					continue;
+				}
+				content = convertGoogleModuleFile(googModule, content);
+				shortExports.addAll(googModule.exports.stream().map(e -> e.exportName.internalName).collect(Collectors.toList()));
 			} else {
 				content = convertGoogProvideFile(provides, file, content, shortExports);
 			}
@@ -99,18 +104,18 @@ class ConvertingPass {
 	 * let FOO = goog.define(...) is invalid an needs to use 'const' instead.
 	 */
 	@VisibleForTesting
-	static String fixGoogDefineKeywords(String content, Collection<String> exportedNamespaces) {
+	static String fixGoogDefineKeywords(String content, Collection<ExportedEntity> exportedNamespaces) {
 		Matcher matcher = Pattern.compile("let\\s+([\\w\\d]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(")
 				.matcher(content);
 		while (matcher.find()) {
 			content = content.replace(matcher.group(), "const " + matcher.group(1) + " = goog.define(");
-			exportedNamespaces.add(matcher.group(1));
+			exportedNamespaces.add(new ExportedEntity(matcher.group(1)));
 		}
 		matcher = Pattern.compile("(?m)^[\\s\\n]*goog\\s*\\.\\s*define\\s*\\('([^)]+\\.([^).]+))',").matcher(content);
 		while (matcher.find()) {
 			content = content.replace(matcher.group(), "const " + matcher.group(2) + " = " + matcher.group());
 			content = replaceFullyQualifiedCallWith(content, matcher.group(1), matcher.group(2));
-			exportedNamespaces.add(matcher.group(2));
+			exportedNamespaces.add(new ExportedEntity(matcher.group(2)));
 		}
 		return content;
 	}
@@ -238,7 +243,7 @@ class ConvertingPass {
 	private String convertGoogProvideFile(List<GoogProvideOrModule> provides, File file,
 										  final String originalContent, List<String> shortExports) {
 		String content = originalContent;
-		Set<String> exports = new TreeSet<>();
+		Set<ExportedEntity> exports = new TreeSet<>();
 
 		content = fixGoogDefineKeywords(content, exports);
 
@@ -255,7 +260,7 @@ class ConvertingPass {
 				}
 				content = content.replaceAll("(?m)^" + Pattern.quote(provide.namespace) + " =", "let " + shortClassName + " =");
 				content = replaceFullyQualifiedCallWith(content, provide.namespace, shortClassName);
-				exports.add(shortClassName);
+				exports.add(new ExportedEntity(classOrFunction, shortClassName));
 			} else if (isTypeDef(classOrFunction, namespace, content)) {
 				// Typedefs:
 				// foo.bar.MyClass; -> let MyClass;
@@ -264,7 +269,7 @@ class ConvertingPass {
 					shortClassName = parts[parts.length - 2] + "_" + shortClassName;
 				}
 				content = content.replaceAll("(?m)^" + Pattern.quote(namespace) + ";", "let " + shortClassName + ";");
-				exports.add(shortClassName);
+				exports.add(new ExportedEntity(shortClassName));
 			} else {
 				// Prepare export of non-private methods
 				Pattern methodOrConstantPattern = Pattern
@@ -273,7 +278,7 @@ class ConvertingPass {
 				while (matcher.find()) {
 					String methodOrConstantName = matcher.group(1);
 					if (!methodOrConstantName.endsWith("_")) {
-						exports.add(methodOrConstantName);
+						exports.add(new ExportedEntity(methodOrConstantName));
 					}
 					content = content.replaceAll("(?m)^" + Pattern.quote(matcher.group()), "let " + methodOrConstantName + matcher.group(2));
 					content = replaceFullyQualifiedCallWith(content, namespace + "." + methodOrConstantName,
@@ -286,7 +291,7 @@ class ConvertingPass {
 				while (matcher.find()) {
 					String typeName = matcher.group(1);
 					if (!typeName.endsWith("_")) {
-						exports.add(typeName);
+						exports.add(new ExportedEntity(typeName));
 					}
 					content = content.replace(matcher.group(), "let " + typeName + ";");
 					content = replaceFullyQualifiedCallWith(content, namespace + typeName,
@@ -297,14 +302,12 @@ class ConvertingPass {
 			content = content.replace(provide.fullMatch, "");
 		}
 
-		exports.removeIf(StringUtils::isEmpty);
 		if (exports.isEmpty()) {
 			System.out.println("WARN: Don't know what to export, skipping: " + file.getPath());
 			return originalContent;
 		} else {
-			shortExports.addAll(exports);
-			return content + "\n\n" + "export {" + (exports.size() <= 1 ? exports.iterator().next()
-					: StringUtils.joinDifferentLastDelimiter(new ArrayList<>(exports), ", ", ", ")) + "};";
+			shortExports.addAll(exports.stream().map(e -> e.internalName).collect(Collectors.toSet()));
+			return content + "\n\n" + "export {" + exports.stream().map(e->e.toEs6Fragment()).collect(Collectors.joining(", ")) + "};";
 		}
 	}
 
@@ -348,7 +351,7 @@ class ConvertingPass {
 			content = content.replace("export " + export.exportName + " = " + export.exportName, "export {" + export.exportName + "}");
 		}
 
-		List<String> exportedNames = globalExports.stream().map(export -> export.exportName).collect(toList());
+		List<ExportedEntity> exportedNames = globalExports.stream().map(export -> export.exportName).collect(toList());
 		content = fixGoogDefineKeywords(content, exportedNames);
 
 		if (globalExports.isEmpty()) {

@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,18 +33,22 @@ public class ReaderPass {
 	private static final String BASE_JS = "base.js";
 	static final String GOOG_JS = "goog.js";
 
-	void process(String inputDirPath) throws IOException {
-		File inputDir = new File(inputDirPath);
+	void process(String... inputDirPaths) throws IOException {
+		for (String inputDirPath : inputDirPaths) {
+			File inputDir = new File(inputDirPath);
 
-		if (!inputDir.isDirectory()) {
-			throw new IOException("Input dir not found");
-		}
+			if (!inputDir.isDirectory()) {
+				throw new IOException("Input dir not found");
+			}
 
-		for (File file : Files.fileTraverser().breadthFirst(inputDir)) {
-			if (isRelevantJsFile(file)) {
-				processJsFile(file);
+			for (File file : Files.fileTraverser().breadthFirst(inputDir)) {
+				if (isRelevantJsFile(file)) {
+					processJsFile(file);
+				}
 			}
 		}
+		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/dojo/dom/query.js"), List.of(new GoogProvideOrModule("goog.dom.query", true, List.of(), null)), List.of());
+		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/mochikit/async/deferred.js"), List.of(new GoogProvideOrModule("goog.async.Deferred", true, List.of(), null)), List.of());
 	}
 
 	private boolean isRelevantJsFile(File file) {
@@ -54,13 +57,13 @@ public class ReaderPass {
 		return lowerCaseFileName.endsWith(".js")
 				&& !(absolutePathSegments.contains("less") || absolutePathSegments.contains("js-cache") || absolutePathSegments.contains("testing"))
 				&& StringUtils.containsOneOf(file.getAbsolutePath(), "closure-library", "src-js",
-				"third_party/closure/")
+				"third_party", "generated-typedefs")
 				&& !StringUtils.endsWithOneOf(lowerCaseFileName, "_test.js", "_perf.js", "tester.js",
 				"alltests.js", "testhelpers.js", "testing.js", "relativecommontests.js", "mockiframeio.js");
 	}
 
 	private void processJsFile(File jsFile) throws IOException {
-		String content = Files.asCharSource(jsFile, Charsets.UTF_8).read();
+		String content = Files.asCharSource(jsFile, Charsets.UTF_8).read().replace("\uFEFF", "");
 
 		if (content.contains("goog.setTestOnly();")) {
 			System.out.println("WARN: " + jsFile.getName() + " (" + jsFile.getAbsolutePath() + ") seems to be test-only, skipping file.");
@@ -131,7 +134,6 @@ public class ReaderPass {
 		return provides;
 	}
 
-	/** For named exports this assumes that the internal name and exported name always match. */
 	@VisibleForTesting
 	static List<GoogModuleExport> extractExportsOfGoogModule(String fileContent) {
 		List<GoogModuleExport> googExports = new ArrayList<>();
@@ -139,13 +141,13 @@ public class ReaderPass {
 		Matcher dottedExportMatcher = dottedExport.matcher(fileContent);
 		while (dottedExportMatcher.find()) {
 			String identifier = dottedExportMatcher.group(1).trim();
-			googExports.add(new GoogModuleExport(identifier, true, dottedExportMatcher.group()));
+			googExports.add(new GoogModuleExport(new ExportedEntity(identifier, identifier), true, dottedExportMatcher.group()));
 		}
-		Pattern defaultExportPattern = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?([\\w_,\\s+:/*@]+)}?;?");
+		Pattern defaultExportPattern = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?([$\\w_,\\s+:/*@]+)}?;?");
 		Matcher defaultExportMatcher = defaultExportPattern.matcher(fileContent);
 		while (defaultExportMatcher.find()) {
 			String rawContent = defaultExportMatcher.group(1).trim();
-			List<String> exportedNames = new ArrayList<>();
+			List<ExportedEntity> exportedNames = new ArrayList<>();
 			if (rawContent.contains(",")) {
 				exportedNames.addAll(Arrays.stream(rawContent.split(",")).map(ReaderPass::normalizeExportEntry).collect(Collectors.toList()));
 			} else {
@@ -156,8 +158,13 @@ public class ReaderPass {
 		return googExports;
 	}
 
-	private static String normalizeExportEntry(String ns) {
-		return ns.split(":")[0].replaceAll("/\\**[^/]*(?<=\\*)/", "").trim();
+	private static ExportedEntity normalizeExportEntry(String ns) {
+		String entryWithoutComments = ns.replaceAll("/\\**[^/]*(?<=\\*)/", "");
+		String[] split = entryWithoutComments.split(":");
+		if (split.length == 1) {
+			return new ExportedEntity(split[0].trim());
+		}
+		return new ExportedEntity(split[0].trim(), split[1].trim());
 	}
 
 	private static List<GoogRequireOrForwardDeclare> parseGoogRequires(String content) {

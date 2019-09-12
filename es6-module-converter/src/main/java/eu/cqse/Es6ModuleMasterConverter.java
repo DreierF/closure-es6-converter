@@ -19,7 +19,10 @@ public class Es6ModuleMasterConverter {
 //		SelectionPass selectionPass = new SelectionPass();
 //		selectionPass.process(new File(INPUT_DIR, "closure/goog/deps.js"), new File("../needed.txt"), true);
 		ReaderPass readInPass = new ReaderPass();
-		readInPass.process(INPUT_DIR);
+		readInPass.process(INPUT_DIR,
+				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/src-js",
+				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/resources/generated-typedefs",
+				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/class-resources/com/teamscale/ui/build/third_party");
 		validatePass1(readInPass);
 		new ConvertingPass().process(readInPass);
 
@@ -40,7 +43,7 @@ public class Es6ModuleMasterConverter {
 			}
 		});
 		if (!unmatchedDependencies.isEmpty()) {
-			throw new RuntimeException("Dependencies to found:\n" + join("\n", unmatchedDependencies));
+			throw new RuntimeException("Dependencies not found:\n" + join("\n", unmatchedDependencies));
 		}
 	}
 }
