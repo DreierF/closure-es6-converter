@@ -15,12 +15,12 @@ class GoogRequireOrForwardDeclare {
 	@Nonnull
 	final String requiredNamespace;
 
-	@Nonnull
+	@Nullable
 	final String fullText;
 
 	final boolean isForwardDeclare;
 
-	GoogRequireOrForwardDeclare(@Nonnull String fullText, @Nonnull String requiredNamespace,
+	GoogRequireOrForwardDeclare(@Nullable String fullText, @Nonnull String requiredNamespace,
 								@Nullable String shortReference, @Nullable String importedFunction, boolean isForwardDeclare) {
 		this.fullText = fullText;
 		this.shortReference = shortReference;

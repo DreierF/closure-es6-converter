@@ -2,6 +2,7 @@ package eu.cqse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
@@ -30,6 +31,7 @@ class ConvertingPass {
 			"localStorage", "Map", "Set", "string", "number", "Object", "Notification", "Error", "Date", "Logger", "LogRecord"));
 
 	private static final Map<String, String> DEFAULT_REPLACEMENTS = new HashMap<>();
+	private static final Set<String> IMPORT_WHOLE_MODULE_EXCEPTIONS = ImmutableSet.of("GraphemeBreak", "CssSpecificity", "CssSanitizer", "ComponentUtil");
 
 	static {
 		DEFAULT_REPLACEMENTS.put("string", "strings");
@@ -55,6 +57,7 @@ class ConvertingPass {
 					readerPass.filesByNamespace, shortExports);
 			content = replaceSupressedExtraRequires(content);
 			content = removeUsageOfProvidedNamespaces(content, provides);
+			content = content.replace("* as goog from","* as g from").replaceAll("goog\\.(\\w+)\\(", "g.$1(");
 			Files.asCharSink(file, Charsets.UTF_8).write(content);
 		}
 	}
@@ -120,9 +123,10 @@ class ConvertingPass {
 						+ (requiredFile == null ? "" : requiredFile.getName()));
 			}
 			String relativePath = getRequirePathFor(file.getAbsolutePath(), requiredFile.getAbsolutePath());
+
 			if (require.importedFunction != null) {
-				content = content.replace(require.fullText,
-						"import {" + require.importedFunction + "} from '" + relativePath + "';");
+				content = replaceOrInsert(content, require.fullText, "import {" + require.importedFunction + "} from '" + relativePath + "';");
+				usedShortReferencesInFile.add(require.importedFunction);
 				continue;
 			}
 
@@ -132,10 +136,45 @@ class ConvertingPass {
 				content = replaceFullyQualifiedCallWith(content, require.requiredNamespace, require.shortReference);
 			}
 			usedShortReferencesInFile.add(require.shortReference);
-			content = content.replace(require.fullText,
-					"import * as " + require.shortReference + " from '" + relativePath + "';");
+
+			String[] parts = require.requiredNamespace.split("\\.");
+			String originalImportedElement = parts[parts.length - 1];
+			String importedElement = originalImportedElement;
+			if (RESERVERD_KEYWORDS.contains(importedElement)) {
+				importedElement = parts[parts.length - 2] + "_" + importedElement;
+			}
+
+			if (!isClassName(originalImportedElement) || IMPORT_WHOLE_MODULE_EXCEPTIONS.contains(originalImportedElement)) {
+				content = replaceOrInsert(content, require.fullText, "import * as " + require.shortReference + " from '" + relativePath + "';"
+				);
+			} else if (importedElement.equals(require.shortReference)) {
+				content = replaceOrInsert(content, require.fullText, "import {" + require.shortReference + "} from '" + relativePath + "';"
+				);
+			} else {
+				content = replaceOrInsert(content,
+						require.fullText, "import {" + importedElement + " as " + require.shortReference + "} from '" + relativePath + "';");
+			}
 		}
 		return content;
+	}
+
+	private String replaceOrInsert(String content, String fullText, String replacement) {
+		if (fullText == null) {
+			int importIndex = content.indexOf("\nimport");
+			int googIndex = content.indexOf("\ngoog");
+			int firstImport;
+			if (importIndex == -1) {
+				firstImport = googIndex + 1;
+			} else {
+				firstImport = importIndex + 1;
+			}
+			return content.substring(0, firstImport) + replacement + "\n" + content.substring(firstImport);
+		}
+		return content.replace(fullText, replacement);
+	}
+
+	private static boolean isClassName(String importedElement) {
+		return Character.isUpperCase(importedElement.charAt(0));
 	}
 
 	private String getRequirePathFor(String callingFile, String targetFile) {
@@ -153,7 +192,7 @@ class ConvertingPass {
 		String[] namespaceParts = requiredNamespace.split("\\.");
 		String newShortName = namespaceParts[namespaceParts.length - 1];
 
-		boolean needsToBeUppercase = Character.isUpperCase(newShortName.charAt(0));
+		boolean needsToBeUppercase = isClassName(newShortName);
 
 		int namespacePartIndex = namespaceParts.length - 1;
 
@@ -230,12 +269,14 @@ class ConvertingPass {
 				Matcher matcher = methodOrConstantPattern.matcher(content);
 				while (matcher.find()) {
 					String methodOrConstantName = matcher.group(1);
-					exports.add(methodOrConstantName);
+					if (!methodOrConstantName.endsWith("_")) {
+						exports.add(methodOrConstantName);
+					}
 					content = content.replaceAll("(?m)^" + Pattern.quote(matcher.group()), "let " + methodOrConstantName + matcher.group(2));
 					content = replaceFullyQualifiedCallWith(content, namespace + "." + methodOrConstantName,
 							methodOrConstantName);
 				}
-				// Prepare export of typedefs and constants
+				// Prepare export of typedefs
 				Pattern typedefPattern = Pattern
 						.compile("(?m)^" + Pattern.quote(namespace) + "\\.([\\w\\d]+[\\w\\d]+);");
 				matcher = typedefPattern.matcher(content);
@@ -255,7 +296,7 @@ class ConvertingPass {
 
 		exports.removeIf(StringUtils::isEmpty);
 		if (exports.isEmpty()) {
-			System.out.println("WARN: Don't know what to export, skipping: " + file.getName());
+			System.out.println("WARN: Don't know what to export, skipping: " + file.getPath());
 			return originalContent;
 		} else {
 			shortExports.addAll(exports);

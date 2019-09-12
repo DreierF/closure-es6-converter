@@ -53,7 +53,19 @@ public class ReaderPass extends Es6Processor {
 		}
 
 		List<GoogRequireOrForwardDeclare> googRequires = parseGoogRequires(content);
+		googRequires.addAll(parseImplicitRequires(content, jsFile));
 		requiresByFile.putAll(jsFile, googRequires);
+	}
+
+	private List<GoogRequireOrForwardDeclare> parseImplicitRequires(String content, File jsFile) {
+		List<GoogRequireOrForwardDeclare> requires = new ArrayList<>();
+		if (content.contains("goog.dispose(") && !jsFile.getName().equals("disposable.js")) {
+			requires.add(new GoogRequireOrForwardDeclare(null, "goog.dispose", null, "dispose", false));
+		}
+		if (!jsFile.getName().equals("base.js")) {
+			requires.add(new GoogRequireOrForwardDeclare(null, "goog", "goog", null, false));
+		}
+		return requires;
 	}
 
 	private static List<GoogProvideOrModule> getProvidedNamespaces(String fileContent) {
@@ -140,8 +152,10 @@ public class ReaderPass extends Es6Processor {
 			} else {
 				shortReference = rawShortReference;
 			}
-			requires.add(new GoogRequireOrForwardDeclare(fullText, requiredNamespace, shortReference, importedFunction,
-					fullText.contains(".forwardDeclare(")));
+			if (!requiredNamespace.equals("goog.dispose")) {
+				requires.add(new GoogRequireOrForwardDeclare(fullText, requiredNamespace, shortReference, importedFunction,
+						fullText.contains(".forwardDeclare(")));
+			}
 		}
 
 		return requires;

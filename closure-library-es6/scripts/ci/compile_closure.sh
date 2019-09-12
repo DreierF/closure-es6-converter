@@ -28,7 +28,7 @@ java -Xmx1G -jar ../closure-compiler-1.0-SNAPSHOT.jar \
   --jscomp_off=deprecated \
   --jscomp_off=lintChecks \
   --jscomp_off=analyzerChecks \
-  --jscomp_warning=unusedLocalVariables \
+  --jscomp_off=unusedLocalVariables \
   --js='**.js' \
   --js='!./closure-deps/**.js' \
   --js='!**_test.js' \
