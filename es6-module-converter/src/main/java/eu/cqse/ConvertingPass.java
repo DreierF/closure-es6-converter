@@ -32,6 +32,7 @@ class ConvertingPass {
 
 	private static final Map<String, String> DEFAULT_REPLACEMENTS = new HashMap<>();
 	private static final Set<String> IMPORT_WHOLE_MODULE_EXCEPTIONS = ImmutableSet.of("GraphemeBreak", "CssSpecificity", "CssSanitizer", "ComponentUtil");
+	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom");
 	private static final String IDENTIFIER_PATTERN = "\\w$";
 
 	static {
@@ -61,6 +62,8 @@ class ConvertingPass {
 			content = replaceSupressedExtraRequires(content);
 			content = removeUsageOfProvidedNamespaces(content, provides);
 			content = content.replaceAll("(\\W)COMPILED(\\W)", "$1true$2");
+			content = content.replaceAll("const ([" + IDENTIFIER_PATTERN + "]+) = goog.require('ts.([" + IDENTIFIER_PATTERN + "]+).([" + IDENTIFIER_PATTERN + "]+)');", "import {$1} from 'soy/ts/$2/$3'");
+			content = content.replaceAll("const ([" + IDENTIFIER_PATTERN + "]+) = goog.require('ts.([" + IDENTIFIER_PATTERN + "]+).([" + IDENTIFIER_PATTERN + "]+).([" + IDENTIFIER_PATTERN + "]+)');", "import {$1} from 'soy/ts/$2/$3/$4'");
 			Files.asCharSink(file, Charsets.UTF_8).write(content);
 		}
 	}
@@ -142,7 +145,7 @@ class ConvertingPass {
 
 			String importedElement = StringUtils.getLastPart(require.requiredNamespace, ".");
 
-			if (!isClassName(importedElement) || IMPORT_WHOLE_MODULE_EXCEPTIONS.contains(importedElement)) {
+			if ((!isClassName(importedElement) || IMPORT_WHOLE_MODULE_EXCEPTIONS.contains(importedElement)) && !IMPORT_CLASS_EXCEPTIONS.contains(require.requiredNamespace)) {
 				content = replaceOrInsert(content, require.fullText, "import * as " + require.shortReference + " from '" + relativePath + "';"
 				);
 			} else if (importedElement.equals(require.shortReference)) {
