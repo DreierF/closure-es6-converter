@@ -236,8 +236,8 @@ goog.html.SafeUrl = class {
     // to cause XSS it would also have to execute the HTML in the same origin
     // of the page with the link. It seems unlikely that both of these will
     // happen, particularly in not really old IEs.
-    var match = filteredDataUrl.match(goog.html.DATA_URL_PATTERN_);
-    var valid = match && goog.html.SAFE_MIME_TYPE_PATTERN_.test(match[1]);
+    var match = filteredDataUrl.match(goog.html.SafeUrl.DATA_URL_PATTERN_);
+    var valid = match && goog.html.SafeUrl.SAFE_MIME_TYPE_PATTERN_.test(match[1]);
     return goog.html.SafeUrl.createSafeUrlSecurityPrivateDoNotAccessOrElse(valid ? filteredDataUrl : goog.html.SafeUrl.INNOCUOUS_STRING);
   }
 
@@ -440,7 +440,7 @@ if (goog.DEBUG) {
  * @const
  * @private
  */
-goog.html.SAFE_MIME_TYPE_PATTERN_ = new RegExp(
+goog.html.SafeUrl.SAFE_MIME_TYPE_PATTERN_ = new RegExp(
     // Note: Due to content-sniffing concerns, only add MIME types for
     // media formats.
     '^(?:audio/(?:3gpp2|3gpp|aac|midi|mp3|mp4|mpeg|oga|ogg|opus|x-m4a|x-wav|wav|webm)|' +
@@ -456,7 +456,7 @@ goog.html.SAFE_MIME_TYPE_PATTERN_ = new RegExp(
  * @const
  * @private
  */
-goog.html.DATA_URL_PATTERN_ = /^data:([^;,]*);base64,[a-z0-9+\/]+=*$/i;
+goog.html.SafeUrl.DATA_URL_PATTERN_ = /^data:([^;,]*);base64,[a-z0-9+\/]+=*$/i;
 
 /**
  * Matches a sip/sips URL. We only allow urls that consist of an email address.
@@ -465,7 +465,7 @@ goog.html.DATA_URL_PATTERN_ = /^data:([^;,]*);base64,[a-z0-9+\/]+=*$/i;
  * @const
  * @private
  */
-goog.html.SIP_URL_PATTERN_ = new RegExp(
+goog.html.SafeUrl.SIP_URL_PATTERN_ = new RegExp(
     '^sip[s]?:[+a-z0-9_.!$%&\'*\\/=^`{|}~-]+@([a-z0-9-]+\\.)+[a-z0-9]{2,63}$',
     'i');
 
@@ -489,7 +489,7 @@ goog.html.SIP_URL_PATTERN_ = new RegExp(
  * @private
  * @const {!RegExp}
  */
-goog.html.SAFE_URL_PATTERN_ =
+goog.html.SafeUrl.SAFE_URL_PATTERN_ =
     /^(?:(?:https?|mailto|ftp):|[^:/?#]*(?:[/?#]|$))/i;
 
 /**
@@ -501,7 +501,7 @@ goog.html.SAFE_URL_PATTERN_ =
  * TODO(bangert): Remove SAFE_URL_PATTERN_
  * @const {!RegExp}
  */
-goog.html.SafeUrl.SAFE_URL_PATTERN = goog.html.SAFE_URL_PATTERN_;
+goog.html.SafeUrl.SAFE_URL_PATTERN = goog.html.SafeUrl.SAFE_URL_PATTERN_;
 
 /**
  * Type marker for the SafeUrl type, used to implement additional run-time
