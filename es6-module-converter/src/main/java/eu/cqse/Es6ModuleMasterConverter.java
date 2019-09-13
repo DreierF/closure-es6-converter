@@ -18,18 +18,21 @@ public class Es6ModuleMasterConverter {
 	public static void main(String[] args) throws IOException {
 //		SelectionPass selectionPass = new SelectionPass();
 //		selectionPass.process(new File(INPUT_DIR, "closure/goog/deps.js"), new File("../needed.txt"), true);
+		CyclicDependencyRemovalPass cycleRemoval = new CyclicDependencyRemovalPass(INPUT_DIR);
+		cycleRemoval.process();
+
 		ReaderPass readInPass = new ReaderPass();
-		readInPass.process(INPUT_DIR,
-				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/src-js",
-				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/resources/generated-typedefs",
-				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/class-resources/com/teamscale/ui/build/third_party");
-		validatePass1(readInPass);
+		readInPass.process(INPUT_DIR);
+//				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/src-js",
+//				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/resources/generated-typedefs",
+//				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/class-resources/com/teamscale/ui/build/third_party");
+		validateProvideRequires(readInPass);
 		new ConvertingPass().process(readInPass);
 
 		System.out.println("\n==== Finished ====");
 	}
 
-	private static void validatePass1(ReaderPass pass1) {
+	private static void validateProvideRequires(ReaderPass pass1) {
 		Preconditions.checkArgument(!pass1.filesByNamespace.keySet().isEmpty(), "No provided namespaces found");
 		Preconditions.checkArgument(!pass1.requiresByFile.keySet().isEmpty(), "No goog.requires found in input files");
 

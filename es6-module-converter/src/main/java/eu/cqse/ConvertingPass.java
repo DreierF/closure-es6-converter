@@ -171,7 +171,9 @@ class ConvertingPass {
 			}
 			return content.substring(0, firstImport) + replacement + "\n" + content.substring(firstImport);
 		}
-		return content.replace(fullText, replacement);
+		// Ensure import is only present once
+		String placeholder = "#!#!PLACEHOLDER_IMPORT#!#!#";
+		return content.replace(fullText, replacement).replace(replacement, placeholder).replaceFirst(placeholder, replacement).replace(placeholder, StringUtils.EMPTY_STRING);
 	}
 
 	private static boolean isClassName(String importedElement) {
@@ -243,61 +245,11 @@ class ConvertingPass {
 		provides.sort((provide1, provide2) -> provide2.namespace.length() - provide1.namespace.length());
 		for (GoogProvideOrModule provide : provides) {
 			String namespace = provide.namespace;
-			String[] parts = namespace.split("\\.");
-			String classOrFunction = parts[parts.length - 1];
-			if (isProvideForPublicClassOrEnum(classOrFunction, namespace, content)) {
-				// foo.bar.MyClass -> MyClass
-				String shortClassName = classOrFunction;
-				if (((Set<String>) RESERVED_KEYWORDS).contains(shortClassName)) {
-					shortClassName = parts[parts.length - 2] + "_" + shortClassName;
-				}
-				content = content.replaceAll("(?m)^" + multilineSafeNamespacePattern(provide.namespace) + " =", "let " + shortClassName + " =");
-				content = replaceFullyQualifiedCallWith(content, provide.namespace, shortClassName);
-				exports.add(new ExportedEntity(classOrFunction, shortClassName));
-			} else if (isTypeDef(classOrFunction, namespace, content)) {
-				// Typedefs:
-				// foo.bar.MyClass; -> let MyClass;
-				String shortClassName = classOrFunction;
-				if (((Set<String>) RESERVED_KEYWORDS).contains(shortClassName)) {
-					shortClassName = parts[parts.length - 2] + "_" + shortClassName;
-				}
-				content = content.replaceAll("(?m)^" + multilineSafeNamespacePattern(namespace) + ";", "let " + shortClassName + ";");
-				exports.add(new ExportedEntity(shortClassName));
-			} else {
-				// Prepare export of non-private methods
-				Pattern methodOrConstantPattern = Pattern
-						.compile("(?m)^" + multilineSafeNamespacePattern(namespace) + "\\s*\\.\\s*([" + IDENTIFIER_PATTERN + "]+)(\\s*=[^=])");
-				Matcher matcher = methodOrConstantPattern.matcher(content);
-				while (matcher.find()) {
-					String methodOrConstantName = matcher.group(1);
-					String internalMethodOrConstantName = methodOrConstantName;
-					if (((Set<String>) RESERVED_KEYWORDS).contains(internalMethodOrConstantName)) {
-						internalMethodOrConstantName = "_" + internalMethodOrConstantName;
-					}
-					if (!methodOrConstantName.endsWith("_")) {
-						exports.add(new ExportedEntity(methodOrConstantName, internalMethodOrConstantName));
-					}
-					content = content.replaceAll("(?m)^" + Pattern.quote(matcher.group()), "let " + safeReplaceString(internalMethodOrConstantName) + matcher.group(2));
-					content = replaceFullyQualifiedCallWith(content, namespace + "." + methodOrConstantName,
-							internalMethodOrConstantName);
-				}
-				// Prepare export of typedefs
-				Pattern typedefPattern = Pattern
-						.compile("(?m)^" + multilineSafeNamespacePattern(namespace) + "\\s*\\.\\s*([" + IDENTIFIER_PATTERN + "]+);");
-				matcher = typedefPattern.matcher(content);
-				while (matcher.find()) {
-					String typeName = matcher.group(1);
-					if (!typeName.endsWith("_")) {
-						exports.add(new ExportedEntity(typeName));
-					}
-					content = content.replace(matcher.group(), "let " + typeName + ";");
-					content = replaceFullyQualifiedCallWith(content, namespace + typeName,
-							typeName);
-				}
-			}
+			content = rewriteFullyQualifiedNamespace(content, exports, namespace);
 
 			content = content.replace(provide.fullMatch, "");
 		}
+
 
 		if (exports.isEmpty()) {
 			System.out.println("WARN: Don't know what to export, skipping: " + file.getPath());
@@ -306,6 +258,70 @@ class ConvertingPass {
 			shortExports.addAll(exports.stream().map(e -> e.internalName).collect(Collectors.toSet()));
 			return content + "\n\n" + "export {" + exports.stream().map(ExportedEntity::toEs6Fragment).collect(Collectors.joining(", ")) + "};";
 		}
+	}
+
+	private String rewriteFullyQualifiedNamespace(String content, Set<ExportedEntity> exports, String namespace) {
+		String[] parts = namespace.split("\\.");
+		String classOrFunction = parts[parts.length - 1];
+		if (isProvideForClassOrEnum(namespace, content)) {
+			// foo.bar.MyClass -> MyClass
+			String shortClassName = classOrFunction;
+			if (RESERVED_KEYWORDS.contains(shortClassName)) {
+				shortClassName = parts[parts.length - 2] + "_" + shortClassName;
+			}
+			content = content.replaceAll("(?m)^" + multilineSafeNamespacePattern(namespace) + " =", "let " + shortClassName + " =");
+			content = replaceFullyQualifiedCallWith(content, namespace, shortClassName);
+			if (isPrivateByConvention(classOrFunction)) {
+				exports.add(new ExportedEntity(classOrFunction, shortClassName));
+			}
+		} else if (isTypeDef(namespace, content)) {
+			// Typedefs:
+			// foo.bar.MyClass; -> let MyClass;
+			String shortClassName = classOrFunction;
+			if (RESERVED_KEYWORDS.contains(shortClassName)) {
+				shortClassName = parts[parts.length - 2] + "_" + shortClassName;
+			}
+			content = content.replaceAll("(?m)^" + multilineSafeNamespacePattern(namespace) + ";", "let " + shortClassName + ";");
+			if (isPrivateByConvention(classOrFunction)) {
+				exports.add(new ExportedEntity(shortClassName));
+			}
+		} else {
+			// Prepare export of non-private methods
+			Pattern methodOrConstantPattern = Pattern
+					.compile("(?m)^" + multilineSafeNamespacePattern(namespace) + "\\s*\\.\\s*([" + IDENTIFIER_PATTERN + "]+)(\\s*=[^=])");
+			Matcher matcher = methodOrConstantPattern.matcher(content);
+			while (matcher.find()) {
+				String methodOrConstantName = matcher.group(1);
+				String internalMethodOrConstantName = methodOrConstantName;
+				if (RESERVED_KEYWORDS.contains(internalMethodOrConstantName)) {
+					internalMethodOrConstantName = "_" + internalMethodOrConstantName;
+				}
+				if (isPrivateByConvention(methodOrConstantName)) {
+					exports.add(new ExportedEntity(methodOrConstantName, internalMethodOrConstantName));
+				}
+				content = content.replaceAll("(?m)^" + Pattern.quote(matcher.group()), "let " + safeReplaceString(internalMethodOrConstantName) + matcher.group(2));
+				content = replaceFullyQualifiedCallWith(content, namespace + "." + methodOrConstantName,
+						internalMethodOrConstantName);
+			}
+			// Prepare export of typedefs
+			Pattern typedefPattern = Pattern
+					.compile("(?m)^" + multilineSafeNamespacePattern(namespace) + "\\s*\\.\\s*([" + IDENTIFIER_PATTERN + "]+);");
+			matcher = typedefPattern.matcher(content);
+			while (matcher.find()) {
+				String typeName = matcher.group(1);
+				if (isPrivateByConvention(typeName)) {
+					exports.add(new ExportedEntity(typeName));
+				}
+				content = content.replace(matcher.group(), "let " + typeName + ";");
+				content = replaceFullyQualifiedCallWith(content, namespace + typeName,
+						typeName);
+			}
+		}
+		return content;
+	}
+
+	private boolean isPrivateByConvention(String classOrFunction) {
+		return !classOrFunction.endsWith("_");
 	}
 
 	private static String safeReplaceString(String methodOrConstantName) {
@@ -320,18 +336,16 @@ class ConvertingPass {
 		return content.replaceAll("(?<!['\"" + IDENTIFIER_PATTERN + "])" + multilineSafeNamespacePattern(fullyQualifiedCall) + "(?!['\"" + IDENTIFIER_PATTERN + "])", safeReplaceString(newCall));
 	}
 
-	private boolean isProvideForPublicClassOrEnum(String classOrFunction, String namespace, String content) {
-		return !classOrFunction.endsWith("_")
-				&& Pattern.compile("(?m)^\\s*" + multilineSafeNamespacePattern(namespace) + "\\s*=\\s*(class|function\\s+)?").matcher(content).find();
+	private boolean isProvideForClassOrEnum(String namespace, String content) {
+		return Pattern.compile("(?m)^\\s*" + multilineSafeNamespacePattern(namespace) + "\\s*=\\s*(class|function\\s+)?").matcher(content).find();
 	}
 
-	private boolean isTypeDef(String classOrFunction, String namespace, String content) {
-		return !classOrFunction.endsWith("_")
-				&& Pattern.compile("(?m)^\\s*" + multilineSafeNamespacePattern(namespace) + ";").matcher(content).find();
+	private boolean isTypeDef(String namespace, String content) {
+		return Pattern.compile("(?m)^\\s*" + multilineSafeNamespacePattern(namespace) + ";").matcher(content).find();
 	}
 
 	private String convertGoogleModuleFile(GoogProvideOrModule moduleOrProvide, String content) {
-		content = content.replace(moduleOrProvide.fullMatch, "");
+		content = content.replaceAll(Pattern.quote(moduleOrProvide.fullMatch) + "\\s*", "");
 		content = content.replaceAll("goog\\.module\\.declareLegacyNamespace\\(\\);?\n?", "");
 
 		List<GoogModuleExport> inlineExports = moduleOrProvide.exports.stream().filter(export -> export.isInlineExport).collect(toList());
