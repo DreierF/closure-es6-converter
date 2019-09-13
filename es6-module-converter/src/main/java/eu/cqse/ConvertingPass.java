@@ -43,9 +43,6 @@ class ConvertingPass {
 
 	void process(ReaderPass readerPass) throws IOException {
 		for (File file : readerPass.providesByFile.keySet()) {
-			if (file.getName().equals(ReaderPass.GOOG_JS)) {
-				continue;
-			}
 			String content = Files.asCharSource(file, Charsets.UTF_8).read();
 			List<GoogProvideOrModule> provides = new ArrayList<>(readerPass.providesByFile.get(file));
 			boolean isModule = provides.stream().anyMatch(provideOrModule -> provideOrModule.isModule);
@@ -145,14 +142,9 @@ class ConvertingPass {
 			}
 			usedShortReferencesInFile.add(require.shortReference);
 
-			String[] parts = require.requiredNamespace.split("\\.");
-			String originalImportedElement = parts[parts.length - 1];
-			String importedElement = originalImportedElement;
-			if (RESERVERD_KEYWORDS.contains(importedElement)) {
-				importedElement = parts[parts.length - 2] + "_" + importedElement;
-			}
+			String importedElement = StringUtils.getLastPart(require.requiredNamespace, ".");
 
-			if (!isClassName(originalImportedElement) || IMPORT_WHOLE_MODULE_EXCEPTIONS.contains(originalImportedElement)) {
+			if (!isClassName(importedElement) || IMPORT_WHOLE_MODULE_EXCEPTIONS.contains(importedElement)) {
 				content = replaceOrInsert(content, require.fullText, "import * as " + require.shortReference + " from '" + relativePath + "';"
 				);
 			} else if (importedElement.equals(require.shortReference)) {
