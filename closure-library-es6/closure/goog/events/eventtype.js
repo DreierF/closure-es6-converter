@@ -36,7 +36,7 @@ goog.require('goog.userAgent');
  * @suppress {missingRequire|missingProvide}
  * @private
  */
-goog.events.getVendorPrefixedName_ = function(eventName) {
+let getVendorPrefixedName_ = function(eventName) {
   return goog.userAgent.WEBKIT ?
       'webkit' + eventName :
       (goog.userAgent.OPERA ? 'o' + eventName.toLowerCase() :
@@ -204,16 +204,16 @@ goog.events.EventType = {
 
   // CSS animation events.
   /** @suppress {missingRequire} */
-  ANIMATIONSTART: goog.events.getVendorPrefixedName_('AnimationStart'),
+  ANIMATIONSTART: getVendorPrefixedName_('AnimationStart'),
   /** @suppress {missingRequire} */
-  ANIMATIONEND: goog.events.getVendorPrefixedName_('AnimationEnd'),
+  ANIMATIONEND: getVendorPrefixedName_('AnimationEnd'),
   /** @suppress {missingRequire} */
-  ANIMATIONITERATION: goog.events.getVendorPrefixedName_('AnimationIteration'),
+  ANIMATIONITERATION: getVendorPrefixedName_('AnimationIteration'),
 
   // CSS transition events. Based on the browser support described at:
   // https://developer.mozilla.org/en/css/css_transitions#Browser_compatibility
   /** @suppress {missingRequire} */
-  TRANSITIONEND: goog.events.getVendorPrefixedName_('TransitionEnd'),
+  TRANSITIONEND: getVendorPrefixedName_('TransitionEnd'),
 
   // W3C Pointer Events
   // http://www.w3.org/TR/pointerevents/
@@ -313,7 +313,7 @@ goog.events.EventType = {
  *     name.
  * @private
  */
-goog.events.getPointerFallbackEventName_ = function(
+let getPointerFallbackEventName_ = function(
     pointerEventName, msPointerEventName, fallbackEventName) {
   if (goog.events.BrowserFeature.POINTER_EVENTS) {
     return pointerEventName;
@@ -332,13 +332,13 @@ goog.events.getPointerFallbackEventName_ = function(
  * @enum {string}
  */
 goog.events.PointerFallbackEventType = {
-  POINTERDOWN: goog.events.getPointerFallbackEventName_(
+  POINTERDOWN: getPointerFallbackEventName_(
       goog.events.EventType.POINTERDOWN, goog.events.EventType.MSPOINTERDOWN,
       goog.events.EventType.MOUSEDOWN),
-  POINTERUP: goog.events.getPointerFallbackEventName_(
+  POINTERUP: getPointerFallbackEventName_(
       goog.events.EventType.POINTERUP, goog.events.EventType.MSPOINTERUP,
       goog.events.EventType.MOUSEUP),
-  POINTERCANCEL: goog.events.getPointerFallbackEventName_(
+  POINTERCANCEL: getPointerFallbackEventName_(
       goog.events.EventType.POINTERCANCEL,
       goog.events.EventType.MSPOINTERCANCEL,
       // When falling back to mouse events, there is no MOUSECANCEL equivalent
@@ -346,19 +346,19 @@ goog.events.PointerFallbackEventType = {
       // which represents both UP and CANCEL. POINTERCANCEL does not fall back
       // to MOUSEUP to prevent listening twice on the same event.
       goog.events.EventType.MOUSECANCEL),
-  POINTERMOVE: goog.events.getPointerFallbackEventName_(
+  POINTERMOVE: getPointerFallbackEventName_(
       goog.events.EventType.POINTERMOVE, goog.events.EventType.MSPOINTERMOVE,
       goog.events.EventType.MOUSEMOVE),
-  POINTEROVER: goog.events.getPointerFallbackEventName_(
+  POINTEROVER: getPointerFallbackEventName_(
       goog.events.EventType.POINTEROVER, goog.events.EventType.MSPOINTEROVER,
       goog.events.EventType.MOUSEOVER),
-  POINTEROUT: goog.events.getPointerFallbackEventName_(
+  POINTEROUT: getPointerFallbackEventName_(
       goog.events.EventType.POINTEROUT, goog.events.EventType.MSPOINTEROUT,
       goog.events.EventType.MOUSEOUT),
-  POINTERENTER: goog.events.getPointerFallbackEventName_(
+  POINTERENTER: getPointerFallbackEventName_(
       goog.events.EventType.POINTERENTER, goog.events.EventType.MSPOINTERENTER,
       goog.events.EventType.MOUSEENTER),
-  POINTERLEAVE: goog.events.getPointerFallbackEventName_(
+  POINTERLEAVE: getPointerFallbackEventName_(
       goog.events.EventType.POINTERLEAVE, goog.events.EventType.MSPOINTERLEAVE,
       goog.events.EventType.MOUSELEAVE)
 };
@@ -371,16 +371,16 @@ goog.events.PointerFallbackEventType = {
  * @enum {string}
  */
 goog.events.PointerTouchFallbackEventType = {
-  POINTERDOWN: goog.events.getPointerFallbackEventName_(
+  POINTERDOWN: getPointerFallbackEventName_(
       goog.events.EventType.POINTERDOWN, goog.events.EventType.MSPOINTERDOWN,
       goog.events.EventType.TOUCHSTART),
-  POINTERUP: goog.events.getPointerFallbackEventName_(
+  POINTERUP: getPointerFallbackEventName_(
       goog.events.EventType.POINTERUP, goog.events.EventType.MSPOINTERUP,
       goog.events.EventType.TOUCHEND),
-  POINTERCANCEL: goog.events.getPointerFallbackEventName_(
+  POINTERCANCEL: getPointerFallbackEventName_(
       goog.events.EventType.POINTERCANCEL,
       goog.events.EventType.MSPOINTERCANCEL, goog.events.EventType.TOUCHCANCEL),
-  POINTERMOVE: goog.events.getPointerFallbackEventName_(
+  POINTERMOVE: getPointerFallbackEventName_(
       goog.events.EventType.POINTERMOVE, goog.events.EventType.MSPOINTERMOVE,
       goog.events.EventType.TOUCHMOVE)
 };
