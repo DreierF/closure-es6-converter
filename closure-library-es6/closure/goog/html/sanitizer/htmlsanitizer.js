@@ -113,7 +113,7 @@ goog.html.sanitizer.HtmlSanitizerAttributePolicy;
  * Whether the template tag is supported.
  * @package @const {boolean}
  */
-goog.html.sanitizer.HTML_SANITIZER_TEMPLATE_SUPPORTED =
+let HTML_SANITIZER_TEMPLATE_SUPPORTED =
     !goog.userAgent.IE || document.documentMode == null;
 
 
@@ -121,7 +121,7 @@ goog.html.sanitizer.HTML_SANITIZER_TEMPLATE_SUPPORTED =
  * Prefix used by all internal html sanitizer booking properties.
  * @private @const {string}
  */
-goog.html.sanitizer.HTML_SANITIZER_BOOKKEEPING_PREFIX_ = 'data-sanitizer-';
+let HTML_SANITIZER_BOOKKEEPING_PREFIX_ = 'data-sanitizer-';
 
 
 /**
@@ -129,8 +129,8 @@ goog.html.sanitizer.HTML_SANITIZER_BOOKKEEPING_PREFIX_ = 'data-sanitizer-';
  * this attribute is the name of the tag before the sanitization occurred.
  * @private @const {string}
  */
-goog.html.sanitizer.HTML_SANITIZER_SANITIZED_ATTR_NAME_ =
-    goog.html.sanitizer.HTML_SANITIZER_BOOKKEEPING_PREFIX_ + 'original-tag';
+let HTML_SANITIZER_SANITIZED_ATTR_NAME_ =
+    HTML_SANITIZER_BOOKKEEPING_PREFIX_ + 'original-tag';
 
 
 /**
@@ -138,7 +138,7 @@ goog.html.sanitizer.HTML_SANITIZER_SANITIZED_ATTR_NAME_ =
  * a new random ID on each call to {@link sanitize}.
  * @private @const {string}
  */
-goog.html.sanitizer.RANDOM_CONTAINER_ = '*';
+let RANDOM_CONTAINER_ = '*';
 
 /**
  * Creates an HTML sanitizer.
@@ -177,7 +177,7 @@ goog.html.sanitizer.HtmlSanitizer = class extends goog.html.sanitizer.SafeDomTre
         // per HTML5 specs, so not much sanitization needed.
         goog.array.forEach(builder.dataAttributeWhitelist_, function (dataAttr) {
             goog.asserts.assert(goog.string.startsWith(dataAttr, 'data-'));
-            goog.asserts.assert(!goog.string.startsWith(dataAttr, goog.html.sanitizer.HTML_SANITIZER_BOOKKEEPING_PREFIX_));
+            goog.asserts.assert(!goog.string.startsWith(dataAttr, HTML_SANITIZER_BOOKKEEPING_PREFIX_));
 
             this.attributeHandlers_['* ' + dataAttr.toUpperCase()] = /** @type {!goog.html.sanitizer.HtmlSanitizerPolicy} */ (goog.html.sanitizer.HtmlSanitizer.cleanUpAttribute_);
         }, this);
@@ -226,7 +226,7 @@ goog.html.sanitizer.HtmlSanitizer = class extends goog.html.sanitizer.SafeDomTre
     processRoot(newRoot) {
         // If the container ID was manually specified, we let the caller add the
         // ancestor to activate the rules.
-        if (this.currentStyleContainerId_ && this.styleContainerId_ == goog.html.sanitizer.RANDOM_CONTAINER_) {
+        if (this.currentStyleContainerId_ && this.styleContainerId_ == RANDOM_CONTAINER_) {
             newRoot.id = this.currentStyleContainerId_;
         }
     }
@@ -266,7 +266,7 @@ goog.html.sanitizer.HtmlSanitizer = class extends goog.html.sanitizer.SafeDomTre
      * @private
      */
     getStyleContainerId_() {
-        var randomStyleContainmentEnabled = this.styleContainerId_ == goog.html.sanitizer.RANDOM_CONTAINER_;
+        var randomStyleContainmentEnabled = this.styleContainerId_ == RANDOM_CONTAINER_;
         var randomStyleContainmentNecessary = !('STYLE' in this.tagBlacklist_) && 'STYLE' in this.tagWhitelist_;
         // If the builder was configured to create a random unique ID, create one, but
         // do so only if STYLE is allowed to begin with.
@@ -312,7 +312,7 @@ goog.html.sanitizer.HtmlSanitizer = class extends goog.html.sanitizer.SafeDomTre
         // name in a data attribute.
         var spanElement = goog.dom.createElement(goog.dom.TagName.SPAN);
         if (this.shouldAddOriginalTagNames_) {
-            goog.html.sanitizer.noclobber.setElementAttribute(spanElement, goog.html.sanitizer.HTML_SANITIZER_SANITIZED_ATTR_NAME_,
+            goog.html.sanitizer.noclobber.setElementAttribute(spanElement, HTML_SANITIZER_SANITIZED_ATTR_NAME_,
                 dirtyName.toLowerCase());
         }
         return spanElement;
@@ -321,7 +321,7 @@ goog.html.sanitizer.HtmlSanitizer = class extends goog.html.sanitizer.SafeDomTre
     /** @override */
     processElementAttribute(dirtyElement, attribute) {
         var attributeName = attribute.name;
-        if (goog.string.startsWith(attributeName, goog.html.sanitizer.HTML_SANITIZER_BOOKKEEPING_PREFIX_)) {
+        if (goog.string.startsWith(attributeName, HTML_SANITIZER_BOOKKEEPING_PREFIX_)) {
             // This is the namespace for the data attributes added by the sanitizer. We
             // prevent untrusted content from setting them in the output.
             return null;
@@ -735,7 +735,7 @@ goog.html.sanitizer.HtmlSanitizer.Builder = class {
             throw new Error('Rules from STYLE tags are already being inlined.');
         }
         delete this.tagBlacklist_['STYLE'];
-        this.styleContainerId_ = goog.html.sanitizer.RANDOM_CONTAINER_;
+        this.styleContainerId_ = RANDOM_CONTAINER_;
         return this;
     }
 
