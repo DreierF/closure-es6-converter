@@ -307,7 +307,7 @@ class ConvertingPass {
 			return originalContent;
 		} else {
 			shortExports.addAll(exports.stream().map(e -> e.internalName).collect(Collectors.toSet()));
-			return content + "\n\n" + "export {" + exports.stream().map(e->e.toEs6Fragment()).collect(Collectors.joining(", ")) + "};";
+			return content + "\n\n" + "export {" + exports.stream().map(e -> e.toEs6Fragment()).collect(Collectors.joining(", ")) + "};";
 		}
 	}
 
@@ -347,8 +347,8 @@ class ConvertingPass {
 			// 'exports foo ='
 			// with
 			// 'export foo ='
-			content = content.replace(export.fullMatch, "export " + export.exportName + " =");
-			content = content.replace("export " + export.exportName + " = " + export.exportName, "export {" + export.exportName + "}");
+			content = content.replace(export.fullMatch, "export " + export.exportName.externalName + " =");
+			content = content.replace("export " + export.exportName.externalName + " = " + export.exportName.externalName, "export {" + export.exportName.externalName + "}");
 		}
 
 		List<ExportedEntity> exportedNames = globalExports.stream().map(export -> export.exportName).collect(toList());
@@ -360,6 +360,6 @@ class ConvertingPass {
 
 		// Remove Closure's 'exports {...}' and then append ES6's 'export {...}' to the file content
 		content = content.replace(globalExports.get(0).fullMatch, "");
-		return content + "\n\nexport {" + StringUtils.concat(exportedNames, ",") + "};";
+		return content + "\n\nexport {" + exportedNames.stream().map(ExportedEntity::toEs6Fragment).collect(Collectors.joining(", ")) + "};";
 	}
 }

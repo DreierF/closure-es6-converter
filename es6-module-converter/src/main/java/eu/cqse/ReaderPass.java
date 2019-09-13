@@ -143,13 +143,14 @@ public class ReaderPass {
 			String identifier = dottedExportMatcher.group(1).trim();
 			googExports.add(new GoogModuleExport(new ExportedEntity(identifier, identifier), true, dottedExportMatcher.group()));
 		}
-		Pattern defaultExportPattern = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?([$\\w_,\\s+:/*@]+)}?;?");
+		Pattern defaultExportPattern = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?(([$\\w_,\\s+:*]|//.*|/\\**[^/]*(?<=\\*)/)+)}?;?");
 		Matcher defaultExportMatcher = defaultExportPattern.matcher(fileContent);
 		while (defaultExportMatcher.find()) {
-			String rawContent = defaultExportMatcher.group(1).trim();
+			String rawContent = defaultExportMatcher.group(1).replaceAll("/\\**[^/]*(?<=\\*)/", "").replaceAll("//.*", "");
 			List<ExportedEntity> exportedNames = new ArrayList<>();
 			if (rawContent.contains(",")) {
-				exportedNames.addAll(Arrays.stream(rawContent.split(",")).map(ReaderPass::normalizeExportEntry).collect(Collectors.toList()));
+				exportedNames.addAll(Arrays.stream(rawContent.split(",")).filter(e -> !e.isBlank())
+						.map(ReaderPass::normalizeExportEntry).collect(Collectors.toList()));
 			} else {
 				exportedNames.add(normalizeExportEntry(rawContent));
 			}
@@ -159,8 +160,7 @@ public class ReaderPass {
 	}
 
 	private static ExportedEntity normalizeExportEntry(String ns) {
-		String entryWithoutComments = ns.replaceAll("/\\**[^/]*(?<=\\*)/", "");
-		String[] split = entryWithoutComments.split(":");
+		String[] split = ns.split(":");
 		if (split.length == 1) {
 			return new ExportedEntity(split[0].trim());
 		}
