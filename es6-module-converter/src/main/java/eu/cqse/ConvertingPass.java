@@ -299,22 +299,12 @@ class ConvertingPass {
 			return originalContent;
 		} else {
 			shortExports.addAll(exports.stream().map(e -> e.internalName).collect(Collectors.toSet()));
-			return content + "\n\n" + "export {" + exports.stream().map(e -> e.toEs6Fragment()).collect(Collectors.joining(", ")) + "};";
+			return content + "\n\n" + "export {" + exports.stream().map(ExportedEntity::toEs6Fragment).collect(Collectors.joining(", ")) + "};";
 		}
 	}
 
 	private static String replaceFullyQualifiedCallWith(String content, String fullyQualifiedCall, String newCall) {
-		Matcher matcher = Pattern.compile("([^\\w])" + Pattern.quote(fullyQualifiedCall) + "([^\\w])").matcher(content);
-		String[] invalidChars = {"'", "\""};
-		while (matcher.find()) {
-			String prefix = matcher.group(1);
-			String suffix = matcher.group(2);
-			if (StringUtils.equalsOneOf(prefix, invalidChars) || StringUtils.equalsOneOf(suffix, invalidChars)) {
-				continue;
-			}
-			content = content.replace(matcher.group(), prefix + newCall + suffix);
-		}
-		return content;
+		return content.replaceAll("(?<!['\"\\w])" + Pattern.quote(fullyQualifiedCall) + "(?!['\"\\w])", newCall);
 	}
 
 	private boolean isProvideForPublicClassOrEnum(String classOrFunction, String namespace, String content) {
