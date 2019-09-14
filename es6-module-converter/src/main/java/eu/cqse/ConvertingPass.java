@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static eu.cqse.ReaderPass.BASE_JS;
 import static eu.cqse.ReaderPass.GOOG_JS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -34,8 +35,8 @@ class ConvertingPass {
 			"console", "document", "localStorage", "number", "parseInt", "string", "window");
 
 	private static final Map<String, String> DEFAULT_REPLACEMENTS = new HashMap<>();
-	private static final Set<String> IMPORT_WHOLE_MODULE_EXCEPTIONS = ImmutableSet.of("GraphemeBreak", "CssSpecificity", "CssSanitizer", "ComponentUtil");
-	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "ts.fixInheritanceForEs6Class");
+	private static final Set<String> IMPORT_WHOLE_MODULE_EXCEPTIONS = ImmutableSet.of("GraphemeBreak", "CssSpecificity", "CssSanitizer", "ComponentUtil", "VERY_UNSAFE");
+	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "ts.fixInheritanceForEs6Class", "goog.dispose");
 	private static final String IDENTIFIER_PATTERN = "\\w$";
 	private static final Set<String> GOOG_IMPORTED_ELEMENTS = Set.of("goog.global",
 			"goog.require",
@@ -111,7 +112,7 @@ class ConvertingPass {
 			} else {
 				content = convertGoogProvideFile(provides, file, content, shortExports);
 			}
-			List<GoogRequireOrForwardDeclare> requires = extendRequiresForSubtypes(readerPass.requiresByFile.get(file), readerPass, content);
+			List<GoogRequireOrForwardDeclare> requires = extendRequires(file, readerPass, content);
 			content = replaceRequires(file, content, requires, readerPass.filesByNamespace, shortExports);
 			content = replaceSuppressedExtraRequires(content);
 
@@ -126,7 +127,8 @@ class ConvertingPass {
 		}
 	}
 
-	private List<GoogRequireOrForwardDeclare> extendRequiresForSubtypes(Collection<GoogRequireOrForwardDeclare> requires, ReaderPass readerPass, String content) {
+	private List<GoogRequireOrForwardDeclare> extendRequires(File file, ReaderPass readerPass, String content) {
+		Collection<GoogRequireOrForwardDeclare> requires = readerPass.requiresByFile.get(file);
 		List<GoogRequireOrForwardDeclare> extendedRequires = new ArrayList<>(requires);
 		Set<String> requiredNamespaces = requires.stream().map(r -> r.requiredNamespace).collect(toSet());
 		for (String requiredNamespace : requiredNamespaces) {
@@ -137,6 +139,17 @@ class ConvertingPass {
 				}
 			}
 		}
+
+		if (!file.getName().equals(GOOG_JS) && !file.getName().equals(BASE_JS)) { // TODO optimize way too slow
+			if (content.contains("goog.dispose(") && !file.getName().equals("disposable.js") && !requiredNamespaces.contains("goog.dispose")) {
+				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.dispose", null, null, false));
+			}
+			if (content.contains("goog.string.") && !file.getName().equals("string.js") && !requiredNamespaces.contains("goog.string")) {
+				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.string", null, null, false));
+			}
+			extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog", "goog", null, false));
+		}
+
 		return extendedRequires;
 	}
 
@@ -194,7 +207,7 @@ class ConvertingPass {
 
 			String importedElement = StringUtils.getLastPart(require.requiredNamespace, ".");
 
-			if ((!isClassName(importedElement) || IMPORT_WHOLE_MODULE_EXCEPTIONS.contains(importedElement)) && !IMPORT_CLASS_EXCEPTIONS.contains(require.requiredNamespace)) {
+			if (shouldImportAsModule(require, importedElement)) {
 				content = replaceOrInsert(content, require.fullText, "import * as " + require.shortReference + " from '" + relativePath + "';"
 				);
 			} else if (importedElement.equals(require.shortReference)) {
@@ -208,21 +221,22 @@ class ConvertingPass {
 		return content;
 	}
 
+	private boolean shouldImportAsModule(GoogRequireOrForwardDeclare require, String importedElement) {
+		if (IMPORT_CLASS_EXCEPTIONS.contains(require.requiredNamespace)) {
+			return false;
+		}
+		if (isClassName(importedElement) && importedElement.contains("Template")) {
+			return true;
+		}
+		return (!isClassName(importedElement) || IMPORT_WHOLE_MODULE_EXCEPTIONS.contains(importedElement));
+	}
+
 	private String replaceOrInsert(String content, String fullText, String replacement) {
 		if (fullText == null) {
-			int importIndex = content.indexOf("\nimport");
-			int googIndex = content.indexOf("\ngoog");
-			int firstImport;
-			if (importIndex == -1) {
-				firstImport = googIndex + 1;
-			} else {
-				firstImport = importIndex + 1;
-			}
-			return content.substring(0, firstImport) + replacement + "\n" + content.substring(firstImport);
+			return replacement + "\n" + content.replace(replacement, StringUtils.EMPTY_STRING);
 		}
 		// Ensure import is only present once
-		String placeholder = "#!#!PLACEHOLDER_IMPORT#!#!#";
-		return content.replace(fullText, replacement).replace(replacement, placeholder).replaceFirst(placeholder, replacement).replace(placeholder, StringUtils.EMPTY_STRING);
+		return replacement + "\n" + content.replace(fullText, StringUtils.EMPTY_STRING).replace(replacement, StringUtils.EMPTY_STRING);
 	}
 
 	private static boolean isClassName(String importedElement) {
@@ -387,7 +401,7 @@ class ConvertingPass {
 	}
 
 	private static String replaceFullyQualifiedCallWith(String content, String fullyQualifiedCall, String newCall) {
-		return content.replaceAll("(?<!['\"/" + IDENTIFIER_PATTERN + "])" + multilineSafeNamespacePattern(fullyQualifiedCall) + "(?!['\"/" + IDENTIFIER_PATTERN + "])", safeReplaceString(newCall));
+		return content.replaceAll("(?<!['\"/\\-" + IDENTIFIER_PATTERN + "])" + multilineSafeNamespacePattern(fullyQualifiedCall) + "(?!['\"/\\-" + IDENTIFIER_PATTERN + "])", safeReplaceString(newCall));
 	}
 
 	private boolean isProvideForClassOrEnum(String namespace, String content) {

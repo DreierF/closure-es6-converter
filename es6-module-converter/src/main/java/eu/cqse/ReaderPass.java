@@ -30,7 +30,7 @@ public class ReaderPass {
 	final Multimap<File, GoogRequireOrForwardDeclare> requiresByFile = ArrayListMultimap.create();
 	final Multimap<File, GoogProvideOrModule> providesByFile = ArrayListMultimap.create();
 
-	private static final String BASE_JS = "base.js";
+	public static final String BASE_JS = "base.js";
 	static final String GOOG_JS = "goog.js";
 
 	void process(String... inputDirPaths) throws IOException {
@@ -78,8 +78,6 @@ public class ReaderPass {
 		}
 
 		List<GoogRequireOrForwardDeclare> googRequires = parseGoogRequires(content);
-		appendImplicitRequires(content, jsFile, googRequires);
-
 		insertProvidesAndRequiresForFile(jsFile, providesOrModules, googRequires);
 	}
 
@@ -94,24 +92,6 @@ public class ReaderPass {
 		}
 
 		requiresByFile.putAll(jsFile, googRequires);
-	}
-
-	private void appendImplicitRequires(String content, File jsFile, List<GoogRequireOrForwardDeclare> googRequires) {
-		if (content.contains("goog.dispose(") && !jsFile.getName().equals("disposable.js") && !containsRequires(googRequires, "goog.dispose")) {
-			googRequires.add(new GoogRequireOrForwardDeclare(null, "goog.dispose", null, "dispose", false));
-		}
-		if (!jsFile.getName().equals(GOOG_JS) && !jsFile.getName().equals(BASE_JS)) {
-			googRequires.add(new GoogRequireOrForwardDeclare(null, "goog", "goog", null, false));
-		}
-	}
-
-	private boolean containsRequires(List<GoogRequireOrForwardDeclare> googRequires, String namespace) {
-		for (GoogRequireOrForwardDeclare googRequire : googRequires) {
-			if (googRequire.requiredNamespace.equals(namespace)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private static List<GoogProvideOrModule> getProvidedNamespaces(String fileContent) {

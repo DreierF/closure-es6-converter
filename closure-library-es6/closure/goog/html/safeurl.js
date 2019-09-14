@@ -213,7 +213,7 @@ goog.html.SafeUrl = class {
    *   as a SafeUrl.
    */
   static fromBlob(blob) {
-    var url = goog.html.SAFE_MIME_TYPE_PATTERN_.test(blob.type) ? goog.fs.url.createObjectUrl(blob) : goog.html.SafeUrl.INNOCUOUS_STRING;
+    var url = goog.html.SafeUrl.SAFE_MIME_TYPE_PATTERN_.test(blob.type) ? goog.fs.url.createObjectUrl(blob) : goog.html.SafeUrl.INNOCUOUS_STRING;
     return goog.html.SafeUrl.createSafeUrlSecurityPrivateDoNotAccessOrElse(url);
   }
 
