@@ -8,7 +8,7 @@ public class GoogModuleExport {
 	/**
 	 * The name of the exported function/constant/...
 	 */
-	public final ExportedEntity exportName;
+	public final AliasedElement exportName;
 
 
 	/**
@@ -33,7 +33,7 @@ public class GoogModuleExport {
 	 */
 	public final String fullMatch;
 
-	public GoogModuleExport(ExportedEntity exportName, boolean isInlineExport, String fullMatch) {
+	public GoogModuleExport(AliasedElement exportName, boolean isInlineExport, String fullMatch) {
 		this.exportName = exportName;
 		this.isInlineExport = isInlineExport;
 		this.fullMatch = fullMatch;

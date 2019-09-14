@@ -18,7 +18,7 @@
  */
 
 
-goog.provide('goog.db.DomErrorLike');
+goog.provide('goog.db.DOMErrorLike');
 goog.provide('goog.db.Error');
 goog.provide('goog.db.Error.ErrorCode');
 goog.provide('goog.db.Error.ErrorName');

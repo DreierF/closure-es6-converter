@@ -22,10 +22,11 @@ public class Es6ModuleMasterConverter {
 		cycleRemoval.process();
 
 		ReaderPass readInPass = new ReaderPass();
-		readInPass.process(INPUT_DIR);
-//				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/src-js",
-//				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/resources/generated-typedefs",
-//				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/class-resources/com/teamscale/ui/build/third_party");
+		readInPass.process(INPUT_DIR,
+				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/src-js",
+				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/resources/generated-typedefs",
+				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/class-resources/com/teamscale/ui/build/third_party",
+				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/build/generated/soy");
 		validateProvideRequires(readInPass);
 		new ConvertingPass().process(readInPass);
 

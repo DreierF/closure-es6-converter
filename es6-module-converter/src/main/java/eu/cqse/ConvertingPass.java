@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,7 +23,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static eu.cqse.ReaderPass.GOOG_JS;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 class ConvertingPass {
 
@@ -32,8 +35,59 @@ class ConvertingPass {
 
 	private static final Map<String, String> DEFAULT_REPLACEMENTS = new HashMap<>();
 	private static final Set<String> IMPORT_WHOLE_MODULE_EXCEPTIONS = ImmutableSet.of("GraphemeBreak", "CssSpecificity", "CssSanitizer", "ComponentUtil");
-	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom");
+	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "ts.fixInheritanceForEs6Class");
 	private static final String IDENTIFIER_PATTERN = "\\w$";
+	private static final Set<String> GOOG_IMPORTED_ELEMENTS = Set.of("goog.global",
+			"goog.require",
+			"goog.isString",
+			"goog.isBoolean",
+			"goog.isNumber",
+			"goog.define",
+			"goog.DEBUG",
+			"goog.LOCALE",
+			"goog.TRUSTED_SITE",
+			"goog.STRICT_MODE_COMPATIBLE",
+			"goog.DISALLOW_TEST_ONLY_CODE",
+			"goog.module.get",
+			"goog.setTestOnly",
+			"goog.forwardDeclare",
+			"goog.getObjectByName",
+			"goog.basePath",
+			"goog.addSingletonGetter",
+			"goog.typeOf",
+			"goog.isArray",
+			"goog.isArrayLike",
+			"goog.isDateLike",
+			"goog.isFunction",
+			"goog.isObject",
+			"goog.getUid",
+			"goog.hasUid",
+			"goog.removeUid",
+			"goog.mixin",
+			"goog.now",
+			"goog.globalEval",
+			"goog.getCssName",
+			"goog.setCssNameMapping",
+			"goog.getMsg",
+			"goog.getMsgWithFallback",
+			"goog.exportSymbol",
+			"goog.exportProperty",
+			"goog.isDef",
+			"goog.isNull",
+			"goog.isDefAndNotNull",
+			"goog.globalize",
+			"goog.nullFunction",
+			"goog.abstractMethod",
+			"goog.removeHashCode",
+			"goog.getHashCode",
+			"goog.cloneObject",
+			"goog.bind",
+			"goog.partial",
+			"goog.inherits",
+			"goog.base",
+			"goog.scope",
+			"goog.defineClass",
+			"goog.declareModuleId", "goog.tagUnsealableClass");
 
 	static {
 		DEFAULT_REPLACEMENTS.put("string", "strings");
@@ -57,14 +111,33 @@ class ConvertingPass {
 			} else {
 				content = convertGoogProvideFile(provides, file, content, shortExports);
 			}
-			content = replaceRequires(file, content, new ArrayList<>(readerPass.requiresByFile.get(file)),
-					readerPass.filesByNamespace, shortExports);
+			List<GoogRequireOrForwardDeclare> requires = extendRequiresForSubtypes(readerPass.requiresByFile.get(file), readerPass, content);
+			content = replaceRequires(file, content, requires, readerPass.filesByNamespace, shortExports);
 			content = replaceSuppressedExtraRequires(content);
+
+			// Remove namespaces from non officially exported elements
+			HashSet<String> remainingGoogNamespaces = getRemainingGoogNamespaces(content);
+			for (String namespace : remainingGoogNamespaces) {
+				content = rewriteFullyQualifiedNamespace(content, Collections.emptySet(), namespace, false); // TODO Might need to be imported to work properly (AFAIKS only happens for type comments where the type is only used in the comment)
+			}
+
 			content = content.replaceAll("(\\W)COMPILED(\\W)", "$1true$2");
-			content = content.replaceAll("const ([" + IDENTIFIER_PATTERN + "]+) = goog.require('ts.([" + IDENTIFIER_PATTERN + "]+).([" + IDENTIFIER_PATTERN + "]+)');", "import {$1} from 'soy/ts/$2/$3'");
-			content = content.replaceAll("const ([" + IDENTIFIER_PATTERN + "]+) = goog.require('ts.([" + IDENTIFIER_PATTERN + "]+).([" + IDENTIFIER_PATTERN + "]+).([" + IDENTIFIER_PATTERN + "]+)');", "import {$1} from 'soy/ts/$2/$3/$4'");
 			Files.asCharSink(file, Charsets.UTF_8).write(content);
 		}
+	}
+
+	private List<GoogRequireOrForwardDeclare> extendRequiresForSubtypes(Collection<GoogRequireOrForwardDeclare> requires, ReaderPass readerPass, String content) {
+		List<GoogRequireOrForwardDeclare> extendedRequires = new ArrayList<>(requires);
+		Set<String> requiredNamespaces = requires.stream().map(r -> r.requiredNamespace).collect(toSet());
+		for (String requiredNamespace : requiredNamespaces) {
+			Collection<GoogProvideOrModule> similarProvides = readerPass.providesByFile.get(readerPass.filesByNamespace.get(requiredNamespace));
+			for (GoogProvideOrModule similarProvide : similarProvides) {
+				if (!requiredNamespaces.contains(similarProvide.namespace) && similarProvide.namespace.startsWith(requiredNamespace) && content.contains(similarProvide.namespace)) {
+					extendedRequires.add(new GoogRequireOrForwardDeclare(null, similarProvide.namespace, null, null, false));
+				}
+			}
+		}
+		return extendedRequires;
 	}
 
 	/**
@@ -78,18 +151,18 @@ class ConvertingPass {
 	 * let FOO = goog.define(...) is invalid an needs to use 'const' instead.
 	 */
 	@VisibleForTesting
-	static String fixGoogDefineKeywords(String content, Collection<ExportedEntity> exportedNamespaces) {
+	static String fixGoogDefineKeywords(String content, Collection<AliasedElement> exportedNamespaces) {
 		Matcher matcher = Pattern.compile("let\\s+([" + IDENTIFIER_PATTERN + "]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(")
 				.matcher(content);
 		while (matcher.find()) {
 			content = content.replace(matcher.group(), "const " + matcher.group(1) + " = goog.define(");
-			exportedNamespaces.add(new ExportedEntity(matcher.group(1)));
+			exportedNamespaces.add(new AliasedElement(matcher.group(1)));
 		}
 		matcher = Pattern.compile("(?m)^[\\s\\n]*goog\\s*\\.\\s*define\\s*\\('([^)]+\\.([^).]+))',").matcher(content);
 		while (matcher.find()) {
 			content = content.replace(matcher.group(), "const " + matcher.group(2) + " = " + matcher.group());
 			content = replaceFullyQualifiedCallWith(content, matcher.group(1), matcher.group(2));
-			exportedNamespaces.add(new ExportedEntity(matcher.group(2)));
+			exportedNamespaces.add(new AliasedElement(matcher.group(2)));
 		}
 		return content;
 	}
@@ -213,7 +286,7 @@ class ConvertingPass {
 
 	private String convertGoogProvideFile(List<GoogProvideOrModule> provides, File file,
 										  String content, List<String> shortExports) {
-		Set<ExportedEntity> exports = new TreeSet<>();
+		Set<AliasedElement> exports = new TreeSet<>();
 
 		content = fixGoogDefineKeywords(content, exports);
 
@@ -223,17 +296,28 @@ class ConvertingPass {
 			content = content.replaceAll(Pattern.quote(provide.fullMatch) + "\\s*", "");
 		}
 
-
 		if (exports.isEmpty()) {
 			System.out.println("WARN: Don't know what to export, skipping: " + file.getPath());
 			return content;
 		} else {
 			shortExports.addAll(exports.stream().map(e -> e.internalName).collect(Collectors.toSet()));
-			return content + "\n\n" + "export {" + exports.stream().map(ExportedEntity::toEs6Fragment).collect(Collectors.joining(", ")) + "};";
+			return content + "\n\n" + "export {" + exports.stream().map(AliasedElement::toEs6Fragment).collect(Collectors.joining(", ")) + "};";
 		}
 	}
 
-	private String rewriteFullyQualifiedNamespace(String content, Set<ExportedEntity> exports, String namespace, boolean isProvided) {
+	private HashSet<String> getRemainingGoogNamespaces(String content) {
+		Matcher matcher = Pattern.compile("goog\\.[" + IDENTIFIER_PATTERN + ".]+(?<!\\.)").matcher(content);
+		HashSet<String> remainingGoogNamespaces = new HashSet<>();
+		while (matcher.find()) {
+			String namespace = matcher.group();
+			if (!namespace.equals(GOOG_JS) && !namespace.contains("prototype") && !StringUtils.startsWithOneOf(namespace, GOOG_IMPORTED_ELEMENTS)) {
+				remainingGoogNamespaces.add(namespace);
+			}
+		}
+		return remainingGoogNamespaces;
+	}
+
+	private String rewriteFullyQualifiedNamespace(String content, Set<AliasedElement> exports, String namespace, boolean isProvided) {
 		if (isProvideForClassOrEnum(namespace, content) || isTypeDef(namespace, content)) {
 			// Class
 			// foo.bar.MyClass -> MyClass
@@ -254,7 +338,7 @@ class ConvertingPass {
 				internalMethodOrConstantName = "_" + internalMethodOrConstantName;
 			}
 			if (isPublicByConvention(methodOrConstantName) && isProvided) {
-				exports.add(new ExportedEntity(methodOrConstantName, internalMethodOrConstantName));
+				exports.add(new AliasedElement(methodOrConstantName, internalMethodOrConstantName));
 			}
 			content = content.replaceAll("(?m)^" + Pattern.quote(matcher.group()), "let " + safeReplaceString(internalMethodOrConstantName) + matcher.group(2));
 			content = replaceFullyQualifiedCallWith(content, namespace + "." + methodOrConstantName,
@@ -267,7 +351,7 @@ class ConvertingPass {
 		while (matcher.find()) {
 			String typeName = matcher.group(1);
 			if (isPublicByConvention(typeName) && isProvided) {
-				exports.add(new ExportedEntity(typeName));
+				exports.add(new AliasedElement(typeName));
 			}
 			content = content.replace(matcher.group(), "let " + typeName + ";");
 			content = replaceFullyQualifiedCallWith(content, namespace + "." + typeName,
@@ -276,7 +360,7 @@ class ConvertingPass {
 		return content;
 	}
 
-	private String getShortNameAndAddToExports(Set<ExportedEntity> exports, String namespace, boolean isProvided) {
+	private String getShortNameAndAddToExports(Set<AliasedElement> exports, String namespace, boolean isProvided) {
 		String[] parts = namespace.split("\\.");
 		String classOrFunction = parts[parts.length - 1];
 		String shortClassName = classOrFunction;
@@ -284,7 +368,7 @@ class ConvertingPass {
 			shortClassName = parts[parts.length - 2] + "_" + shortClassName;
 		}
 		if (isPublicByConvention(classOrFunction) && isProvided) {
-			ExportedEntity e = new ExportedEntity(classOrFunction, shortClassName);
+			AliasedElement e = new AliasedElement(classOrFunction, shortClassName);
 			exports.add(e);
 		}
 		return shortClassName;
@@ -303,7 +387,7 @@ class ConvertingPass {
 	}
 
 	private static String replaceFullyQualifiedCallWith(String content, String fullyQualifiedCall, String newCall) {
-		return content.replaceAll("(?<!['\"" + IDENTIFIER_PATTERN + "])" + multilineSafeNamespacePattern(fullyQualifiedCall) + "(?!['\"" + IDENTIFIER_PATTERN + "])", safeReplaceString(newCall));
+		return content.replaceAll("(?<!['\"/" + IDENTIFIER_PATTERN + "])" + multilineSafeNamespacePattern(fullyQualifiedCall) + "(?!['\"/" + IDENTIFIER_PATTERN + "])", safeReplaceString(newCall));
 	}
 
 	private boolean isProvideForClassOrEnum(String namespace, String content) {
@@ -330,7 +414,7 @@ class ConvertingPass {
 			content = content.replace("export " + export.exportName.externalName + " = " + export.exportName.externalName, "export {" + export.exportName.externalName + "}");
 		}
 
-		List<ExportedEntity> exportedNames = globalExports.stream().map(export -> export.exportName).collect(toList());
+		List<AliasedElement> exportedNames = globalExports.stream().map(export -> export.exportName).collect(toList());
 		content = fixGoogDefineKeywords(content, exportedNames);
 
 		if (globalExports.isEmpty()) {
@@ -339,6 +423,6 @@ class ConvertingPass {
 
 		// Remove Closure's 'exports {...}' and then append ES6's 'export {...}' to the file content
 		content = content.replace(globalExports.get(0).fullMatch, "");
-		return content + "\n\nexport {" + exportedNames.stream().map(ExportedEntity::toEs6Fragment).collect(Collectors.joining(", ")) + "};";
+		return content + "\n\nexport {" + exportedNames.stream().map(AliasedElement::toEs6Fragment).collect(Collectors.joining(", ")) + "};";
 	}
 }

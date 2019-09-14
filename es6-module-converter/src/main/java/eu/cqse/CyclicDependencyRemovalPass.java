@@ -30,8 +30,8 @@ public class CyclicDependencyRemovalPass {
 		merge("events/eventhandler.js","events/eventhandler.js", "events/events.js", "events/eventwrapper.js", "events/listenable.js", "events/eventtarget.js", "events/listener.js", "events/listenermap.js");
 		merge("promise/promise.js", "promise/thenable.js", "promise/promise.js", "promise/resolver.js");
 		merge("ui/container.js","ui/container.js", "ui/containerrenderer.js");
-		merge("ui/control.js","ui/control.js", "ui/controlrenderer.js", "ui/registry.js");
-		merge("ui/menu.js", "ui/menu.js", "ui/menuitem.js", "ui/menurenderer.js");
+		merge("ui/control.js","ui/controlrenderer.js", "ui/registry.js", "ui/control.js");
+		merge("ui/menu.js", "ui/menurenderer.js", "ui/menuitem.js", "ui/menu.js");
 	}
 
 	private void merge(String finalName, String... fileNames) throws IOException {

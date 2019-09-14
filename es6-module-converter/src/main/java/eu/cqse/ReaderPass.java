@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class ReaderPass {
 
-	 static final Pattern PROVIDE_OR_MODULE_PATTERN = Pattern
+	static final Pattern PROVIDE_OR_MODULE_PATTERN = Pattern
 			.compile("(?m)^goog\\s*\\.\\s*(?:provide|module)\\s*\\(['\"]([\\w.]+)['\"]\\s*\\)\\s*;?");
 
 	final Map<String, File> filesByNamespace = new HashMap<>();
@@ -58,7 +57,7 @@ public class ReaderPass {
 		return lowerCaseFileName.endsWith(".js")
 				&& !(absolutePathSegments.contains("less") || absolutePathSegments.contains("js-cache") || absolutePathSegments.contains("testing"))
 				&& StringUtils.containsOneOf(file.getAbsolutePath(), "closure-library", "src-js",
-				"third_party", "generated-typedefs")
+				"third_party", "generated-typedefs", "soy")
 				&& !StringUtils.endsWithOneOf(lowerCaseFileName, "_test.js", "_perf.js", "tester.js",
 				"alltests.js", "testhelpers.js", "testing.js", "relativecommontests.js", "mockiframeio.js");
 	}
@@ -142,13 +141,13 @@ public class ReaderPass {
 		Matcher dottedExportMatcher = dottedExport.matcher(fileContent);
 		while (dottedExportMatcher.find()) {
 			String identifier = dottedExportMatcher.group(1).trim();
-			googExports.add(new GoogModuleExport(new ExportedEntity(identifier, identifier), true, dottedExportMatcher.group()));
+			googExports.add(new GoogModuleExport(new AliasedElement(identifier, identifier), true, dottedExportMatcher.group()));
 		}
 		Pattern defaultExportPattern = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?(([$\\w_,\\s+:*]|//.*|/\\**[^/]*(?<=\\*)/)+)}?;?");
 		Matcher defaultExportMatcher = defaultExportPattern.matcher(fileContent);
 		while (defaultExportMatcher.find()) {
 			String rawContent = defaultExportMatcher.group(1).replaceAll("/\\**[^/]*(?<=\\*)/", "").replaceAll("//.*", "");
-			List<ExportedEntity> exportedNames = new ArrayList<>();
+			List<AliasedElement> exportedNames = new ArrayList<>();
 			if (rawContent.contains(",")) {
 				exportedNames.addAll(Arrays.stream(rawContent.split(",")).filter(e -> !e.isBlank())
 						.map(ReaderPass::normalizeExportEntry).collect(Collectors.toList()));
@@ -160,16 +159,15 @@ public class ReaderPass {
 		return googExports;
 	}
 
-	private static ExportedEntity normalizeExportEntry(String ns) {
+	private static AliasedElement normalizeExportEntry(String ns) {
 		String[] split = ns.split(":");
 		if (split.length == 1) {
-			return new ExportedEntity(split[0].trim());
+			return new AliasedElement(split[0].trim());
 		}
-		return new ExportedEntity(split[0].trim(), split[1].trim());
+		return new AliasedElement(split[0].trim(), split[1].trim());
 	}
 
 	private static List<GoogRequireOrForwardDeclare> parseGoogRequires(String content) {
-
 		List<GoogRequireOrForwardDeclare> requires = new ArrayList<>();
 		// Matches e.g.:
 		// goog.require('x.y.z');
@@ -184,12 +182,6 @@ public class ReaderPass {
 		Matcher matcher = requirePattern.matcher(content);
 		while (matcher.find()) {
 			String requiredNamespace = matcher.group(2);
-			if (requiredNamespace.endsWith("Template")
-					|| StringUtils.equalsOneOf(requiredNamespace, "ts.commons.Constants", "ts.commons.Regex",
-					"ts.Style", "ts.admin.InstanceComparisonTemplateDetailView",
-					"ts.admin.InstanceComparisonTemplateOverview", "ts.data.ETeamscalePerspective")) {
-				continue;
-			}
 			String fullText = matcher.group();
 			String rawShortReference = matcher.group(1);
 			String shortReference = null;
