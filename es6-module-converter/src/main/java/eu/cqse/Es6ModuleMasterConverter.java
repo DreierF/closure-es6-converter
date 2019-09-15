@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toSet;
 public class Es6ModuleMasterConverter {
 
 	private static final String INPUT_DIR = "../closure-library-es6";
+	private static final String TEAMSCALE_DIR = "/Users/florian/Documents/CQSE/TeamscaleWebpack";
 
 	public static void main(String[] args) throws IOException {
 //		SelectionPass selectionPass = new SelectionPass();
@@ -23,10 +24,10 @@ public class Es6ModuleMasterConverter {
 
 		ReaderPass readInPass = new ReaderPass();
 		readInPass.process(INPUT_DIR,
-				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/src-js",
-				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/resources/generated-typedefs",
-				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/class-resources/com/teamscale/ui/build/third_party",
-				"/Users/florian/Documents/CQSE/TeamscaleWebpack/engine/com.teamscale.ui/build/generated/soy");
+				TEAMSCALE_DIR + "/engine/com.teamscale.ui/src-js",
+				TEAMSCALE_DIR + "/engine/com.teamscale.ui/resources/generated-typedefs",
+				TEAMSCALE_DIR + "/engine/com.teamscale.ui/class-resources/com/teamscale/ui/build/third_party",
+				TEAMSCALE_DIR + "/engine/com.teamscale.ui/build/generated/soy");
 		validateProvideRequires(readInPass);
 		new ConvertingPass().process(readInPass);
 

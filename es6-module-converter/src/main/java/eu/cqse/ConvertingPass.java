@@ -97,7 +97,7 @@ class ConvertingPass {
 
 	void process(ReaderPass readerPass) throws IOException {
 		for (File file : readerPass.providesByFile.keySet()) {
-			String content = Files.asCharSource(file, Charsets.UTF_8).read();
+			String content = Files.asCharSource(file, Charsets.UTF_8).read().replace("\uFEFF", "");
 			List<GoogProvideOrModule> provides = new ArrayList<>(readerPass.providesByFile.get(file));
 			boolean isModule = provides.stream().anyMatch(provideOrModule -> provideOrModule.isModule);
 			List<String> shortExports = new ArrayList<>();
@@ -144,7 +144,13 @@ class ConvertingPass {
 			if (content.contains("goog.dispose(") && !file.getName().equals("disposable.js") && !requiredNamespaces.contains("goog.dispose")) {
 				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.dispose", null, null, false));
 			}
-			if (content.contains("goog.string.") && !file.getName().equals("string.js") && !requiredNamespaces.contains("goog.string")) {
+			if (content.contains("goog.a11y.aria.State") && !file.getName().equals("attributes.js") && !requiredNamespaces.contains("goog.a11y.aria.State")) {
+				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.a11y.aria.State", null, null, false));
+			}
+			if (content.contains("goog.string.Const") && !file.getName().equals("const.js") && !requiredNamespaces.contains("goog.string.Const")) {
+				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.string.Const", null, null, false));
+			}
+			if (Pattern.compile("goog\\.string\\.(starts|ends)With").matcher(content).find() && !file.getName().equals("string.js") && !requiredNamespaces.contains("goog.string")) {
 				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.string", null, null, false));
 			}
 			extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog", "goog", null, false));
@@ -401,7 +407,7 @@ class ConvertingPass {
 	}
 
 	private static String replaceFullyQualifiedCallWith(String content, String fullyQualifiedCall, String newCall) {
-		return content.replaceAll("(?<!['\"/\\-" + IDENTIFIER_PATTERN + "])" + multilineSafeNamespacePattern(fullyQualifiedCall) + "(?!['\"/\\-" + IDENTIFIER_PATTERN + "])", safeReplaceString(newCall));
+		return content.replaceAll("(?<!['\"/" + IDENTIFIER_PATTERN + "])" + multilineSafeNamespacePattern(fullyQualifiedCall) + "(?!['\"/" + IDENTIFIER_PATTERN + "])", safeReplaceString(newCall));
 	}
 
 	private boolean isProvideForClassOrEnum(String namespace, String content) {

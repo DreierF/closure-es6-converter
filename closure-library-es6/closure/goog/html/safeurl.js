@@ -268,7 +268,7 @@ goog.html.SafeUrl = class {
    *     wrapped as a SafeUrl if it does not pass.
    */
   static fromSipUrl(sipUrl) {
-    if (!goog.html.SIP_URL_PATTERN_.test(decodeURIComponent(sipUrl))) {
+    if (!goog.html.SafeUrl.SIP_URL_PATTERN_.test(decodeURIComponent(sipUrl))) {
       sipUrl = goog.html.SafeUrl.INNOCUOUS_STRING;
     }
     return goog.html.SafeUrl.createSafeUrlSecurityPrivateDoNotAccessOrElse(sipUrl);
@@ -357,7 +357,7 @@ goog.html.SafeUrl = class {
     } else {
       url = String(url);
     }
-    if (!goog.html.SAFE_URL_PATTERN_.test(url)) {
+    if (!goog.html.SafeUrl.SAFE_URL_PATTERN_.test(url)) {
       url = goog.html.SafeUrl.INNOCUOUS_STRING;
     }
     return goog.html.SafeUrl.createSafeUrlSecurityPrivateDoNotAccessOrElse(url);
@@ -388,7 +388,7 @@ goog.html.SafeUrl = class {
     } else {
       url = String(url);
     }
-    if (!goog.asserts.assert(goog.html.SAFE_URL_PATTERN_.test(url))) {
+    if (!goog.asserts.assert(goog.html.SafeUrl.SAFE_URL_PATTERN_.test(url))) {
       url = goog.html.SafeUrl.INNOCUOUS_STRING;
     }
     return goog.html.SafeUrl.createSafeUrlSecurityPrivateDoNotAccessOrElse(url);
@@ -493,8 +493,8 @@ goog.html.SafeUrl.SAFE_URL_PATTERN_ =
     /^(?:(?:https?|mailto|ftp):|[^:/?#]*(?:[/?#]|$))/i;
 
 /**
- * Public version of goog.html.SAFE_URL_PATTERN_. Updating
- * goog.html.SAFE_URL_PATTERN_ doesn't seem to be backward compatible.
+ * Public version of goog.html.SafeUrl.SAFE_URL_PATTERN_. Updating
+ * goog.html.SafeUrl.SAFE_URL_PATTERN_ doesn't seem to be backward compatible.
  * Namespace is also changed to goog.html.SafeUrl so it can be imported using
  * goog.require('goog.dom.SafeUrl').
  *
