@@ -48,13 +48,13 @@ public class Es6ModuleMasterConverter {
 		Es6ClassConversionPass es6Conversion = new Es6ClassConversionPass();
 		es6Conversion.process(OUTPUT_DIR);
 
-		FileUtils.safeDeleteDir(TEAMSCALE_UI_DIR_CONVERTED.toPath());
-		FileUtils.copyFolder(TEAMSCALE_UI_DIR.toPath(), TEAMSCALE_UI_DIR_CONVERTED.toPath());
-
-		ReaderPass readInPass = new ReaderPass();
-		readInPass.process(ObjectArrays.concat(OUTPUT_DIR, getUiDirFiles(TEAMSCALE_UI_DIR_CONVERTED)));
-		validateProvideRequires(readInPass);
-		new ConvertingPass().process(readInPass);
+//		FileUtils.safeDeleteDir(TEAMSCALE_UI_DIR_CONVERTED.toPath());
+//		FileUtils.copyFolder(TEAMSCALE_UI_DIR.toPath(), TEAMSCALE_UI_DIR_CONVERTED.toPath());
+//
+//		ReaderPass readInPass = new ReaderPass();
+//		readInPass.process(ObjectArrays.concat(OUTPUT_DIR, getUiDirFiles(TEAMSCALE_UI_DIR_CONVERTED)));
+//		validateProvideRequires(readInPass);
+//		new ConvertingPass().process(readInPass);
 
 		System.out.println("\n==== Finished ====");
 	}

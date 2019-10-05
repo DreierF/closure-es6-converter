@@ -37,15 +37,15 @@ public class ClassContainer {
 		stringBuilder.append(constructor.getEs6Constructor(classMembers));
 
 		for (ClassMember classMember : classMembers) {
-			stringBuilder.append(classMember.docComment);
-			String declaration = classMember.declaration;
 			if (classMember.isMethod()) {
+				stringBuilder.append(classMember.docComment);
+				String declaration = classMember.declaration;
 				declaration = declaration.replaceFirst("\\s?=\\s*function", classMember.memberName);
+				stringBuilder.append(declaration);
 			}
-			stringBuilder.append(declaration);
 		}
 
-		stringBuilder.append("}");
+		stringBuilder.append("\n").append("}");
 
 		return stringBuilder.toString();
 	}

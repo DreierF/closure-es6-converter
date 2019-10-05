@@ -1,6 +1,7 @@
 package eu.cqse.es6;
 
 import java.util.List;
+import java.util.regex.Matcher;
 
 public class Constructor {
 	public final String fullMatch;
@@ -16,19 +17,22 @@ public class Constructor {
 	}
 
 	public String getEs6Constructor(List<ClassMember> classMembers) {
-		String constructorComment = docComment.replace(" * @final\n", "").replaceAll(" * @extends.*\n", "");
+		String constructorComment = docComment
+				.replace(" * @final\n", "")
+				.replaceAll(" \\* @extends.*\n", "")
+				.replace("* */", "*/");
 
 		String constructorDefinition = this.constructorDefinition.replaceFirst("\\s?=\\s*function", "constructor");
 		StringBuilder constructorExtensionBuilder = new StringBuilder();
 		for (ClassMember classMember : classMembers) {
-			constructorExtensionBuilder.append(classMember.docComment);
+			constructorExtensionBuilder.append("\n").append(classMember.docComment);
 			String declaration = classMember.declaration;
 			if (classMember.isField()) {
-				declaration = declaration.replaceFirst("\\s?=\\s*", "this." + classMember.memberName + "$0");
+				declaration = declaration.replaceFirst("\\s?=\\s*", Matcher.quoteReplacement("this." + classMember.memberName) + "$0");
 			}
-			constructorExtensionBuilder.append(declaration);
+			constructorExtensionBuilder.append(declaration).append("\n\n");
 		}
-		constructorDefinition = constructorDefinition.replaceAll("};?$", constructorExtensionBuilder + "}");
-		return constructorComment + "\n" + constructorDefinition;
+		constructorDefinition = constructorDefinition.replaceAll("};?$", Matcher.quoteReplacement(constructorExtensionBuilder + "}"));
+		return constructorComment + constructorDefinition;
 	}
 }

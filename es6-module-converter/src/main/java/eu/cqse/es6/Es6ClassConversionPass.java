@@ -20,7 +20,7 @@ public class Es6ClassConversionPass {
 	private static final ImmutableList<Character> CLOSING = ImmutableList.of(')', ']', '}');
 	private static final Pattern GOOG_INHERITS_PATTERN = Pattern.compile("(?m)^goog\\.inherits\\(\\s*([^,]+),\\s*([^)]+)\\);");
 	private static final Pattern CONSTRUCTOR_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/|@constructor).)*@constructor((?!\\*/).)*\\*/\\s*)([\\w.]+)(\\s?=\\s*function)", Pattern.DOTALL);
-	private static final Pattern CLASS_MEMBER_PATTERN = Pattern.compile("(?m)^(/\\*\\*(.(?!\\*/))*\\*/\\s*)([\\w.]+)\\.prototype\\.(\\w+)" +
+	private static final Pattern CLASS_MEMBER_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/).)*\\*/\\s*)([\\w.]+)\\.prototype\\.(\\w+)" +
 			"(;|\\s?=\\s*)", Pattern.DOTALL);
 
 	public void process(File inputDir) throws IOException {
@@ -71,8 +71,10 @@ public class Es6ClassConversionPass {
 		ListMultimap<String, ClassMember> classMembers = ArrayListMultimap.create();
 		Matcher matcher = CLASS_MEMBER_PATTERN.matcher(content);
 		while (matcher.find()) {
-			String definition = getDefinition(content, matcher, 6);
-			ClassMember classMember = new ClassMember(matcher.group(), matcher.group(1), matcher.group(4), matcher.group(5), definition);
+			String definition = getDefinition(content, matcher, 5);
+			String fullMatch = matcher.group();
+			fullMatch = fullMatch.substring(0, fullMatch.length() - matcher.group(5).length()) + definition;
+			ClassMember classMember = new ClassMember(fullMatch, matcher.group(1), matcher.group(3), matcher.group(4), definition);
 			classMembers.put(classMember.classNamespace, classMember);
 		}
 		return classMembers;
@@ -80,28 +82,81 @@ public class Es6ClassConversionPass {
 
 	private String getDefinition(String content, Matcher matcher, int definitionStartGroup) {
 		String definition = matcher.group(definitionStartGroup);
-		if (!definition.equals(";")) {
-			definition = content.substring(matcher.start(definitionStartGroup), getDefinitionEnd(content, matcher.end()));
+		if (definition.equals(";")) {
+			return ";";
 		}
-		return definition;
+		return content.substring(matcher.start(definitionStartGroup), getDefinitionEnd(content, matcher.end()));
 	}
 
 	private int getDefinitionEnd(String content, int matcherEnd) {
 		int end = matcherEnd;
 		int nesting = 0;
-		while (content.charAt(end) != ';' || nesting > 0) {
+		EScannerState state = EScannerState.TOP_LEVEL;
+		while (true) {
 			char currentChar = content.charAt(end);
-			if (currentChar == '}' && content.charAt(end + 1) == '\n' && content.charAt(end + 2) == '\n' && nesting == 0) {
-				return end + 1;
-			}
-			if (OPENING.contains(currentChar)) {
-				nesting++;
-			} else if (CLOSING.contains(currentChar)) {
-				nesting--;
+			switch (state) {
+				case IN_SINGLE_LINE_COMMENT:
+					if (currentChar == '\n') {
+						state = EScannerState.TOP_LEVEL;
+					}
+					break;
+				case IN_REGEX:
+					if (currentChar == '\\') {
+						end++;
+					} else if (currentChar == '/') {
+						state = EScannerState.TOP_LEVEL;
+					}
+					break;
+				case IN_BLOCK_COMMENT:
+					if (currentChar == '*' && content.charAt(end + 1) == '/') {
+						end++;
+						state = EScannerState.TOP_LEVEL;
+					}
+					break;
+				case IN_SINGLE_QUOTED_STRING:
+					if (currentChar == '\\') {
+						end++;
+					} else if (currentChar == '\'') {
+						state = EScannerState.TOP_LEVEL;
+					}
+					break;
+				case IN_DOUBLE_QUOTED_STRING:
+					if (currentChar == '\\') {
+						end++;
+					} else if (currentChar == '"') {
+						state = EScannerState.TOP_LEVEL;
+					}
+					break;
+				case TOP_LEVEL:
+					if (nesting == 0 && (currentChar == ';' ||
+							(currentChar == '}' && content.charAt(end + 1) == '\n' && content.charAt(end + 2) == '\n'))) {
+						return end + 1;
+					}
+					if (currentChar == '/') {
+						if (content.charAt(end + 1) == '/') {
+							state = EScannerState.IN_SINGLE_LINE_COMMENT;
+						} else if (content.charAt(end + 1) == '*') {
+							state = EScannerState.IN_BLOCK_COMMENT;
+						} else if (content.charAt(end + 1) == '[') {
+							state = EScannerState.IN_REGEX;
+						}
+					} else if (currentChar == '\'') {
+						state = EScannerState.IN_SINGLE_QUOTED_STRING;
+					} else if (currentChar == '"') {
+						state = EScannerState.IN_DOUBLE_QUOTED_STRING;
+					}
+					if (OPENING.contains(currentChar)) {
+						nesting++;
+					} else if (CLOSING.contains(currentChar)) {
+						nesting--;
+					}
+					break;
 			}
 			end++;
+			if (end >= content.length()) {
+				throw new IllegalArgumentException("Did not find definition end in: " + content.substring(matcherEnd - 10));
+			}
 		}
-		return end + 1;
 	}
 
 	private List<Constructor> getConstructors(String content) {
@@ -109,7 +164,9 @@ public class Es6ClassConversionPass {
 		Matcher matcher = CONSTRUCTOR_PATTERN.matcher(content);
 		while (matcher.find()) {
 			String definition = getDefinition(content, matcher, 5);
-			constructors.add(new Constructor(matcher.group(), matcher.group(1), matcher.group(4), definition));
+			String fullMatch = matcher.group();
+			fullMatch = fullMatch.substring(0, fullMatch.length() - matcher.group(5).length()) + definition;
+			constructors.add(new Constructor(fullMatch, matcher.group(1), matcher.group(4), definition));
 		}
 		return constructors;
 	}
@@ -122,5 +179,9 @@ public class Es6ClassConversionPass {
 			inheritsInfos.put(googInheritsInfo.fullClassNamespace, googInheritsInfo);
 		}
 		return inheritsInfos;
+	}
+
+	private enum EScannerState {
+		TOP_LEVEL, IN_REGEX, IN_BLOCK_COMMENT, IN_SINGLE_QUOTED_STRING, IN_DOUBLE_QUOTED_STRING, IN_SINGLE_LINE_COMMENT
 	}
 }

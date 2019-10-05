@@ -26,7 +26,7 @@ public class ReaderPass {
 	final Multimap<File, GoogProvideOrModule> providesByFile = ArrayListMultimap.create();
 
 	public static final String BASE_JS = "base.js";
-	static final String GOOG_JS = "goog.js";
+	public static final String GOOG_JS = "goog.js";
 
 	void process(File... inputDirPaths) throws IOException {
 		FileUtils.processRelevantJsFiles(this::processJsFile, inputDirPaths);
@@ -43,9 +43,11 @@ public class ReaderPass {
 		}
 
 		List<GoogProvideOrModule> providesOrModules = getProvidedNamespaces(content);
-		if (providesOrModules.isEmpty() && !jsFile.getName().endsWith("Externs.js") && !jsFile.getName().equals("Index.js")) {
-			System.out.println(
-					"INFO: " + jsFile.getAbsolutePath() + " does not seem to goog.provide or goog.module anything");
+		if (providesOrModules.isEmpty()) {
+			if (!jsFile.getName().endsWith("Externs.js") && !jsFile.getName().equals("Index.js")) {
+				System.out.println(
+						"INFO: " + jsFile.getAbsolutePath() + " does not seem to goog.provide or goog.module anything");
+			}
 			return;
 		}
 
@@ -58,7 +60,7 @@ public class ReaderPass {
 
 		for (GoogProvideOrModule provideOrModule : providesOrModules) {
 			if (filesByNamespace.containsKey(provideOrModule.namespace)) {
-				throw new UnsupportedOperationException("Namespace " + provideOrModule.namespace + " is already provided by more than one file: " + jsFile.getName() + ", " + filesByNamespace.get(provideOrModule.namespace));
+				throw new UnsupportedOperationException("Namespace " + provideOrModule.namespace + " is already provided by more than one file: " + jsFile + ", " + filesByNamespace.get(provideOrModule.namespace));
 			}
 			filesByNamespace.put(provideOrModule.namespace, jsFile);
 		}

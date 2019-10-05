@@ -398,7 +398,7 @@ class ConvertingPass {
 	}
 
 	private static String safeReplaceString(String methodOrConstantName) {
-		return methodOrConstantName.replace("$", "\\$");
+		return Matcher.quoteReplacement(methodOrConstantName);
 	}
 
 	private static String multilineSafeNamespacePattern(String namespace) {
