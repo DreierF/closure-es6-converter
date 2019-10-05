@@ -1,12 +1,8 @@
 package eu.cqse;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +11,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -34,34 +29,13 @@ public class ReaderPass {
 	static final String GOOG_JS = "goog.js";
 
 	void process(File... inputDirPaths) throws IOException {
-		for (File inputDir : inputDirPaths) {
-			if (!inputDir.isDirectory()) {
-				throw new IOException("Input dir not found");
-			}
-
-			for (File file : Files.fileTraverser().breadthFirst(inputDir)) {
-				if (isRelevantJsFile(file)) {
-					processJsFile(file);
-				}
-			}
-		}
+		FileUtils.processRelevantJsFiles(this::processJsFile, inputDirPaths);
 //		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/dojo/dom/query.js"), List.of(new GoogProvideOrModule("goog.dom.query", true, List.of(), null)), List.of());
 //		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/mochikit/async/deferred.js"), List.of(new GoogProvideOrModule("goog.async.Deferred", true, List.of(), null)), List.of());
 	}
 
-	private boolean isRelevantJsFile(File file) {
-		String lowerCaseFileName = file.getName().toLowerCase();
-		Set<String> absolutePathSegments = Sets.newHashSet(Splitter.on(File.separatorChar).split(file.getAbsolutePath()));
-		return lowerCaseFileName.endsWith(".js")
-				&& !(absolutePathSegments.contains("less") || absolutePathSegments.contains("js-cache") || absolutePathSegments.contains("testing"))
-				&& StringUtils.containsOneOf(file.getAbsolutePath(), "closure-library", "src-js",
-				"third_party", "generated-typedefs", "soy")
-				&& !StringUtils.endsWithOneOf(lowerCaseFileName, "_test.js", "_perf.js", "tester.js",
-				"alltests.js", "testhelpers.js", "testing.js", "relativecommontests.js", "mockiframeio.js");
-	}
-
-	private void processJsFile(File jsFile) throws IOException {
-		String content = Files.asCharSource(jsFile, Charsets.UTF_8).read().replace("\uFEFF", "");
+	private void processJsFile(File jsFile) {
+		String content = FileUtils.getFileContentSafe(jsFile);
 
 		if (content.contains("goog.setTestOnly();")) {
 			System.out.println("WARN: " + jsFile.getName() + " (" + jsFile.getAbsolutePath() + ") seems to be test-only, skipping file.");
@@ -69,7 +43,7 @@ public class ReaderPass {
 		}
 
 		List<GoogProvideOrModule> providesOrModules = getProvidedNamespaces(content);
-		if (providesOrModules.isEmpty()) {
+		if (providesOrModules.isEmpty() && !jsFile.getName().endsWith("Externs.js") && !jsFile.getName().equals("Index.js")) {
 			System.out.println(
 					"INFO: " + jsFile.getAbsolutePath() + " does not seem to goog.provide or goog.module anything");
 			return;

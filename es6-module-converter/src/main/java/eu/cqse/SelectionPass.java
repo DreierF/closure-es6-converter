@@ -1,57 +1,26 @@
 package eu.cqse;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.Moshi;
-import com.squareup.moshi.Types;
-
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class SelectionPass {
 
-	private static final JsonAdapter<List<ClosureDependency>> JSON_ADAPTER = new Moshi.Builder().build()
-			.adapter(Types.newParameterizedType(List.class, ClosureDependency.class));
-
-	public Set<String> process(File depsFile, boolean includeTests, File... teamscaleUiDir) throws IOException {
+	public Set<File> process(ReaderPass depsFile, boolean includeTests, ReaderPass teamscaleUiDir) {
 		Set<String> tsRequiredNamespaces = getTsRequiredNamespaces(teamscaleUiDir);
 		HashMap<String, ClosureDependency> depsByProvide = getStringClosureDependencies(depsFile);
-		if (depsByProvide == null) {
-			return null;
-		}
 
 		return calculateTransitiveClosure(depsByProvide, includeTests, tsRequiredNamespaces);
 	}
 
-	private static Set<String> getTsRequiredNamespaces(File... teamscaleUiDirs) throws IOException {
-		Set<String> tsRequiredNamespaces = new HashSet<>();
-		for (File teamscaleUiDir : teamscaleUiDirs) {
-			for (File file : Files.fileTraverser().breadthFirst(teamscaleUiDir)) {
-				if (file.isFile()) {
-					Pattern p = Pattern.compile("goog\\.(?:require|forwardDeclare)\\(['\"](goog\\..*)['\"]\\)");
-					String content = Files.asCharSource(file, Charsets.UTF_8).read();
-					Matcher matcher = p.matcher(content);
-					while (matcher.find()) {
-						tsRequiredNamespaces.add(matcher.group(1));
-					}
-				}
-			}
-		}
-		return tsRequiredNamespaces;
+	private static Set<String> getTsRequiredNamespaces(ReaderPass teamscaleUiDirs) {
+		return teamscaleUiDirs.requiresByFile.values().stream().map(require -> require.requiredNamespace).filter(namespace -> namespace.startsWith("goog.")).collect(Collectors.toSet());
 	}
 
-	private Set<String> calculateTransitiveClosure(HashMap<String, ClosureDependency> depsByProvide, boolean includeTests, Set<String> tsRequiredNamespaces) throws IOException {
-		Set<String> transitivelyRequiredClosureFiles = new HashSet<>();
+	private Set<File> calculateTransitiveClosure(HashMap<String, ClosureDependency> depsByProvide, boolean includeTests, Set<String> tsRequiredNamespaces) {
+		Set<File> transitivelyRequiredClosureFiles = new HashSet<>();
 		Set<String> unsatisfiedDependencies = new HashSet<>(tsRequiredNamespaces);
 		Set<String> processedDependencies = new HashSet<>();
 		while (!unsatisfiedDependencies.isEmpty()) {
@@ -80,28 +49,16 @@ public class SelectionPass {
 				}
 			}
 		}
-		return transitivelyRequiredClosureFiles.stream().map(f -> "closure/goog/" + f).collect(Collectors.toSet());
+		return transitivelyRequiredClosureFiles;
 	}
 
-	private HashMap<String, ClosureDependency> getStringClosureDependencies(File depsFile) throws IOException {
-		String content = Files.asCharSource(depsFile, Charsets.UTF_8).read();
-		String jsonRepresentation = "[" + content.replaceAll("//.*", "")
-				.replaceAll("goog.addDependency\\(([^,]+), ([^]]+]),([^]]+]), ([^)]+)\\);", "{'file': $1, 'provides': $2, 'requires': $3, 'info': $4},")
-				.stripTrailing()
-				.replace('\'', '"');
-		jsonRepresentation = jsonRepresentation.substring(0, jsonRepresentation.length() - 1) + "]";
-
-		List<ClosureDependency> closureDependencies = JSON_ADAPTER.fromJson(jsonRepresentation);
-		if (closureDependencies == null) {
-			System.err.println("Failed to parse json!");
-			return null;
-		}
-
+	private HashMap<String, ClosureDependency> getStringClosureDependencies(ReaderPass closureLib) {
 		HashMap<String, ClosureDependency> depsByProvide = new HashMap<>();
-		for (ClosureDependency dependency : closureDependencies) {
-			for (String provide : dependency.provides) {
-				depsByProvide.put(provide, dependency);
-			}
+		for (String providedNamespace : closureLib.filesByNamespace.keySet()) {
+			ClosureDependency dependency = new ClosureDependency();
+			dependency.file = closureLib.filesByNamespace.get(providedNamespace);
+			dependency.requires = closureLib.requiresByFile.get(dependency.file).stream().map(r -> r.requiredNamespace).collect(Collectors.toList());
+			depsByProvide.put(providedNamespace, dependency);
 		}
 		return depsByProvide;
 	}

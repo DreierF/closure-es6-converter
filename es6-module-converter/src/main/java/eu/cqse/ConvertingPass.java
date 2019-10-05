@@ -1,10 +1,8 @@
 package eu.cqse;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static eu.cqse.FileUtils.getFileContentSafe;
 import static eu.cqse.ReaderPass.BASE_JS;
 import static eu.cqse.ReaderPass.GOOG_JS;
 import static java.util.stream.Collectors.toList;
@@ -97,7 +96,7 @@ class ConvertingPass {
 
 	void process(ReaderPass readerPass) throws IOException {
 		for (File file : readerPass.providesByFile.keySet()) {
-			String content = Files.asCharSource(file, Charsets.UTF_8).read().replace("\uFEFF", "");
+			String content = getFileContentSafe(file);
 			List<GoogProvideOrModule> provides = new ArrayList<>(readerPass.providesByFile.get(file));
 			boolean isModule = provides.stream().anyMatch(provideOrModule -> provideOrModule.isModule);
 			List<String> shortExports = new ArrayList<>();
@@ -123,7 +122,7 @@ class ConvertingPass {
 			}
 
 			content = content.replaceAll("(\\W)COMPILED(\\W)", "$1true$2");
-			Files.asCharSink(file, Charsets.UTF_8).write(content);
+			FileUtils.writeFileContent(file, content);
 		}
 	}
 

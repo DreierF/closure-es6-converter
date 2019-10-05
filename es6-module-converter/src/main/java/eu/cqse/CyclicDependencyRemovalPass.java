@@ -1,8 +1,5 @@
 package eu.cqse;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -38,11 +35,7 @@ public class CyclicDependencyRemovalPass {
 				System.out.println("Cyclic dependency is not required and therefore skipped in the merge process: " + f.getName());
 				return "";
 			}
-			try {
-				return Files.asCharSource(f, Charsets.UTF_8).read();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+			return FileUtils.getFileContentSafe(f);
 		}).collect(Collectors.joining("\n\n"));
 
 		Matcher matcher = ReaderPass.PROVIDE_OR_MODULE_PATTERN.matcher(content);
@@ -54,6 +47,6 @@ public class CyclicDependencyRemovalPass {
 		for (File file : files) {
 			file.delete();
 		}
-		Files.asCharSink(new File(googDir, finalName), Charsets.UTF_8).write(content);
+		FileUtils.writeFileContent(new File(googDir, finalName), content);
 	}
 }
