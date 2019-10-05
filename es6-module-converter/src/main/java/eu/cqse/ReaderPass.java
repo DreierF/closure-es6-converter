@@ -33,10 +33,8 @@ public class ReaderPass {
 	public static final String BASE_JS = "base.js";
 	static final String GOOG_JS = "goog.js";
 
-	void process(String... inputDirPaths) throws IOException {
-		for (String inputDirPath : inputDirPaths) {
-			File inputDir = new File(inputDirPath);
-
+	void process(File... inputDirPaths) throws IOException {
+		for (File inputDir : inputDirPaths) {
 			if (!inputDir.isDirectory()) {
 				throw new IOException("Input dir not found");
 			}
@@ -47,8 +45,8 @@ public class ReaderPass {
 				}
 			}
 		}
-		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/dojo/dom/query.js"), List.of(new GoogProvideOrModule("goog.dom.query", true, List.of(), null)), List.of());
-		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/mochikit/async/deferred.js"), List.of(new GoogProvideOrModule("goog.async.Deferred", true, List.of(), null)), List.of());
+//		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/dojo/dom/query.js"), List.of(new GoogProvideOrModule("goog.dom.query", true, List.of(), null)), List.of());
+//		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/mochikit/async/deferred.js"), List.of(new GoogProvideOrModule("goog.async.Deferred", true, List.of(), null)), List.of());
 	}
 
 	private boolean isRelevantJsFile(File file) {

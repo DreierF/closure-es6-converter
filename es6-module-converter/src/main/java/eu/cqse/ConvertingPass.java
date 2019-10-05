@@ -150,7 +150,7 @@ class ConvertingPass {
 			if (content.contains("goog.string.Const") && !file.getName().equals("const.js") && !requiredNamespaces.contains("goog.string.Const")) {
 				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.string.Const", null, null, false));
 			}
-			if (Pattern.compile("goog\\.string\\.(starts|ends)With").matcher(content).find() && !file.getName().equals("string.js") && !requiredNamespaces.contains("goog.string")) {
+			if (Pattern.compile("goog\\.string\\.(startsWith|endsWith|caseInsensitiveContains)").matcher(content).find() && !file.getName().equals("string.js") && !requiredNamespaces.contains("goog.string")) {
 				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.string", null, null, false));
 			}
 			extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog", "goog", null, false));

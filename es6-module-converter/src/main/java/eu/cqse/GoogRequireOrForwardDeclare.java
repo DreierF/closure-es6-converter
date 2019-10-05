@@ -4,19 +4,19 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
-class GoogRequireOrForwardDeclare {
+public class GoogRequireOrForwardDeclare {
 
 	@Nullable
-	 String shortReference;
+	public String shortReference;
 
 	@Nullable
-	final String importedFunction;
+	public final String importedFunction;
 
 	@Nonnull
-	final String requiredNamespace;
+	public final String requiredNamespace;
 
 	@Nullable
-	final String fullText;
+	public final String fullText;
 
 	final boolean isForwardDeclare;
 
