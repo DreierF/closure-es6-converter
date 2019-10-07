@@ -48,7 +48,7 @@ public class Es6ClassConversionPass {
 		}
 
 		try {
-			FileUtils.writeFileContent(file, content);
+			FileUtils.writeFileContent(file, content.replaceAll("\n{3,}", "\n\n"));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

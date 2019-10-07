@@ -1,5 +1,7 @@
 package eu.cqse.es6;
 
+import eu.cqse.JsCodeUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,26 +24,35 @@ public class ClassContainer {
 		}
 	}
 
+	public String getDocComment() {
+		String docComment = constructor.docComment
+				.replaceAll(" \\* @param.*\n?", "")
+				.replaceAll("( \\*)? @constructor\n?", "");
+		boolean isAbstractClass = classMembers.stream().anyMatch(ClassMember::isAbstract);
+		if (isAbstractClass) {
+			return docComment.replaceAll("(\\s*)\\*/\\s*$", "$1* @abstract$0");
+		}
+		return docComment;
+	}
+
 	public String buildEs6Class() {
 		StringBuilder stringBuilder = new StringBuilder();
 
-		String classComment = constructor.docComment.replaceAll(" \\* @param.*\n", "").replaceAll(" \\* @constructor\n", "");
-		stringBuilder.append(classComment);
+		stringBuilder.append(getDocComment());
 
 		stringBuilder.append(constructor.classNamespace).append(" = class ");
 		if (googInheritsInfo != null) {
 			stringBuilder.append("extends ").append(googInheritsInfo.extendedFullNamespace).append(" ");
 		}
-		stringBuilder.append("{\n\n");
+		stringBuilder.append("{");
 
-		stringBuilder.append(constructor.getEs6Constructor(classMembers));
+		stringBuilder.append("\n\n");
+		stringBuilder.append(JsCodeUtils.indentCode(constructor.getEs6Representation(classMembers, googInheritsInfo)));
 
 		for (ClassMember classMember : classMembers) {
 			if (classMember.isMethod()) {
-				stringBuilder.append(classMember.docComment);
-				String declaration = classMember.declaration;
-				declaration = declaration.replaceFirst("\\s?=\\s*function", classMember.memberName);
-				stringBuilder.append(declaration);
+				stringBuilder.append("\n\n");
+				stringBuilder.append(JsCodeUtils.indentCode(classMember.getEs6Representation(googInheritsInfo)));
 			}
 		}
 

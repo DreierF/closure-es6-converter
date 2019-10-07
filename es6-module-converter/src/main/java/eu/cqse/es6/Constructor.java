@@ -3,36 +3,55 @@ package eu.cqse.es6;
 import java.util.List;
 import java.util.regex.Matcher;
 
-public class Constructor {
-	public final String fullMatch;
-	public final String docComment;
-	public final String classNamespace;
-	public final String constructorDefinition;
+import static eu.cqse.JsCodeUtils.indentCode;
+import static eu.cqse.JsCodeUtils.multilineSafeNamespacePattern;
 
-	public Constructor(String fullMatch, String docComment, String classNamespace, String constructorDefinition) {
-		this.fullMatch = fullMatch;
-		this.docComment = docComment;
-		this.classNamespace = classNamespace;
-		this.constructorDefinition = constructorDefinition;
+public class Constructor extends ClassMember {
+
+	public Constructor(String fullMatch, String docComment, String classNamespace, String declaration) {
+		super(fullMatch, docComment, classNamespace, "constructor", declaration);
 	}
 
-	public String getEs6Constructor(List<ClassMember> classMembers) {
-		String constructorComment = docComment
-				.replace(" * @final\n", "")
+	@Override
+	public String getDocComment() {
+		return docComment
+				.replaceAll("( \\*)? @final\n?", "")
+				.replaceAll("( \\*)? @constructor\n?", "")
 				.replaceAll(" \\* @extends.*\n", "")
+				.replaceAll(" \\* @implements.*\n", "")
 				.replace("* */", "*/");
+	}
 
-		String constructorDefinition = this.constructorDefinition.replaceFirst("\\s?=\\s*function", "constructor");
+	@Override
+	public String getDeclaration(GoogInheritsInfo googInheritsInfo) {
+		String declaration = super.getDeclaration(googInheritsInfo);
+		if (googInheritsInfo != null) {
+			declaration = declaration
+					.replaceAll(multilineSafeNamespacePattern(googInheritsInfo.extendedFullNamespace + ".call") + "\\s*\\(\\s*this,?\\s*", "super(");
+			if (!declaration.contains("super(")) {
+				declaration = declaration.replaceAll("constructor\\([^)]+\\)\\s*\\{\\s*", "$0super();\n\n  ");
+			}
+			//TODO rewrite for "cannot access this before calling super()"
+			// - collect all this.name before super(...
+			// - replace first occurrence with let tmp_name;
+			// - replace rest as well
+			// - add initializations this.name=tmp_name; after super call
+		}
+		return declaration;
+	}
+
+	public String getEs6Representation(List<ClassMember> classMembers, GoogInheritsInfo googInheritsInfo) {
+		String constructorDefinition = this.getAsEs6Method(googInheritsInfo);
+
 		StringBuilder constructorExtensionBuilder = new StringBuilder();
 		for (ClassMember classMember : classMembers) {
-			constructorExtensionBuilder.append("\n").append(classMember.docComment);
-			String declaration = classMember.declaration;
 			if (classMember.isField()) {
-				declaration = declaration.replaceFirst("\\s?=\\s*", Matcher.quoteReplacement("this." + classMember.memberName) + "$0");
+				constructorExtensionBuilder.append("\n");
+				constructorExtensionBuilder.append(indentCode(classMember.getAsEs6Field()));
+				constructorExtensionBuilder.append("\n\n");
 			}
-			constructorExtensionBuilder.append(declaration).append("\n\n");
 		}
 		constructorDefinition = constructorDefinition.replaceAll("};?$", Matcher.quoteReplacement(constructorExtensionBuilder + "}"));
-		return constructorComment + constructorDefinition;
+		return constructorDefinition;
 	}
 }

@@ -343,12 +343,12 @@ class ConvertingPass {
 			// Typedefs:
 			// foo.bar.MyClass; -> let MyClass;
 			String shortClassName = getShortNameAndAddToExports(exports, namespace, isProvided);
-			content = content.replaceAll("(?m)^" + multilineSafeNamespacePattern(namespace) + "( =|;)", "let " + shortClassName + "$1");
+			content = content.replaceAll("(?m)^" + JsCodeUtils.multilineSafeNamespacePattern(namespace) + "( =|;)", "let " + shortClassName + "$1");
 			return replaceFullyQualifiedCallWith(content, namespace, shortClassName);
 		}
 		// Prepare export of non-private methods
 		Pattern methodOrConstantPattern = Pattern
-				.compile("(?m)^" + multilineSafeNamespacePattern(namespace) + "\\s*\\.\\s*([" + IDENTIFIER_PATTERN + "]+)(\\s*=[^=])");
+				.compile("(?m)^" + JsCodeUtils.multilineSafeNamespacePattern(namespace) + "\\s*\\.\\s*([" + IDENTIFIER_PATTERN + "]+)(\\s*=[^=])");
 		Matcher matcher = methodOrConstantPattern.matcher(content);
 		while (matcher.find()) {
 			String methodOrConstantName = matcher.group(1);
@@ -359,13 +359,13 @@ class ConvertingPass {
 			if (isPublicByConvention(methodOrConstantName) && isProvided) {
 				exports.add(new AliasedElement(methodOrConstantName, internalMethodOrConstantName));
 			}
-			content = content.replaceAll("(?m)^" + Pattern.quote(matcher.group()), "let " + safeReplaceString(internalMethodOrConstantName) + matcher.group(2));
+			content = content.replaceAll("(?m)^" + Pattern.quote(matcher.group()), "let " + JsCodeUtils.safeReplaceString(internalMethodOrConstantName) + matcher.group(2));
 			content = replaceFullyQualifiedCallWith(content, namespace + "." + methodOrConstantName,
 					internalMethodOrConstantName);
 		}
 		// Prepare export of exported namespace typedefs e.g. goog.soy -> goog.soy.StrictTemplate
 		Pattern typedefPattern = Pattern
-				.compile("(?m)^" + multilineSafeNamespacePattern(namespace) + "\\s*\\.\\s*([" + IDENTIFIER_PATTERN + "]+);");
+				.compile("(?m)^" + JsCodeUtils.multilineSafeNamespacePattern(namespace) + "\\s*\\.\\s*([" + IDENTIFIER_PATTERN + "]+);");
 		matcher = typedefPattern.matcher(content);
 		while (matcher.find()) {
 			String typeName = matcher.group(1);
@@ -397,24 +397,16 @@ class ConvertingPass {
 		return !classOrFunction.endsWith("_");
 	}
 
-	private static String safeReplaceString(String methodOrConstantName) {
-		return Matcher.quoteReplacement(methodOrConstantName);
-	}
-
-	private static String multilineSafeNamespacePattern(String namespace) {
-		return Pattern.quote(namespace).replace(".", "\\E\\s*\\.\\s*\\Q");
-	}
-
 	private static String replaceFullyQualifiedCallWith(String content, String fullyQualifiedCall, String newCall) {
-		return content.replaceAll("(?<!['\"/" + IDENTIFIER_PATTERN + "])" + multilineSafeNamespacePattern(fullyQualifiedCall) + "(?!['\"/" + IDENTIFIER_PATTERN + "])", safeReplaceString(newCall));
+		return content.replaceAll("(?<!['\"/" + IDENTIFIER_PATTERN + "])" + JsCodeUtils.multilineSafeNamespacePattern(fullyQualifiedCall) + "(?!['\"/" + IDENTIFIER_PATTERN + "])", JsCodeUtils.safeReplaceString(newCall));
 	}
 
 	private boolean isProvideForClassOrEnum(String namespace, String content) {
-		return Pattern.compile("(?m)^\\s*" + multilineSafeNamespacePattern(namespace) + "\\s*=\\s*(class|function\\s+)?").matcher(content).find();
+		return Pattern.compile("(?m)^\\s*" + JsCodeUtils.multilineSafeNamespacePattern(namespace) + "\\s*=\\s*(class|function\\s+)?").matcher(content).find();
 	}
 
 	private boolean isTypeDef(String namespace, String content) {
-		return Pattern.compile("(?m)^\\s*" + multilineSafeNamespacePattern(namespace) + ";").matcher(content).find();
+		return Pattern.compile("(?m)^\\s*" + JsCodeUtils.multilineSafeNamespacePattern(namespace) + ";").matcher(content).find();
 	}
 
 	private String convertGoogleModuleFile(GoogProvideOrModule moduleOrProvide, String content) {
