@@ -11,9 +11,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static eu.cqse.JsCodeUtils.IDENTIFIER_PATTERN;
 
 public class ReaderPass {
 
@@ -52,7 +55,29 @@ public class ReaderPass {
 		}
 
 		List<GoogRequireOrForwardDeclare> googRequires = parseGoogRequires(content);
+		addImplicitTypeOnlyGoogRequires(googRequires, content);
 		insertProvidesAndRequiresForFile(jsFile, providesOrModules, googRequires);
+	}
+
+	private void addImplicitTypeOnlyGoogRequires(List<GoogRequireOrForwardDeclare> googRequires, String content) {
+		Set<String> requires = googRequires.stream().map(r -> r.requiredNamespace).collect(Collectors.toSet());
+		// Matches e.g.:
+		// {?ts.data.Test=}
+		// {!Listenable$$module$closure$goog$events$eventhandler|null}
+		// {Element|string|function():Element=}
+		// {!Array.<ts.data.Test>}
+		Pattern requirePattern = Pattern.compile("(?m)^\\s*\\*.*\\{([^}\n]+)}");
+		Matcher matcher = requirePattern.matcher(content);
+		while (matcher.find()) {
+			String typeDefinition = matcher.group(1);
+			String[] namespaces = typeDefinition.split("[^" + IDENTIFIER_PATTERN + ".]+");
+			for (String namespace : namespaces) {
+				if (namespace.contains(".") && !requires.contains(namespace) && !namespace.equals("Array.")) {
+					googRequires.add(new GoogRequireOrForwardDeclare(null, namespace, null, null,
+							GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_LENIENT));
+				}
+			}
+		}
 	}
 
 	private void insertProvidesAndRequiresForFile(File jsFile, List<GoogProvideOrModule> providesOrModules, List<GoogRequireOrForwardDeclare> googRequires) {
@@ -132,7 +157,7 @@ public class ReaderPass {
 		// Groups(1) = short reference ('foo' or '{foo}' or n/a)
 		// Groups(2) = required namespace
 		Pattern requirePattern = Pattern.compile(
-				"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|forwardDeclare)[\\s\\r\\n]*\\(['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
+				"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|forwardDeclare)[\\s\\r\\n]*\\(\\s*['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
 		Matcher matcher = requirePattern.matcher(content);
 		while (matcher.find()) {
 			String requiredNamespace = matcher.group(2);
@@ -149,8 +174,15 @@ public class ReaderPass {
 			} else {
 				shortReference = rawShortReference;
 			}
+			boolean containsForwardDeclare = fullText.contains(".forwardDeclare(");
+			GoogRequireOrForwardDeclare.ERequireType requireType;
+			if (containsForwardDeclare) {
+				requireType = GoogRequireOrForwardDeclare.ERequireType.GOOG_FORWARD_DECLARE;
+			} else {
+				requireType = GoogRequireOrForwardDeclare.ERequireType.GOOG_REQUIRE;
+			}
 			requires.add(new GoogRequireOrForwardDeclare(fullText, requiredNamespace, shortReference, importedFunction,
-					fullText.contains(".forwardDeclare(")));
+					requireType));
 		}
 
 		return requires;

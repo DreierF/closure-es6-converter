@@ -18,15 +18,15 @@ public class GoogRequireOrForwardDeclare {
 	@Nullable
 	public final String fullText;
 
-	final boolean isForwardDeclare;
+	final ERequireType requireType;
 
 	GoogRequireOrForwardDeclare(@Nullable String fullText, @Nonnull String requiredNamespace,
-								@Nullable String shortReference, @Nullable String importedFunction, boolean isForwardDeclare) {
+								@Nullable String shortReference, @Nullable String importedFunction, ERequireType requireType) {
 		this.fullText = fullText;
 		this.shortReference = shortReference;
 		this.importedFunction = importedFunction;
 		this.requiredNamespace = requiredNamespace;
-		this.isForwardDeclare = isForwardDeclare;
+		this.requireType = requireType;
 	}
 
 	@Override
@@ -46,5 +46,12 @@ public class GoogRequireOrForwardDeclare {
 		return Objects.equals(shortReference, that.shortReference)
 				&& Objects.equals(importedFunction, that.importedFunction)
 				&& requiredNamespace.equals(that.requiredNamespace);
+	}
+
+	enum ERequireType {
+		GOOG_REQUIRE,
+		GOOG_FORWARD_DECLARE,
+		IMPLICIT_STRICT,
+		IMPLICIT_LENIENT
 	}
 }

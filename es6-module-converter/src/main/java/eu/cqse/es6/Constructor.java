@@ -31,11 +31,6 @@ public class Constructor extends ClassMember {
 			if (!declaration.contains("super(")) {
 				declaration = declaration.replaceAll("constructor\\([^)]+\\)\\s*\\{\\s*", "$0super();\n\n  ");
 			}
-			//TODO rewrite for "cannot access this before calling super()"
-			// - collect all this.name before super(...
-			// - replace first occurrence with let tmp_name;
-			// - replace rest as well
-			// - add initializations this.name=tmp_name; after super call
 		}
 		return declaration;
 	}

@@ -16,7 +16,10 @@ public class SelectionPass {
 	}
 
 	private static Set<String> getTsRequiredNamespaces(ReaderPass teamscaleUiDirs) {
-		return teamscaleUiDirs.requiresByFile.values().stream().map(require -> require.requiredNamespace).filter(namespace -> namespace.startsWith("goog.")).collect(Collectors.toSet());
+		return teamscaleUiDirs.requiresByFile.values().stream()
+				.filter(r -> r.requireType != GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_LENIENT)
+				.map(require -> require.requiredNamespace)
+				.filter(namespace -> namespace.startsWith("goog.")).collect(Collectors.toSet());
 	}
 
 	private Set<File> calculateTransitiveClosure(HashMap<String, ClosureDependency> depsByProvide, boolean includeTests, Set<String> tsRequiredNamespaces) {
@@ -57,7 +60,9 @@ public class SelectionPass {
 		for (String providedNamespace : closureLib.filesByNamespace.keySet()) {
 			ClosureDependency dependency = new ClosureDependency();
 			dependency.file = closureLib.filesByNamespace.get(providedNamespace);
-			dependency.requires = closureLib.requiresByFile.get(dependency.file).stream().map(r -> r.requiredNamespace).collect(Collectors.toList());
+			dependency.requires = closureLib.requiresByFile.get(dependency.file).stream()
+					.filter(r -> r.requireType != GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_LENIENT)
+					.map(r -> r.requiredNamespace).collect(Collectors.toList());
 			depsByProvide.put(providedNamespace, dependency);
 		}
 		return depsByProvide;

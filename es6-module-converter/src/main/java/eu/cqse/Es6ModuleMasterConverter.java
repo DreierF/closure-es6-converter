@@ -1,11 +1,12 @@
 package eu.cqse;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.CommandLineRunner;
+import com.google.common.collect.ObjectArrays;
 import eu.cqse.es6.Es6ClassConversionPass;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,9 +42,10 @@ public class Es6ModuleMasterConverter {
 
 		SelectionPass selectionPass = new SelectionPass();
 		Set<File> selectedFiles = selectionPass.process(readClosureLib, INCLUDE_TESTS, readTs);
-		selectedFiles.add(new File(INPUT_DIR, "closure/goog/base.js"));
 		FileUtils.copyFiles(selectedFiles, INPUT_DIR.toPath(), OUTPUT_DIR.toPath());
+		Files.copy(INPUT_DIR.toPath().resolve("../goog.js"), OUTPUT_DIR.toPath().resolve("closure/goog/goog.js"));
 		if (INCLUDE_TESTS) {
+			//TODO copy actual tests
 			FileUtils.copyFolder(new File(INPUT_DIR, "scripts").toPath(), new File(OUTPUT_DIR, "scripts").toPath());
 		}
 
@@ -56,13 +58,13 @@ public class Es6ModuleMasterConverter {
 		Es6ClassConversionPass es6Conversion = new Es6ClassConversionPass();
 		es6Conversion.process(OUTPUT_DIR);
 
-//		FileUtils.safeDeleteDir(TEAMSCALE_UI_DIR_CONVERTED.toPath());
-//		FileUtils.copyFolder(TEAMSCALE_UI_DIR.toPath(), TEAMSCALE_UI_DIR_CONVERTED.toPath());
-//
-//		ReaderPass readInPass = new ReaderPass();
-//		readInPass.process(ObjectArrays.concat(OUTPUT_DIR, getUiDirFiles(TEAMSCALE_UI_DIR_CONVERTED)));
-//		validateProvideRequires(readInPass);
-//		new ConvertingPass().process(readInPass);
+		FileUtils.safeDeleteDir(TEAMSCALE_UI_DIR_CONVERTED.toPath());
+		FileUtils.copyFolder(TEAMSCALE_UI_DIR.toPath(), TEAMSCALE_UI_DIR_CONVERTED.toPath());
+
+		ReaderPass readInPass = new ReaderPass();
+		readInPass.process(ObjectArrays.concat(OUTPUT_DIR, getUiDirFiles(TEAMSCALE_UI_DIR_CONVERTED)));
+		validateProvideRequires(readInPass);
+		new ConvertingPass().process(readInPass);
 
 //		CommandLineRunner.main(new String[]{"-O", "ADVANCED",
 //				"--warning_level", "VERBOSE",
@@ -100,7 +102,9 @@ public class Es6ModuleMasterConverter {
 		Preconditions.checkArgument(!pass1.requiresByFile.keySet().isEmpty(), "No goog.requires found in input files");
 
 		Collection<GoogRequireOrForwardDeclare> requires = pass1.requiresByFile.values();
-		Set<String> allRequires = requires.stream().map(require -> require.requiredNamespace).collect(toSet());
+		Set<String> allRequires = requires.stream()
+				.filter(r -> r.requireType != GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_LENIENT)
+				.map(require -> require.requiredNamespace).collect(toSet());
 
 		List<String> unmatchedDependencies = new ArrayList<>();
 		allRequires.forEach(requiredNamespace -> {
@@ -109,7 +113,7 @@ public class Es6ModuleMasterConverter {
 			}
 		});
 		if (!unmatchedDependencies.isEmpty()) {
-			throw new RuntimeException("Dependencies not found:" + join("", unmatchedDependencies));
+			throw new RuntimeException("Dependencies not found:" + join(", ", unmatchedDependencies));
 		}
 	}
 }
