@@ -1,6 +1,7 @@
 package eu.cqse;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -11,7 +12,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -31,12 +31,21 @@ class ConvertingPass {
 
 	private static final Set<String> RESERVED_KEYWORDS = Set.of("Array",
 			"Date", "Error", "File", "LogRecord", "Logger", "Map", "Notification", "Object", "ServiceWorker", "Set", "array",
-			"console", "document", "localStorage", "number", "parseInt", "string", "window");
+			"console", "document", "localStorage", "number", "parseInt", "string", "window", "Element", "Event",
+			"MouseEvent", "BrowserEvent", "EventTarget", "Node", "Document", "FileReader", "ProgressEvent",
+			"XmlHttpFactory");
 
-	private static final Map<String, String> DEFAULT_REPLACEMENTS = new HashMap<>();
-	private static final Set<String> IMPORT_WHOLE_MODULE_EXCEPTIONS = ImmutableSet.of("GraphemeBreak", "CssSpecificity",
-			"CssSanitizer", "ComponentUtil", "VERY_UNSAFE", "CssPropertySanitizer", "BrowserFeature");
-	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "ts.fixInheritanceForEs6Class", "goog.dispose");
+	private static final Map<String, String> DEFAULT_REPLACEMENTS = ImmutableMap.of(
+			"string", "strings",
+			"number", "numbers"
+	);
+
+	private static final Set<String> IMPORT_WHOLE_MODULE_EXCEPTIONS = ImmutableSet.of("goog.i18n.GraphemeBreak",
+			"goog.html.CssSpecificity", "goog.html.sanitizer.CssSanitizer", "goog.ui.ComponentUtil",
+			"goog.html.sanitizer.CssPropertySanitizer", "goog.debug.entryPointRegistry", "goog.userAgent",
+			"goog.i18n.uChar", "goog.dom.animationFrame", "goog.dom.BrowserFeature");
+
+	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "goog.dispose");
 	private static final Pattern ASSIGNED_GOOG_DEFINE_PATTERN = Pattern.compile("(?:let\\s+)?([" + JsCodeUtils.IDENTIFIER_PATTERN + ".]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(\\s*'([^']+\\.([^'.]+))',\\s*([^)]+)\\);?");
 	private static final Set<String> GOOG_IMPORTED_ELEMENTS = Set.of("goog.global",
 			"goog.require",
@@ -49,6 +58,7 @@ class ConvertingPass {
 			"goog.TRUSTED_SITE",
 			"goog.STRICT_MODE_COMPATIBLE",
 			"goog.DISALLOW_TEST_ONLY_CODE",
+			"goog.FEATURESET_YEAR",
 			"goog.module.get",
 			"goog.setTestOnly",
 			"goog.forwardDeclare",
@@ -90,11 +100,6 @@ class ConvertingPass {
 			"goog.defineClass",
 			"goog.declareModuleId", "goog.tagUnsealableClass");
 
-	static {
-		DEFAULT_REPLACEMENTS.put("string", "strings");
-		DEFAULT_REPLACEMENTS.put("number", "numbers");
-	}
-
 	void process(ReaderPass readerPass) throws IOException {
 		for (File file : readerPass.providesByFile.keySet()) {
 			String content = getFileContentSafe(file);
@@ -119,11 +124,14 @@ class ConvertingPass {
 			// Remove namespaces from non officially exported elements
 			HashSet<String> remainingGoogNamespaces = getRemainingGoogNamespaces(content);
 			for (String namespace : remainingGoogNamespaces) {
-				content = rewriteFullyQualifiedNamespace(content, Collections.emptySet(), namespace, false); // TODO Might need to be imported to work properly (AFAIKS only happens for type comments where the type is only used in the comment)
+				// TODO Might need to be imported to work properly (AFAIKS only happens for type comments where the type is only used in the comment)
+				// TODO still needed?
+				content = rewriteFullyQualifiedNamespace(content, Collections.emptySet(), namespace, false);
 //				content = replaceFullyQualifiedCallWith(content, namespace, StringUtils.getLastPart(namespace, '.'));
 			}
 
 			content = content.replaceAll("(\\W)COMPILED(\\W)", "$1true$2");
+			content = content.replace("* @define {", "* @type {");
 			FileUtils.writeFileContent(file, content);
 		}
 	}
@@ -144,6 +152,9 @@ class ConvertingPass {
 		if (!file.getName().equals(GOOG_JS) && !file.getName().equals(BASE_JS)) { // TODO optimize way too slow
 			if (content.contains("goog.dispose(") && !file.getName().equals("disposable.js") && !requiredNamespaces.contains("goog.dispose")) {
 				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.dispose", null, null, GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_STRICT));
+			}
+			if (content.contains("goog.disposeAll(") && !file.getName().equals("disposable.js") && !requiredNamespaces.contains("goog.disposeAll")) {
+				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.disposeAll", null, null, GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_STRICT));
 			}
 			if (content.contains("goog.a11y.aria.State") && !file.getName().equals("attributes.js") && !requiredNamespaces.contains("goog.a11y.aria.State")) {
 				extendedRequires.add(new GoogRequireOrForwardDeclare(null, "goog.a11y.aria.State", null, null, GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_STRICT));
@@ -202,6 +213,10 @@ class ConvertingPass {
 				throw new RuntimeException("Required namespace " + require.requiredNamespace + " could not be found "
 						+ (requiredFile == null ? "" : requiredFile.getName()));
 			}
+			if (file.getAbsoluteFile().equals(requiredFile.getAbsoluteFile())) {
+				// No need to include types from itself
+				continue;
+			}
 			String relativePath = getRequirePathFor(file.getAbsolutePath(), requiredFile.getAbsolutePath());
 
 			if (require.importedFunction != null) {
@@ -240,7 +255,8 @@ class ConvertingPass {
 		if (isClassName(importedElement) && importedElement.contains("Template")) {
 			return true;
 		}
-		return (!isClassName(importedElement) || IMPORT_WHOLE_MODULE_EXCEPTIONS.contains(importedElement));
+		return !isClassName(importedElement) && !isFunctionName(importedElement)
+				|| IMPORT_WHOLE_MODULE_EXCEPTIONS.contains(require.requiredNamespace);
 	}
 
 	private String replaceOrInsert(String content, String fullText, String replacement) {
@@ -253,6 +269,10 @@ class ConvertingPass {
 
 	private static boolean isClassName(String importedElement) {
 		return Character.isUpperCase(importedElement.charAt(0));
+	}
+
+	private static boolean isFunctionName(String importedElement) {
+		return importedElement.matches(".*[A-Z].*");
 	}
 
 	private String getRequirePathFor(String callingFile, String targetFile) {

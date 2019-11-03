@@ -28,7 +28,7 @@ public class ClassContainer {
 		String docComment = constructor.docComment
 				.replaceAll(" \\* @param.*\n?", "")
 				.replaceAll("( \\*)? @constructor\n?", "");
-		boolean isAbstractClass = classMembers.stream().anyMatch(ClassMember::isAbstract);
+		boolean isAbstractClass = classMembers.stream().anyMatch(ClassMember::isAbstract) && !docComment.contains("@interface");
 		if (isAbstractClass) {
 			return docComment.replaceAll("(\\s*)\\*/\\s*$", "$1* @abstract$0");
 		}

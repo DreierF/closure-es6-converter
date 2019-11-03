@@ -43,7 +43,7 @@ public class Es6ModuleMasterConverter {
 		SelectionPass selectionPass = new SelectionPass();
 		Set<File> selectedFiles = selectionPass.process(readClosureLib, INCLUDE_TESTS, readTs);
 		FileUtils.copyFiles(selectedFiles, INPUT_DIR.toPath(), OUTPUT_DIR.toPath());
-		Files.copy(INPUT_DIR.toPath().resolve("../goog.js"), OUTPUT_DIR.toPath().resolve("closure/goog/goog.js"));
+		Files.copy(INPUT_DIR.toPath().resolve("closure/goog/base.js"), OUTPUT_DIR.toPath().resolve("closure/goog/goog.js"));
 		if (INCLUDE_TESTS) {
 			//TODO copy actual tests
 			FileUtils.copyFolder(new File(INPUT_DIR, "scripts").toPath(), new File(OUTPUT_DIR, "scripts").toPath());

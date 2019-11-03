@@ -27,6 +27,8 @@ public class CyclicDependencyRemovalPass {
 		merge("ui/control.js", "ui/controlrenderer.js", "ui/registry.js", "ui/control.js");
 		merge("ui/menu.js", "ui/menurenderer.js", "ui/menuitem.js", "ui/menu.js");
 		merge("useragent/product.js", "useragent/product.js", "useragent/product_isversion.js");
+		merge("ui/menuseparator.js", "ui/menuseparatorrenderer.js", "ui/menuseparator.js");
+		merge("ui/tree/treenode.js", "ui/tree/basenode.js", "ui/tree/treenode.js");
 	}
 
 	private void merge(String finalName, String... fileNames) throws IOException {

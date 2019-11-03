@@ -19,6 +19,8 @@ public class Constructor extends ClassMember {
 				.replaceAll("( \\*)? @constructor\n?", "")
 				.replaceAll(" \\* @extends.*\n", "")
 				.replaceAll(" \\* @implements.*\n", "")
+				.replaceAll(" \\* @interface\n", "")
+				.replaceAll(" \\* @abstract\n", "")
 				.replace("* */", "*/");
 	}
 

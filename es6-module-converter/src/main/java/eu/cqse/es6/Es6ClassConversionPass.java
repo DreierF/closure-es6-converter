@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 public class Es6ClassConversionPass {
 
 	private static final Pattern GOOG_INHERITS_PATTERN = Pattern.compile("(?m)^goog\\.inherits\\(\\s*([^,]+),\\s*([^)]+)\\);");
-	private static final Pattern CONSTRUCTOR_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/|@constructor).)*@constructor((?!\\*/).)*\\*/\\s*)([\\w.]+)(\\s?=\\s*function)", Pattern.DOTALL);
+	private static final Pattern CONSTRUCTOR_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/|@(?:constructor|interface)).)*@(?:constructor|interface)((?!\\*/).)*\\*/\\s*)([\\w.]+)(\\s?=\\s*function)", Pattern.DOTALL);
 	private static final Pattern CLASS_MEMBER_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/).)*\\*/\\s*)([\\w.]+)\\.prototype\\.(\\w+)" +
 			"(;|\\s?=\\s*)", Pattern.DOTALL);
 

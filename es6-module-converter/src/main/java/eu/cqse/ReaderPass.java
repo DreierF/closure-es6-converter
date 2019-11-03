@@ -66,7 +66,7 @@ public class ReaderPass {
 		// {!Listenable$$module$closure$goog$events$eventhandler|null}
 		// {Element|string|function():Element=}
 		// {!Array.<ts.data.Test>}
-		Pattern requirePattern = Pattern.compile("(?m)^\\s*\\*.*\\{([^}\n]+)}");
+		Pattern requirePattern = Pattern.compile("(?m)(?:param|return|type|extends|typedef|private|protected|public)\\s*\\{([^}]+)}");
 		Matcher matcher = requirePattern.matcher(content);
 		while (matcher.find()) {
 			String typeDefinition = matcher.group(1);

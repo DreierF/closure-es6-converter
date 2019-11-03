@@ -10,8 +10,10 @@ import java.util.regex.Pattern;
 import static eu.cqse.JsCodeUtils.multilineSafeNamespacePattern;
 
 public class ClassMember {
-	private static final Pattern METHOD_DELEGATION_PATTERN = Pattern.compile("\\s*=\\s*[\\w_.\\s]+" + multilineSafeNamespacePattern(".prototype.") + "([\\w_]+);");
-	private static final Pattern FUNCTION_DELEGATION_PATTERN = Pattern.compile("\\s*=\\s*[\\w_.\\s]+\\.([\\w_]+);");
+	private static final Pattern METHOD_DELEGATION_PATTERN = Pattern.compile("(?m)\\s*=\\s*[\\w_.\\s]+" + multilineSafeNamespacePattern(".prototype.") + "([\\w_]+);");
+	private static final Pattern FUNCTION_DELEGATION_PATTERN = Pattern.compile("(?m)\\s*=\\s*[\\w_.\\s]+\\.([\\w_]+);");
+	private static final Pattern TYPE_UNION_WITH_UNDEFINED = Pattern.compile("@type \\{.*undefined(?!>).*}");
+	private static final Pattern PRIMITIVE_NON_NULLABLE_TYPE = Pattern.compile("@type \\{(number|boolean|string|KeyCodes)}");
 
 	public final String fullMatch;
 	public final String docComment;
@@ -28,7 +30,7 @@ public class ClassMember {
 	}
 
 	public boolean isMethod() {
-		return this.declaration.matches("\\s?=\\s*function.*")
+		return this.declaration.matches("(?ms)\\s?=\\s*function.*")
 				|| docComment.contains("@param")
 				|| docComment.contains("@return")
 				|| isExplicitAbstractMethod(declaration);
@@ -39,14 +41,15 @@ public class ClassMember {
 	}
 
 	public String getDocComment() {
+		String docComment = this.docComment.replaceAll("\\* @(private|protected|public) \\{", "* @$1\n  * @type {");
 		if (isExplicitAbstractMethod(declaration)) {
 			return docComment
 					.replaceAll("\\s*\\* @type \\{function\\(\\) : void}\n", "")
 					.replaceAll("(\\s*)\\*/\\s*$", "$1* @abstract$0");
 		}
 		if (hasNoInitializer(declaration)) {
-			if (!docComment.matches("@type \\{.*undefined.*}")) {
-				return docComment.replaceAll("@type \\{(.*)}", "@type {$1|undefined}");
+			if (PRIMITIVE_NON_NULLABLE_TYPE.matcher(docComment).find()) {
+				return docComment.replaceAll("@type \\{(.*)}", "@type {$1|null}");
 			}
 		}
 		return docComment;
@@ -60,10 +63,10 @@ public class ClassMember {
 			Matcher matcher = METHOD_DELEGATION_PATTERN.matcher(declaration);
 			if (matcher.find()) {
 				String delegate = matcher.group(1);
-				return memberName + "(" + getInferredParameterList() + ") {\n  return this." + delegate + "();\n}";
+				return memberName + "(" + getInferredParameterList() + ") {\n  return this." + delegate + "(" + getInferredParameterList() + ");\n}";
 			} else {
 				String delegate = declaration.replaceFirst("\\s*=\\s*(.*);", "$1");
-				return memberName + "(" + getInferredParameterList() + ") {\n  return " + delegate + "();\n}";
+				return memberName + "(" + getInferredParameterList() + ") {\n  return " + delegate + "(" + getInferredParameterList() + ");\n}";
 			}
 		} else {
 			declaration = declaration.replaceFirst("\\s?=\\s*function", memberName);
@@ -74,6 +77,9 @@ public class ClassMember {
 				declaration = declaration
 						.replaceAll(multilineSafeNamespacePattern(googInheritsInfo.fullClassNamespace + ".base")
 								+ "\\(\\s*this,\\s*'(\\w+)',?\\s*", "super.$1(");
+				declaration = declaration
+						.replaceAll(multilineSafeNamespacePattern(googInheritsInfo.fullClassNamespace + ".superClass_.")
+								+ "([\\w_]+)\\s*\\.\\s*call\\s*\\(\\s*this,?\\s*", "super.$1(");
 			}
 			return declaration;
 		}
@@ -107,7 +113,7 @@ public class ClassMember {
 	 * gives clues how the method should look like.
 	 */
 	private String getInferredParameterList() {
-		Matcher matcher = Pattern.compile("\\* @parm\\s?\\{[^{}]+(}|\\{[^{}]+}) (\\w+)").matcher(this.docComment);
+		Matcher matcher = Pattern.compile("\\* @param\\s?\\{[^{}]+(}|\\{[^{}]+}) (\\w+)").matcher(this.docComment);
 		List<String> parameterList = new ArrayList<>();
 		while (matcher.find()) {
 			parameterList.add(matcher.group(2));
@@ -124,10 +130,14 @@ public class ClassMember {
 	}
 
 	public String getAsEs6Field() {
-		String docComment = this.docComment;
+		String docComment = this.getDocComment();
 		String declaration = this.declaration;
 		if (hasNoInitializer(declaration)) {
-			declaration = " = undefined;";
+			if (TYPE_UNION_WITH_UNDEFINED.matcher(docComment).find()) {
+				declaration = " = undefined;";
+			} else {
+				declaration = " = null;";
+			}
 		}
 		declaration = declaration.replaceFirst("\\s?=\\s*", Matcher.quoteReplacement("this." + memberName) + "$0");
 		return docComment + declaration;
