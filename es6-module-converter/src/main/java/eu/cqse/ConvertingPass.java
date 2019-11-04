@@ -33,7 +33,7 @@ class ConvertingPass {
 			"Date", "Error", "File", "LogRecord", "Logger", "Map", "Notification", "Object", "ServiceWorker", "Set", "array",
 			"console", "document", "localStorage", "number", "parseInt", "string", "window", "Element", "Event",
 			"MouseEvent", "BrowserEvent", "EventTarget", "Node", "Document", "FileReader", "ProgressEvent",
-			"XmlHttpFactory");
+			"XmlHttpFactory", "Promise");
 
 	private static final Map<String, String> DEFAULT_REPLACEMENTS = ImmutableMap.of(
 			"string", "strings",

@@ -72,6 +72,9 @@ public class ReaderPass {
 			String typeDefinition = matcher.group(1);
 			String[] namespaces = typeDefinition.split("[^" + IDENTIFIER_PATTERN + ".]+");
 			for (String namespace : namespaces) {
+				if (namespace.equals("goog.net.XhrLike.OrNative")) {
+					namespace = "goog.net.XhrLike";
+				}
 				if (namespace.contains(".") && !requires.contains(namespace) && !namespace.equals("Array.")) {
 					googRequires.add(new GoogRequireOrForwardDeclare(null, namespace, null, null,
 							GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_LENIENT));
