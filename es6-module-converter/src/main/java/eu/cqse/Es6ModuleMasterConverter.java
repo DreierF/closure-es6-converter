@@ -2,6 +2,7 @@ package eu.cqse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ObjectArrays;
+import com.google.javascript.jscomp.CommandLineRunner;
 import eu.cqse.es6.Es6ClassConversionPass;
 
 import java.io.File;
@@ -16,7 +17,11 @@ import static java.lang.String.join;
 import static java.util.stream.Collectors.toSet;
 
 /**
- * Run "./gradlew generateJavascriptDataClasses compileSoy" before
+ * HOWTO:
+ * - Adjust TEAMSCALE_UI_DIR to point to a clone of the TS repo.
+ * - Make sure you have checked out the branch "experimental/webpack"
+ * - Run "./gradlew generateJavascriptDataClasses compileSoy" in this repo
+ *
  */
 public class Es6ModuleMasterConverter {
 
@@ -28,12 +33,48 @@ public class Es6ModuleMasterConverter {
 
 	private static File[] getUiDirFiles(File teamscaleUiDir) {
 		return new File[]{new File(teamscaleUiDir, "src-js"),
-				new File(teamscaleUiDir, "resources/generated-typedefs"),
-				new File(teamscaleUiDir, "class-resources/com/teamscale/ui/build/third_party"),
+				new File(teamscaleUiDir, "generated-src-js/typedefs"),
+				new File(teamscaleUiDir, "resources/third_party"),
 				new File(teamscaleUiDir, "build/generated/soy")};
 	}
 
 	public static void main(String[] args) throws IOException {
+		convert();
+
+		CommandLineRunner.main(new String[]{"-O", "ADVANCED",
+				"--warning_level", "VERBOSE",
+				"--jscomp_error='*'",
+				"--jscomp_off=strictMissingRequire",
+				"--jscomp_off=extraRequire",
+				"--jscomp_off=deprecated",
+				"--jscomp_off=lintChecks",
+				"--jscomp_off=analyzerChecks",
+				"--jscomp_off=strictMissingProperties",
+				"--jscomp_off=strictPrimitiveOperators",
+				"--jscomp_warning=unusedLocalVariables",
+				"--js='" + OUTPUT_DIR + "/**.js'",
+				"--js='!./closure-deps/**.js'",
+				"--js='!**_test.js'",
+				"--js='!**_perf.js'",
+				"--js='!**tester.js'",
+				"--js='!**promise/testsuiteadapter.js'",
+				"--js='!**relativecommontests.js'",
+				"--js='!**osapi/osapi.js'",
+				"--js='!**svgpan/svgpan.js'",
+				"--js='!**alltests.js'",
+				"--js='!**node_modules**.js'",
+				"--js='!**protractor_spec.js'",
+				"--js='!**protractor.conf.js'",
+				"--js='!**browser_capabilities.js'",
+				"--js='!**generate_closure_unit_tests.js'",
+				"--js='!./doc/**.js'",
+				"--js='!**debug_loader_integration_tests/testdata/**'",
+				"--js_output_file=\"compiled.js\""});
+
+		System.out.println("\n==== Finished ====");
+	}
+
+	private static void convert() throws IOException {
 		ReaderPass readClosureLib = new ReaderPass();
 		readClosureLib.process(INPUT_DIR);
 
@@ -65,36 +106,6 @@ public class Es6ModuleMasterConverter {
 		readInPass.process(ObjectArrays.concat(OUTPUT_DIR, getUiDirFiles(TEAMSCALE_UI_DIR_CONVERTED)));
 		validateProvideRequires(readInPass);
 		new ConvertingPass().process(readInPass);
-
-//		CommandLineRunner.main(new String[]{"-O", "ADVANCED",
-//				"--warning_level", "VERBOSE",
-//				"--jscomp_error='*'",
-//				"--jscomp_off=strictMissingRequire",
-//				"--jscomp_off=extraRequire",
-//				"--jscomp_off=deprecated",
-//				"--jscomp_off=lintChecks",
-//				"--jscomp_off=analyzerChecks",
-//				"--jscomp_warning=unusedLocalVariables",
-//				"--js='" + OUTPUT_DIR + "/**.js'",
-//				"--js='!./closure-deps/**.js'",
-//				"--js='!**_test.js'",
-//				"--js='!**_perf.js'",
-//				"--js='!**tester.js'",
-//				"--js='!**promise/testsuiteadapter.js'",
-//				"--js='!**relativecommontests.js'",
-//				"--js='!**osapi/osapi.js'",
-//				"--js='!**svgpan/svgpan.js'",
-//				"--js='!**alltests.js'",
-//				"--js='!**node_modules**.js'",
-//				"--js='!**protractor_spec.js'",
-//				"--js='!**protractor.conf.js'",
-//				"--js='!**browser_capabilities.js'",
-//				"--js='!**generate_closure_unit_tests.js'",
-//				"--js='!./doc/**.js'",
-//				"--js='!**debug_loader_integration_tests/testdata/**'",
-//				"--js_output_file=\"compiled.js\""});
-
-		System.out.println("\n==== Finished ====");
 	}
 
 	private static void validateProvideRequires(ReaderPass pass1) {

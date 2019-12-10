@@ -30,9 +30,14 @@ public class ReaderPass {
 
 	public static final String BASE_JS = "base.js";
 	public static final String GOOG_JS = "goog.js";
+	private static final Pattern DEFAULT_EXPORT_PATTERN = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?(([$\\w_,\\s+:*]|//.*|/\\**[^/]*(?<=\\*)/)+)}?;?");
+	private static final Pattern DOTTED_EXPORT = Pattern.compile("(?m)^\\s*exports\\.([\\w_]+)\\s*=");
+	private static final Pattern REQUIRE_PATTERN = Pattern.compile(
+			"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|forwardDeclare)[\\s\\r\\n]*\\(\\s*['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
 
 	void process(File... inputDirPaths) throws IOException {
 		FileUtils.processRelevantJsFiles(this::processJsFile, inputDirPaths);
+//		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "closure/goog/goog.js"), List.of(new GoogProvideOrModule("goog", true, List.of(), null)), List.of());
 //		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/dojo/dom/query.js"), List.of(new GoogProvideOrModule("goog.dom.query", true, List.of(), null)), List.of());
 //		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/mochikit/async/deferred.js"), List.of(new GoogProvideOrModule("goog.async.Deferred", true, List.of(), null)), List.of());
 	}
@@ -105,10 +110,10 @@ public class ReaderPass {
 			boolean isModule = matcher.group().contains("module(");
 			List<GoogModuleExport> exports = new ArrayList<>();
 			if (isModule) {
-				exports.addAll(extractExportsOfGoogModule(fileContent));
+				exports.addAll(extractExportsOfGoogModule(fileContent, namespace));
 				if (exports.isEmpty()) {
 					throw new RuntimeException(
-							"Namespace '" + namespace + " is provided as goog.module, but not exports were found");
+							"Namespace '" + namespace + "' is provided as goog.module, but not exports were found");
 				}
 			}
 			provides.add(new GoogProvideOrModule(namespace, isModule, exports, fullMatch));
@@ -117,34 +122,32 @@ public class ReaderPass {
 	}
 
 	@VisibleForTesting
-	static List<GoogModuleExport> extractExportsOfGoogModule(String fileContent) {
+	static List<GoogModuleExport> extractExportsOfGoogModule(String fileContent, String module) {
 		List<GoogModuleExport> googExports = new ArrayList<>();
-		Pattern dottedExport = Pattern.compile("(?m)^\\s*exports\\.([\\w_]+)\\s*=");
-		Matcher dottedExportMatcher = dottedExport.matcher(fileContent);
+		Matcher dottedExportMatcher = DOTTED_EXPORT.matcher(fileContent);
 		while (dottedExportMatcher.find()) {
 			String identifier = dottedExportMatcher.group(1).trim();
 			googExports.add(new GoogModuleExport(new AliasedElement(identifier, identifier), true, dottedExportMatcher.group()));
 		}
-		Pattern defaultExportPattern = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?(([$\\w_,\\s+:*]|//.*|/\\**[^/]*(?<=\\*)/)+)}?;?");
-		Matcher defaultExportMatcher = defaultExportPattern.matcher(fileContent);
+		Matcher defaultExportMatcher = DEFAULT_EXPORT_PATTERN.matcher(fileContent);
 		while (defaultExportMatcher.find()) {
 			String rawContent = defaultExportMatcher.group(1).replaceAll("/\\**[^/]*(?<=\\*)/", "").replaceAll("//.*", "");
 			List<AliasedElement> exportedNames = new ArrayList<>();
 			if (rawContent.contains(",")) {
 				exportedNames.addAll(Arrays.stream(rawContent.split(",")).filter(e -> !e.isBlank())
-						.map(ReaderPass::normalizeExportEntry).collect(Collectors.toList()));
+						.map(ns -> normalizeExportEntry(ns, module)).collect(Collectors.toList()));
 			} else {
-				exportedNames.add(normalizeExportEntry(rawContent));
+				exportedNames.add(normalizeExportEntry(rawContent, module));
 			}
 			exportedNames.forEach(exportedName -> googExports.add(new GoogModuleExport(exportedName, false, defaultExportMatcher.group())));
 		}
 		return googExports;
 	}
 
-	private static AliasedElement normalizeExportEntry(String ns) {
+	private static AliasedElement normalizeExportEntry(String ns, String module) {
 		String[] split = ns.split(":");
 		if (split.length == 1) {
-			return new AliasedElement(split[0].trim());
+			return new AliasedElement(StringUtils.getLastPart(module, '.'), split[0].trim());
 		}
 		return new AliasedElement(split[0].trim(), split[1].trim());
 	}
@@ -159,9 +162,7 @@ public class ReaderPass {
 		//
 		// Groups(1) = short reference ('foo' or '{foo}' or n/a)
 		// Groups(2) = required namespace
-		Pattern requirePattern = Pattern.compile(
-				"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|forwardDeclare)[\\s\\r\\n]*\\(\\s*['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
-		Matcher matcher = requirePattern.matcher(content);
+		Matcher matcher = REQUIRE_PATTERN.matcher(content);
 		while (matcher.find()) {
 			String requiredNamespace = matcher.group(2);
 			String fullText = matcher.group();

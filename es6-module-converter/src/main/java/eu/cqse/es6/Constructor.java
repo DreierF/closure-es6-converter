@@ -8,8 +8,11 @@ import static eu.cqse.JsCodeUtils.multilineSafeNamespacePattern;
 
 public class Constructor extends ClassMember {
 
-	public Constructor(String fullMatch, String docComment, String classNamespace, String declaration) {
+	public final String constLetVar;
+
+	public Constructor(String fullMatch, String docComment, String classNamespace, String declaration, String constLetVar) {
 		super(fullMatch, docComment, classNamespace, "constructor", declaration);
+		this.constLetVar = constLetVar;
 	}
 
 	@Override
@@ -20,7 +23,7 @@ public class Constructor extends ClassMember {
 				.replaceAll(" \\* @extends.*\n", "")
 				.replaceAll(" \\* @implements.*\n", "")
 				.replaceAll(" \\* @interface\n", "")
-				.replaceAll(" \\* @abstract\n", "")
+				.replaceAll("( \\*)? @abstract\n", "")
 				.replace("* */", "*/");
 	}
 

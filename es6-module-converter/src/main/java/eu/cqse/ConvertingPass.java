@@ -45,7 +45,7 @@ class ConvertingPass {
 			"goog.html.sanitizer.CssPropertySanitizer", "goog.debug.entryPointRegistry", "goog.userAgent",
 			"goog.i18n.uChar", "goog.dom.animationFrame", "goog.dom.BrowserFeature");
 
-	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "goog.dispose");
+	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "goog.dispose", "goog.async.run");
 	private static final Pattern ASSIGNED_GOOG_DEFINE_PATTERN = Pattern.compile("(?:let\\s+)?([" + JsCodeUtils.IDENTIFIER_PATTERN + ".]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(\\s*'([^']+\\.([^'.]+))',\\s*([^)]+)\\);?");
 	private static final Set<String> GOOG_IMPORTED_ELEMENTS = Set.of("goog.global",
 			"goog.require",
@@ -132,6 +132,15 @@ class ConvertingPass {
 
 			content = content.replaceAll("(\\W)COMPILED(\\W)", "$1true$2");
 			content = content.replace("* @define {", "* @type {");
+			content = content.replaceAll("(?m)\\nif \\(goog\\.DEBUG\\) \\{[^\\n]*(\\n+(?!})[^\\n]*)*\\n+}", "");
+			content = content.replaceAll("goog\\.LOCALE(?=\\W)(?!(\\.|\\s*=))", "'en'");
+			content = content.replaceAll("goog\\.global(?=[.\\[])", "window");
+			content = content.replaceAll("(?m)^goog\\.tagUnsealableClass", "// $0");
+
+			// Workaround for https://github.com/google/closure-compiler/issues/3484
+			content = content.replaceAll("import \\* as goog .*", "$0\nvar goog_ = goog;");
+			content = content.replaceAll("goog(\\.\\w+(?=\\W)(?![.']))", "goog_$1");
+
 			FileUtils.writeFileContent(file, content);
 		}
 	}

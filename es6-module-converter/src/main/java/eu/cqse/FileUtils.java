@@ -19,7 +19,7 @@ public class FileUtils {
 	public static void processRelevantJsFiles(Consumer<File> processor, File... inputDirPaths) throws IOException {
 		for (File inputDir : inputDirPaths) {
 			if (!inputDir.isDirectory()) {
-				throw new IOException("Input dir not found");
+				throw new IOException("Input dir " + inputDir + " not found!");
 			}
 
 			for (File file : Files.fileTraverser().breadthFirst(inputDir)) {

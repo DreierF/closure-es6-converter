@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 public class Es6ClassConversionPass {
 
 	private static final Pattern GOOG_INHERITS_PATTERN = Pattern.compile("(?m)^goog\\.inherits\\(\\s*([^,]+),\\s*([^)]+)\\);");
-	private static final Pattern CONSTRUCTOR_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/|@(?:constructor|interface)).)*@(?:constructor|interface)((?!\\*/).)*\\*/\\s*)([\\w.]+)(\\s?=\\s*function)", Pattern.DOTALL);
+	private static final Pattern CONSTRUCTOR_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/|@(?:constructor|interface)).)*@(?:constructor|interface)((?!\\*/).)*\\*/\\s*)((?:const|var|let)\\s+)?([\\w.]+)(\\s?=\\s*function)", Pattern.DOTALL);
 	private static final Pattern CLASS_MEMBER_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/).)*\\*/\\s*)([\\w.]+)\\.prototype\\.(\\w+)" +
 			"(;|\\s?=\\s*)", Pattern.DOTALL);
 
@@ -82,10 +82,10 @@ public class Es6ClassConversionPass {
 		List<Constructor> constructors = new ArrayList<>();
 		Matcher matcher = CONSTRUCTOR_PATTERN.matcher(content);
 		while (matcher.find()) {
-			String definition = JsCodeUtils.getDefinition(content, matcher, 5);
+			String definition = JsCodeUtils.getDefinition(content, matcher, 6);
 			String fullMatch = matcher.group();
-			fullMatch = fullMatch.substring(0, fullMatch.length() - matcher.group(5).length()) + definition;
-			constructors.add(new Constructor(fullMatch, matcher.group(1), matcher.group(4), definition));
+			fullMatch = fullMatch.substring(0, fullMatch.length() - matcher.group(6).length()) + definition;
+			constructors.add(new Constructor(fullMatch, matcher.group(1), matcher.group(5), definition, matcher.group(4)));
 		}
 		return constructors;
 	}

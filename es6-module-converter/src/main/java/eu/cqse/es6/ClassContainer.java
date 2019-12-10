@@ -28,7 +28,7 @@ public class ClassContainer {
 		String docComment = constructor.docComment
 				.replaceAll(" \\* @param.*\n?", "")
 				.replaceAll("( \\*)? @constructor\n?", "");
-		boolean isAbstractClass = classMembers.stream().anyMatch(ClassMember::isAbstract) && !docComment.contains("@interface");
+		boolean isAbstractClass = classMembers.stream().anyMatch(ClassMember::isAbstract) && !docComment.contains("@interface") && !docComment.contains("@abstract");
 		if (isAbstractClass) {
 			return docComment.replaceAll("(\\s*)\\*/\\s*$", "$1* @abstract$0");
 		}
@@ -39,6 +39,10 @@ public class ClassContainer {
 		StringBuilder stringBuilder = new StringBuilder();
 
 		stringBuilder.append(getDocComment());
+
+		if (constructor.constLetVar != null) {
+			stringBuilder.append(constructor.constLetVar);
+		}
 
 		stringBuilder.append(constructor.classNamespace).append(" = class ");
 		if (googInheritsInfo != null) {
