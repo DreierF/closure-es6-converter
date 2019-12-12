@@ -26,8 +26,8 @@ public class ClassContainer {
 
 	public String getDocComment() {
 		String docComment = constructor.docComment
-				.replaceAll(" \\* @param.*\n?", "")
-				.replaceAll("( \\*)? @constructor\n?", "");
+				.replaceAll(" \\* @param.*\r?\n?", "")
+				.replaceAll("( \\*)? @constructor\r?\n?", "");
 		boolean isAbstractClass = classMembers.stream().anyMatch(ClassMember::isAbstract) && !docComment.contains("@interface") && !docComment.contains("@abstract");
 		if (isAbstractClass) {
 			return docComment.replaceAll("(\\s*)\\*/\\s*$", "$1* @abstract$0");
@@ -50,17 +50,17 @@ public class ClassContainer {
 		}
 		stringBuilder.append("{");
 
-		stringBuilder.append("\n\n");
+		stringBuilder.append("\r\n\r\n");
 		stringBuilder.append(JsCodeUtils.indentCode(constructor.getEs6Representation(classMembers, googInheritsInfo)));
 
 		for (ClassMember classMember : classMembers) {
 			if (classMember.isMethod()) {
-				stringBuilder.append("\n\n");
+				stringBuilder.append("\r\n\r\n");
 				stringBuilder.append(JsCodeUtils.indentCode(classMember.getEs6Representation(googInheritsInfo)));
 			}
 		}
 
-		stringBuilder.append("\n").append("}");
+		stringBuilder.append("\r\n").append("}");
 
 		return stringBuilder.toString();
 	}

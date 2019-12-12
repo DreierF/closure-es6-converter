@@ -18,12 +18,12 @@ public class Constructor extends ClassMember {
 	@Override
 	public String getDocComment() {
 		return docComment
-				.replaceAll("( \\*)? @final\n?", "")
-				.replaceAll("( \\*)? @constructor\n?", "")
-				.replaceAll(" \\* @extends.*\n", "")
-				.replaceAll(" \\* @implements.*\n", "")
-				.replaceAll(" \\* @interface\n", "")
-				.replaceAll("( \\*)? @abstract\n", "")
+				.replaceAll("( \\*)? @final\r?\n?", "")
+				.replaceAll("( \\*)? @constructor\r?\n?", "")
+				.replaceAll(" \\* @extends.*\r?\n", "")
+				.replaceAll(" \\* @implements.*\r?\n", "")
+				.replaceAll(" \\* @interface\r?\n", "")
+				.replaceAll("( \\*)? @abstract\r?\n", "")
 				.replace("* */", "*/");
 	}
 
@@ -34,7 +34,7 @@ public class Constructor extends ClassMember {
 			declaration = declaration
 					.replaceAll(multilineSafeNamespacePattern(googInheritsInfo.extendedFullNamespace + ".call") + "\\s*\\(\\s*this,?\\s*", "super(");
 			if (!declaration.contains("super(")) {
-				declaration = declaration.replaceAll("constructor\\([^)]+\\)\\s*\\{\\s*", "$0super();\n\n  ");
+				declaration = declaration.replaceAll("constructor\\([^)]+\\)\\s*\\{\\s*", "$0super();\r\n\n  ");
 			}
 		}
 		return declaration;
@@ -46,9 +46,9 @@ public class Constructor extends ClassMember {
 		StringBuilder constructorExtensionBuilder = new StringBuilder();
 		for (ClassMember classMember : classMembers) {
 			if (classMember.isField()) {
-				constructorExtensionBuilder.append("\n");
+				constructorExtensionBuilder.append("\r\n");
 				constructorExtensionBuilder.append(indentCode(classMember.getAsEs6Field()));
-				constructorExtensionBuilder.append("\n\n");
+				constructorExtensionBuilder.append("\r\n\r\n");
 			}
 		}
 		constructorDefinition = constructorDefinition.replaceAll("};?$", Matcher.quoteReplacement(constructorExtensionBuilder + "}"));

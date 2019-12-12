@@ -39,7 +39,7 @@ public class CyclicDependencyRemovalPass {
 				return "";
 			}
 			return FileUtils.getFileContentSafe(f);
-		}).collect(Collectors.joining("\n\n"));
+		}).collect(Collectors.joining("\r\n\r\n"));
 
 		Matcher matcher = ReaderPass.PROVIDE_OR_MODULE_PATTERN.matcher(content);
 		while (matcher.find()) {

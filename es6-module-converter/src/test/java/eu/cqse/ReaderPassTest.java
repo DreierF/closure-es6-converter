@@ -10,7 +10,7 @@ class ReaderPassTest {
 
 	@Test
 	void extractExportsOfGoogModuleSingleNamedExport() {
-		List<GoogModuleExport> googModuleExports = ReaderPass.extractExportsOfGoogModule("exports = {\ntest:test\n};");
+		List<GoogModuleExport> googModuleExports = ReaderPass.extractExportsOfGoogModule("exports = {\r\ntest:test\r\n};");
 		assertThat(googModuleExports.stream().map(e -> e.exportName.internalName)).containsExactly("test");
 	}
 
