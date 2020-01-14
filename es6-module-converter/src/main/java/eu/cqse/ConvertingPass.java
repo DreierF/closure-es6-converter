@@ -139,6 +139,9 @@ class ConvertingPass {
 
             content = content.replaceAll("let (\\w+) = class ", "class $1 ");
             content = content.replaceAll("let (\\w+) = function\\(", "function $1(");
+            content = content.replaceAll("(\\r?\\n){3,}", "\n\n");
+            content = content.replaceAll("(?m)(import.*)\n\nimport", "$1\nimport");
+
             FileUtils.writeFileContent(file, content);
         }
     }
