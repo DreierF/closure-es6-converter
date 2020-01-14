@@ -44,7 +44,7 @@ public class ClassMember {
         String docComment = this.docComment.replaceAll("\\* @(private|protected|public) \\{", "* @$1\r\n  * @type {");
         if (isExplicitAbstractMethod(declaration)) {
             return docComment
-                    .replaceAll("\\s*\\* @type \\{function\\(\\) : void}\r\n", "")
+                    .replaceAll("\\s*\\* @type \\{function\\(\\) : void}\r?\n", "")
                     .replaceAll("(\\s*)\\*/\\s*$", "$1* @abstract$0");
         }
         if (hasNoInitializer(declaration)) {
