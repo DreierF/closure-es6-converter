@@ -8,18 +8,10 @@ import java.util.stream.Collectors;
 
 public class SelectionPass {
 
-	public Set<File> process(ReaderPass depsFile, boolean includeTests, ReaderPass teamscaleUiDir) {
-		Set<String> tsRequiredNamespaces = getTsRequiredNamespaces(teamscaleUiDir);
+	public Set<File> process(ReaderPass depsFile, boolean includeTests, Set<String> tsRequiredNamespaces) {
 		HashMap<String, ClosureDependency> depsByProvide = getStringClosureDependencies(depsFile);
 
 		return calculateTransitiveClosure(depsByProvide, includeTests, tsRequiredNamespaces);
-	}
-
-	private static Set<String> getTsRequiredNamespaces(ReaderPass teamscaleUiDirs) {
-		return teamscaleUiDirs.requiresByFile.values().stream()
-				.filter(r -> r.requireType != GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_LENIENT)
-				.map(require -> require.requiredNamespace)
-				.filter(namespace -> namespace.startsWith("goog.")).collect(Collectors.toSet());
 	}
 
 	private Set<File> calculateTransitiveClosure(HashMap<String, ClosureDependency> depsByProvide, boolean includeTests, Set<String> tsRequiredNamespaces) {
