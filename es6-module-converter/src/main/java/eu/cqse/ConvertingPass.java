@@ -136,6 +136,9 @@ class ConvertingPass {
             content = content.replaceAll("goog(\\.\\w+(?=\\W)(?![.']))", "google$1");
             content = content.replace("goog.LOCALE.", "google.LOCALE.");
 
+
+            content = content.replaceAll("let (\\w+) = class ", "class $1 ");
+            content = content.replaceAll("let (\\w+) = function\\(", "function $1(");
             FileUtils.writeFileContent(file, content);
         }
     }
