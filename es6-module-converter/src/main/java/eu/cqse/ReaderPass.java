@@ -83,6 +83,7 @@ public class ReaderPass {
 				if (namespace.contains(".") && !requires.contains(namespace) && !namespace.equals("Array.")) {
 					googRequires.add(new GoogRequireOrForwardDeclare(null, namespace, null, null,
 							GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_LENIENT));
+					requires.add(namespace);
 				}
 			}
 		}
