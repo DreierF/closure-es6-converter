@@ -125,10 +125,7 @@ class ConvertingPass {
 			// Remove namespaces from non officially exported elements
 			HashSet<String> remainingGoogNamespaces = getRemainingGoogNamespaces(content);
 			for (String namespace : remainingGoogNamespaces) {
-				// TODO Might need to be imported to work properly (AFAIKS only happens for type comments where the type is only used in the comment)
-				// TODO still needed?
 				content = rewriteFullyQualifiedNamespace(content, Collections.emptySet(), namespace, false);
-//				content = replaceFullyQualifiedCallWith(content, namespace, StringUtils.getLastPart(namespace, '.'));
 			}
 
 			content = content.replaceAll("(\\W)COMPILED(\\W)", "$1true$2");
@@ -140,7 +137,6 @@ class ConvertingPass {
 
 			// Workaround for https://github.com/google/closure-compiler/issues/3484
 			content = content.replaceAll("import \\* as goog ", "import \\* as google ");
-			// content = content.replaceAll("import \\* as goog .*", "$0\nvar goog_ = goog;");
 			content = content.replaceAll("goog(\\.\\w+(?=\\W)(?![.']))", "google$1");
 			content = content.replace("goog.LOCALE.", "google.LOCALE.");
 
