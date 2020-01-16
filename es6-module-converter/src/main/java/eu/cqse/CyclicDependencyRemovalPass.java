@@ -12,7 +12,7 @@ public class CyclicDependencyRemovalPass {
 	private final File googDir;
 
 	public CyclicDependencyRemovalPass(File closurePath) throws IOException {
-		googDir = new File(closurePath, "closure/goog");
+		googDir = closurePath;
 
 		if (!googDir.isDirectory()) {
 			throw new IOException("Input dir not found");

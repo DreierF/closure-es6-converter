@@ -2,12 +2,20 @@ package eu.cqse;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.io.MoreFiles;
 import com.google.javascript.jscomp.CommandLineRunner;
 import eu.cqse.es6.Es6ClassConversionPass;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.lang.String.join;
+import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.util.stream.Collectors.toSet;
 
 /**
@@ -31,9 +40,9 @@ public class Es6ModuleMasterConverter {
 	private static final File TEAMSCALE_UI_DIR = new File("/Users/florian/Documents/CQSE/Teamscale/engine/com.teamscale.ui");
 	//    public static final File TEAMSCALE_UI_DIR_CONVERTED = new File(TEAMSCALE_UI_DIR.getAbsolutePath() + ".converted");
 	private static final boolean INCLUDE_TESTS = false;
-    private static final File REQUIRED_NAMESPACES = new File("required-namespaces.txt");
+	private static final File REQUIRED_NAMESPACES = new File("required-namespaces.txt");
 
-    private static File[] getUiDirFiles(File teamscaleUiDir) {
+	private static File[] getUiDirFiles(File teamscaleUiDir) {
 		return new File[]{new File(teamscaleUiDir, "src-js"),
 				new File(teamscaleUiDir, "generated-src-js/typedefs"),
 				new File(teamscaleUiDir, "resources/third_party"),
@@ -41,8 +50,8 @@ public class Es6ModuleMasterConverter {
 	}
 
 	public static void main(String[] args) throws IOException {
-    	// Uncomment the below line to update the required-namespaces.txt
-    	//updateRequiredNamespaces()
+		// Uncomment the below line to update the required-namespaces.txt
+		//updateRequiredNamespaces()
 
 		convert();
 
@@ -89,11 +98,30 @@ public class Es6ModuleMasterConverter {
 		SelectionPass selectionPass = new SelectionPass();
 		Set<File> selectedFiles = selectionPass.process(readClosureLib, INCLUDE_TESTS, tsRequiredNamespaces);
 		FileUtils.copyFiles(selectedFiles, INPUT_DIR.toPath(), OUTPUT_DIR.toPath());
-		Files.copy(INPUT_DIR.toPath().resolve("closure/goog/base.js"), OUTPUT_DIR.toPath().resolve("closure/goog/google.js"));
-		if (INCLUDE_TESTS) {
-			//TODO copy actual tests
-			FileUtils.copyFolder(new File(INPUT_DIR, "scripts").toPath(), new File(OUTPUT_DIR, "scripts").toPath());
-		}
+		Files.walkFileTree(OUTPUT_DIR.toPath(), new SimpleFileVisitor<>() {
+
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+				File dest = new File(file.toFile().getAbsolutePath().replace("third_party/", "").replace("closure/goog/", ""));
+				dest.getParentFile().mkdirs();
+				file.toFile().renameTo(dest);
+				return CONTINUE;
+			}
+
+			@Override
+			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+				if(dir.toFile().listFiles().length == 0) {
+					dir.toFile().delete();
+				}
+				return super.postVisitDirectory(dir, exc);
+			}
+		});
+
+		Files.copy(INPUT_DIR.toPath().resolve("closure/goog/base.js"), OUTPUT_DIR.toPath().resolve("google.js"));
+//		if (INCLUDE_TESTS) {
+//			//TODO copy actual tests
+//			FileUtils.copyFolder(new File(INPUT_DIR, "scripts").toPath(), new File(OUTPUT_DIR, "scripts").toPath());
+//		}
 
 		SpecificFixesApplier fixer = new SpecificFixesApplier(OUTPUT_DIR);
 		fixer.process();

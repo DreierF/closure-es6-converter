@@ -84,7 +84,7 @@ public class SpecificFixesApplier {
     }
 
     private void replace(String file, String search, String replace) throws IOException {
-        File fixedJsFile = new File(outputDir, "closure/goog/" + file);
+        File fixedJsFile = new File(outputDir, file);
         String content = FileUtils.getFileContentSafe(fixedJsFile);
         if (!content.contains(search)) {
             throw new IllegalStateException(search + " not contained in " + file);
@@ -94,7 +94,7 @@ public class SpecificFixesApplier {
     }
 
     private void replaceAll(String file, Pattern searchPattern, String replace) throws IOException {
-        File fixedJsFile = new File(outputDir, "closure/goog/" + file);
+        File fixedJsFile = new File(outputDir, file);
         String content = FileUtils.getFileContentSafe(fixedJsFile);
         if (!searchPattern.matcher(content).find()) {
             throw new IllegalStateException(searchPattern.pattern() + " not contained in " + file);
@@ -106,7 +106,7 @@ public class SpecificFixesApplier {
     private void removeDeclaration(String file, String search) throws IOException {
         Pattern pattern = Pattern.compile(DOCUMENTED_PATTERN + Pattern.quote(search) +
                 "(\\s*=\\s*)");
-        File fixedJsFile = new File(outputDir, "closure/goog/" + file);
+        File fixedJsFile = new File(outputDir, file);
         String content = FileUtils.getFileContentSafe(fixedJsFile);
         Matcher matcher = pattern.matcher(content);
         if (!matcher.find()) {

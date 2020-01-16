@@ -1,4 +1,5 @@
 es6-module-converter/out
 clang/
-closure-library-converted/
+closure-library-converted/lib/
+node_modules/
 es6-module-converter/compiled.js
