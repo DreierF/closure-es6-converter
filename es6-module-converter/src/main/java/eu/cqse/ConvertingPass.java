@@ -292,6 +292,9 @@ class ConvertingPass {
         if (!relativePath.startsWith(".")) {
             return "./" + relativePath;
         }
+        if (relativePath.startsWith("../")) {
+            return "./" + relativePath;
+        }
         return relativePath;
     }
 
