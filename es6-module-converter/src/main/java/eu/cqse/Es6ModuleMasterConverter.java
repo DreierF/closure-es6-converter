@@ -27,7 +27,7 @@ import static java.util.stream.Collectors.toSet;
 public class Es6ModuleMasterConverter {
 
 	private static final File INPUT_DIR = new File("../closure-library");
-	private static final File OUTPUT_DIR = new File("../closure-library-converted");
+	private static final File OUTPUT_DIR = new File("../closure-library-converted/lib");
 	private static final File TEAMSCALE_UI_DIR = new File("/Users/florian/Documents/CQSE/Teamscale/engine/com.teamscale.ui");
 	//    public static final File TEAMSCALE_UI_DIR_CONVERTED = new File(TEAMSCALE_UI_DIR.getAbsolutePath() + ".converted");
 	private static final boolean INCLUDE_TESTS = false;
