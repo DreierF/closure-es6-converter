@@ -10,8 +10,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,14 +49,11 @@ class ConvertingPass {
 
 	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "goog.dispose", "goog.async.run");
 	private static final Pattern ASSIGNED_GOOG_DEFINE_PATTERN = Pattern.compile("(?:let\\s+)?([" + JsCodeUtils.IDENTIFIER_PATTERN + ".]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(\\s*'([^']+\\.([^'.]+))',\\s*([^)]+)\\);?");
-	private static final Set<String> GOOG_IMPORTED_ELEMENTS = Set.of("goog.global",
-//			"goog.require",
+	private static final Set<String> GOOG_ELEMENTS_NEED_IMPORT = Set.of(
 			"goog.isString",
 			"goog.isBoolean",
 			"goog.isNumber",
 			"goog.define",
-			"goog.DEBUG",
-			"goog.LOCALE",
 			"goog.TRUSTED_SITE",
 			"goog.STRICT_MODE_COMPATIBLE",
 			"goog.DISALLOW_TEST_ONLY_CODE",
@@ -98,8 +97,28 @@ class ConvertingPass {
 			"goog.base",
 			"goog.scope",
 			"goog.defineClass",
-			"goog.declareModuleId", "goog.tagUnsealableClass");
-	private static final Pattern GOOG_NAMESPACE_PATTERN = Pattern.compile("(" + String.join("|", GOOG_IMPORTED_ELEMENTS) + ")");
+			"goog.declareModuleId"
+	);
+
+	/**
+	 * The following are omitted in #GOOG_ELEMENTS_NEED_IMPORT, because they are removed during the conversion
+	 * and therefore don't need a google import
+	 */
+	private static final Set<String> GOOG_IMPORTED_ELEMENTS = new HashSet<>(Set.of(
+			"goog.global",
+			"goog.require",
+			"goog.tagUnsealableClass",
+			"goog.DEBUG",
+			"goog.LOCALE",
+			"goog.COMPILED"
+	));
+
+	static {
+		GOOG_IMPORTED_ELEMENTS.addAll(GOOG_ELEMENTS_NEED_IMPORT);
+	}
+
+	private static final Pattern GOOG_NAMESPACE_PATTERN = Pattern.compile("(" + String.join("|", GOOG_ELEMENTS_NEED_IMPORT) + ")");
+	private static final Pattern IMPORT_BLOCK_PATTERN = Pattern.compile("(?m)(^import .*[\r\n]+)+");
 
 	void process(ReaderPass readerPass) throws IOException {
 		for (File file : readerPass.providesByFile.keySet()) {
@@ -145,6 +164,13 @@ class ConvertingPass {
 			content = content.replaceAll("let (\\w+) = function\\(", "function $1(");
 			content = content.replaceAll("(\\r?\\n){3,}", "\n\n");
 			content = content.replaceAll("(?m)(import.*)\n\nimport", "$1\nimport");
+
+			Matcher matcher = IMPORT_BLOCK_PATTERN.matcher(content);
+			if (matcher.find()) {
+				String[] imports = matcher.group().split("[\n\r]+");
+				String sortedImports = Arrays.stream(imports).sorted(Comparator.comparing(o -> StringUtils.getLastPart(o, "from "))).collect(Collectors.joining("\n"));
+				content = matcher.replaceFirst(sortedImports + "\n");
+			}
 
 			FileUtils.writeFileContent(file, content);
 		}
