@@ -2,7 +2,6 @@ package eu.cqse;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.io.MoreFiles;
 import com.google.javascript.jscomp.CommandLineRunner;
 import eu.cqse.es6.Es6ClassConversionPass;
 
@@ -11,7 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -32,11 +30,14 @@ import static java.util.stream.Collectors.toSet;
  * - Adjust TEAMSCALE_UI_DIR to point to a clone of the TS repo.
  * - Make sure you have checked out the branch "experimental/webpack"
  * - Run "./gradlew generateJavascriptDataClasses compileSoy" in this repo
+ * <p>
+ * Run yarn install to install tsc
  */
 public class Es6ModuleMasterConverter {
 
 	private static final File INPUT_DIR = new File("../closure-library");
 	private static final File OUTPUT_DIR = new File("../closure-library-converted/lib");
+	private static final File TEMP_DIR = new File("../temp");
 	private static final File TEAMSCALE_UI_DIR = new File("/Users/florian/Documents/CQSE/Teamscale/engine/com.teamscale.ui");
 	//    public static final File TEAMSCALE_UI_DIR_CONVERTED = new File(TEAMSCALE_UI_DIR.getAbsolutePath() + ".converted");
 	private static final boolean INCLUDE_TESTS = false;
@@ -49,11 +50,13 @@ public class Es6ModuleMasterConverter {
 				new File(teamscaleUiDir, "build/generated/soy")};
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		// Uncomment the below line to update the required-namespaces.txt
 		//updateRequiredNamespaces()
 
 		convert();
+
+		generateTSDeclarationFiles();
 
 		CommandLineRunner.main(new String[]{"-O", "ADVANCED",
 				"--warning_level", "VERBOSE",
@@ -89,6 +92,81 @@ public class Es6ModuleMasterConverter {
 		System.out.println("\r\n==== Finished ====");
 	}
 
+	private static void generateTSDeclarationFiles() throws IOException, InterruptedException {
+		// Remove old .d.ts files
+		Files.walkFileTree(OUTPUT_DIR.toPath(), new SimpleFileVisitor<>() {
+
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+				if (isDeclarationFile(file)) {
+					file.toFile().delete();
+				}
+				return CONTINUE;
+			}
+		});
+
+		Path typings = new File("../typings").toPath();
+		FileUtils.safeDeleteDir(TEMP_DIR.toPath());
+		FileUtils.safeDeleteDir(typings);
+		TEMP_DIR.mkdirs();
+		FileUtils.copyFolder(OUTPUT_DIR.toPath(), TEMP_DIR.toPath());
+
+		new SpecificFixesApplierForDeclaration(TEMP_DIR).process();
+
+		// Generate .d.ts files in typings
+		runTS();
+
+		Files.walkFileTree(typings, new SimpleFileVisitor<>() {
+
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				if (isDeclarationFile(file)) {
+					File fixedFile = OUTPUT_DIR.toPath().resolve(typings.relativize(file)).toFile();
+					new DeclarationFixer(file).writeFixTo(fixedFile);
+				}
+				return CONTINUE;
+			}
+		});
+
+//		FileUtils.safeDeleteDir(TEMP_DIR.toPath());
+//		FileUtils.safeDeleteDir(typings);
+	}
+
+	private static boolean isDeclarationFile(Path f) {
+		return f.toFile().getName().endsWith(".d.ts");
+	}
+
+	public static void runTS() throws IOException, InterruptedException {
+		Runtime rt = Runtime.getRuntime();
+		String[] commands = {"../node_modules/.bin/tsc"};
+		Process proc = rt.exec(commands);
+
+		BufferedReader stdInput = new BufferedReader(new
+				InputStreamReader(proc.getInputStream()));
+
+		BufferedReader stdError = new BufferedReader(new
+				InputStreamReader(proc.getErrorStream()));
+
+		int exitCode = proc.waitFor();
+
+		// Read the output from the command
+		System.out.println("Here is the standard output of the command:\n");
+		String s = null;
+		while ((s = stdInput.readLine()) != null) {
+			System.out.println(s);
+		}
+
+		// Read any errors from the attempted command
+		System.out.println("Here is the standard error of the command (if any):\n");
+		while ((s = stdError.readLine()) != null) {
+			System.out.println(s);
+		}
+
+		if (exitCode != 0) {
+			throw new RuntimeException("d.ts generation exited with errors.");
+		}
+	}
+
 	private static void convert() throws IOException {
 		Set<String> tsRequiredNamespaces = getTsRequiredNamespaces();
 
@@ -110,7 +188,7 @@ public class Es6ModuleMasterConverter {
 
 			@Override
 			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-				if(dir.toFile().listFiles().length == 0) {
+				if (dir.toFile().listFiles().length == 0) {
 					dir.toFile().delete();
 				}
 				return super.postVisitDirectory(dir, exc);

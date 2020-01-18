@@ -19,6 +19,7 @@ public class Constructor extends ClassMember {
 	public String getDocComment() {
 		return docComment
 				.replaceAll("( \\*)? @final\r?\n?", "")
+				.replaceAll("( \\*)? @struct\r?\n?", "")
 				.replaceAll("( \\*)? @constructor\r?\n?", "")
 				.replaceAll(" \\* @extends.*\r?\n", "")
 				.replaceAll(" \\* @implements.*\r?\n", "")

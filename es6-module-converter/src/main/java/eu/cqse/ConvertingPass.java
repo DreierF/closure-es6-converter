@@ -56,6 +56,7 @@ class ConvertingPass {
 			"goog.define",
 			"goog.TRUSTED_SITE",
 			"goog.STRICT_MODE_COMPATIBLE",
+			"goog.TRUSTED_TYPES_POLICY_NAME",
 			"goog.DISALLOW_TEST_ONLY_CODE",
 			"goog.FEATURESET_YEAR",
 			"goog.module.get",
@@ -92,11 +93,13 @@ class ConvertingPass {
 			"goog.getHashCode",
 			"goog.cloneObject",
 			"goog.bind",
+			"goog.createTrustedTypesPolicy",
 			"goog.partial",
 			"goog.inherits",
 			"goog.base",
 			"goog.scope",
 			"goog.defineClass",
+			"goog.LOCALE",
 			"goog.declareModuleId"
 	);
 
@@ -109,7 +112,6 @@ class ConvertingPass {
 			"goog.require",
 			"goog.tagUnsealableClass",
 			"goog.DEBUG",
-			"goog.LOCALE",
 			"goog.COMPILED"
 	));
 
@@ -160,8 +162,8 @@ class ConvertingPass {
 			content = content.replace("goog.LOCALE.", "google.LOCALE.");
 
 
-			content = content.replaceAll("let (\\w+) = class ", "class $1 ");
-			content = content.replaceAll("let (\\w+) = function\\(", "function $1(");
+			content = content.replaceAll("(?:let|const|var)\\s+([" + JsCodeUtils.IDENTIFIER_PATTERN + "]+) = class ", "class $1 ");
+			content = content.replaceAll("(?:let|const|var)\\s+([" + JsCodeUtils.IDENTIFIER_PATTERN + "]+) = function\\(", "function $1(");
 			content = content.replaceAll("(\\r?\\n){3,}", "\n\n");
 			content = content.replaceAll("(?m)(import.*)\n\nimport", "$1\nimport");
 
