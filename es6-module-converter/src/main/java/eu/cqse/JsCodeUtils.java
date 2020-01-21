@@ -2,6 +2,8 @@ package eu.cqse;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +30,15 @@ public class JsCodeUtils {
 			return ";";
 		}
 		return content.substring(matcher.start(definitionStartGroup), getDefinitionEnd(content, matcher.end()));
+	}
+
+	public static String getInferredParameterList(String docComment) {
+		Matcher matcher = Pattern.compile("\\* @param\\s?\\{[^{}]+(}|\\{[^{}]+}) (\\w+)").matcher(docComment);
+		List<String> parameterList = new ArrayList<>();
+		while (matcher.find()) {
+			parameterList.add(matcher.group(2));
+		}
+		return StringUtils.concat(parameterList, ", ");
 	}
 
 	private static int getDefinitionEnd(String content, int matcherEnd) {

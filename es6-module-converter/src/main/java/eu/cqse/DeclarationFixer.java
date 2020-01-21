@@ -23,6 +23,7 @@ public class DeclarationFixer {
 	private void fix() {
 		fileContentSafe = fileContentSafe.replaceAll("(?<!\\w)(THIS|T|S|R|K|V|RESULT|VALUE|SCOPE|EVENTOBJ|TYPE|DEFAULT)_[123](?!\\w)", "$1");
 		fileContentSafe = fileContentSafe.replaceAll(" => ([);])", " => void$1");
+		fileContentSafe = fileContentSafe.replaceAll("opt_(\\w+): ", "opt_$1?: ");
 		adjustIn("google", "isArray(val: any): boolean", "isArray(val: any): val is any[]");
 		adjustIn("google", "isBoolean(val: any): boolean", "isBoolean(val: any): val is boolean");
 		adjustIn("google", "isDef(val: any): boolean", "isDef<T>(val: T): val is Exclude<typeof val, undefined>");
@@ -60,6 +61,7 @@ public class DeclarationFixer {
 		adjustIn("dialog", "set(key: any,", "// @ts-ignore\n    set(key: any,");
 		adjustIn("labelinput", "eventHandler_: EventHandler | null;", "eventHandler_: EventHandler<any> | null;");
 		adjustIn("paletterenderer", "decorate(palette: Control<any>, element: Element): null;", "decorate(palette: UiPalette, element: Element): null;");
+		adjustIn("functions", "identity<T>(opt_returnValue?: T, var_args: any): T;", "identity<T>(opt_returnValue?: T, ...var_args: any): T;");
 		adjustIn("events/eventtype", Pattern.compile("import MOUSE(.*)_1 = MOUSE([^;]+);"), "import MOUSE$1_1 = EventType.MOUSE$2;");
 		adjustIn("events/eventtype", Pattern.compile("import MOUSE(.*)_2 = POINTER([^;]+);"), "import MOUSE$1_2 = PointerFallbackEventType.POINTER$2;");
 		adjustIn("events/eventtype", Pattern.compile("import TOUCH(.*)_1 = POINTER([^;]+);"), "import TOUCH$1_1 = PointerTouchFallbackEventType.POINTER$2;");

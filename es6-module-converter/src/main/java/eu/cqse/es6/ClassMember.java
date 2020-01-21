@@ -1,9 +1,7 @@
 package eu.cqse.es6;
 
-import eu.cqse.StringUtils;
+import eu.cqse.JsCodeUtils;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,7 +29,7 @@ public class ClassMember {
 
 	public boolean isMethod() {
 		return this.declaration.matches("(?ms)\\s?=\\s*function.*")
-				|| (this.declaration.matches("(?ms)\\s?=\\s*goog.nullFunction;.*") && !docComment.contains("{Function}"))
+				|| (this.declaration.matches("(?ms)\\s?=\\s*goog\\.nullFunction;.*") && !docComment.contains("{Function}"))
 				|| docComment.contains("@param")
 				|| docComment.contains("@return")
 				|| isExplicitAbstractMethod(declaration);
@@ -117,12 +115,7 @@ public class ClassMember {
 	 * gives clues how the method should look like.
 	 */
 	private String getInferredParameterList() {
-		Matcher matcher = Pattern.compile("\\* @param\\s?\\{[^{}]+(}|\\{[^{}]+}) (\\w+)").matcher(this.docComment);
-		List<String> parameterList = new ArrayList<>();
-		while (matcher.find()) {
-			parameterList.add(matcher.group(2));
-		}
-		return StringUtils.concat(parameterList, ", ");
+		return JsCodeUtils.getInferredParameterList(this.docComment);
 	}
 
 	public String getEs6Representation(GoogInheritsInfo googInheritsInfo) {

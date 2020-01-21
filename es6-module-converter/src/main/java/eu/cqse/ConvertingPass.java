@@ -100,7 +100,8 @@ class ConvertingPass {
 			"goog.scope",
 			"goog.defineClass",
 			"goog.LOCALE",
-			"goog.declareModuleId"
+			"goog.declareModuleId",
+			"goog.DEBUG"
 	);
 
 	/**
@@ -111,13 +112,15 @@ class ConvertingPass {
 			"goog.global",
 			"goog.require",
 			"goog.tagUnsealableClass",
-			"goog.DEBUG",
 			"goog.COMPILED"
 	));
 
 	static {
 		GOOG_IMPORTED_ELEMENTS.addAll(GOOG_ELEMENTS_NEED_IMPORT);
 	}
+
+	private static final Pattern FUNCTION_DELEGATION = Pattern.compile("(?m)^(/\\*\\*((?!\\*/|@(?:return)).)*@(?:return)((?!\\*/).)*\\*/\\s*)(?:(?:const|var|let)\\s+)?([\\w_]+)(?:\\s?=\\s*([\\w_.]+);)", Pattern.DOTALL);
+
 
 	private static final Pattern GOOG_NAMESPACE_PATTERN = Pattern.compile("(" + String.join("|", GOOG_ELEMENTS_NEED_IMPORT) + ")");
 	private static final Pattern IMPORT_BLOCK_PATTERN = Pattern.compile("(?m)(^import .*[\r\n]+)+");
@@ -153,7 +156,7 @@ class ConvertingPass {
 			content = content.replace("* @define {", "* @type {");
 			content = content.replaceAll("(?m)\\nif \\(goog\\.DEBUG\\) \\{[^\\n]*(\\n+(?!})[^\\n]*)*\\n+}", "");
 			content = content.replaceAll("goog\\.LOCALE(?=\\W)(?!(\\.|\\s*=))", "google.LOCALE");
-			content = content.replaceAll("goog\\.global(?=[.\\[])", "window");
+			content = content.replaceAll("goog\\.global(?=\\W)", "window");
 			content = content.replaceAll("(?m)^goog\\.tagUnsealableClass", "// $0");
 
 			// Workaround for https://github.com/google/closure-compiler/issues/3484
@@ -164,6 +167,9 @@ class ConvertingPass {
 
 			content = content.replaceAll("(?:let|const|var)\\s+([" + JsCodeUtils.IDENTIFIER_PATTERN + "]+) = class ", "class $1 ");
 			content = content.replaceAll("(?:let|const|var)\\s+([" + JsCodeUtils.IDENTIFIER_PATTERN + "]+) = function\\(", "function $1(");
+
+			content = replaceFunctionDelegations(content);
+
 			content = content.replaceAll("(\\r?\\n){3,}", "\n\n");
 			content = content.replaceAll("(?m)(import.*)\n\nimport", "$1\nimport");
 
@@ -176,6 +182,22 @@ class ConvertingPass {
 
 			FileUtils.writeFileContent(file, content);
 		}
+	}
+
+	private String replaceFunctionDelegations(String content) {
+		while (true) {
+			Matcher funcMatcher = FUNCTION_DELEGATION.matcher(content);
+			if (!funcMatcher.find()) {
+				break;
+			}
+			String docComment = funcMatcher.group(1);
+			String inferredParameterList = JsCodeUtils.getInferredParameterList(docComment);
+			String functionName = funcMatcher.group(4);
+			String delegationFunction = funcMatcher.group(5);
+			String replaced = docComment + "function " + functionName + "(" + inferredParameterList + ") {\n  return " + delegationFunction + "(" + inferredParameterList + ");\n}";
+			content = content.replace(funcMatcher.group(), replaced);
+		}
+		return content;
 	}
 
 	private List<GoogRequireOrForwardDeclare> extendRequires(File file, ReaderPass readerPass, String content) {
