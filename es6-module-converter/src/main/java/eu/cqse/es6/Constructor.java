@@ -49,10 +49,18 @@ public class Constructor extends ClassMember {
 			if (classMember.isField()) {
 				constructorExtensionBuilder.append("\r\n");
 				constructorExtensionBuilder.append(indentCode(classMember.getAsEs6Field()));
-				constructorExtensionBuilder.append("\r\n\r\n");
+				constructorExtensionBuilder.append("\r\n");
 			}
 		}
-		constructorDefinition = constructorDefinition.replaceAll("};?$", Matcher.quoteReplacement(constructorExtensionBuilder + "}"));
+		String insertAfter;
+		if (googInheritsInfo != null) {
+			insertAfter = "(?m)^\\s*super\\([^;]+;";
+		} else {
+			insertAfter = "(?m)^\\s*constructor\\([^{]+\\{";
+		}
+		constructorDefinition = constructorDefinition
+				.replaceFirst(insertAfter, "$0" + Matcher.quoteReplacement(constructorExtensionBuilder.toString()))
+				.replaceFirst("};$", "}");
 		return constructorDefinition;
 	}
 }
