@@ -72,10 +72,6 @@ goog.math.Coordinate
 goog.math.Rect
 goog.math.Size
 goog.math.Vec2
-goog.net.HttpStatus
-goog.net.XhrIo
-goog.net.XhrIo.ResponseType
-goog.net.XhrManager
 goog.object
 goog.positioning
 goog.positioning.AnchoredPosition
