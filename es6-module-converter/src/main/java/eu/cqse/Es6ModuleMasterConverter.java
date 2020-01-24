@@ -111,22 +111,12 @@ public class Es6ModuleMasterConverter {
 		TEMP_DIR.mkdirs();
 		FileUtils.copyFolder(OUTPUT_DIR.toPath(), TEMP_DIR.toPath());
 
-		new SpecificFixesApplierForDeclaration(TEMP_DIR).process();
+		new SpecificFixesApplierForDeclaration(TEMP_DIR.toPath()).fixAllInPlace();
 
 		// Generate .d.ts files in typings
 		runTS();
 
-		Files.walkFileTree(typings, new SimpleFileVisitor<>() {
-
-			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				if (isDeclarationFile(file)) {
-					File fixedFile = OUTPUT_DIR.toPath().resolve(typings.relativize(file)).toFile();
-					new DeclarationFixer(file).writeFixTo(fixedFile);
-				}
-				return CONTINUE;
-			}
-		});
+		new DeclarationFixer(typings).fixAllTo(OUTPUT_DIR);
 
 //		FileUtils.safeDeleteDir(TEMP_DIR.toPath());
 //		FileUtils.safeDeleteDir(typings);
@@ -201,8 +191,7 @@ public class Es6ModuleMasterConverter {
 //			FileUtils.copyFolder(new File(INPUT_DIR, "scripts").toPath(), new File(OUTPUT_DIR, "scripts").toPath());
 //		}
 
-		SpecificFixesApplier fixer = new SpecificFixesApplier(OUTPUT_DIR);
-		fixer.process();
+		new SpecificFixesApplier(OUTPUT_DIR.toPath()).fixAllInPlace();
 
 		CyclicDependencyRemovalPass cycleRemoval = new CyclicDependencyRemovalPass(OUTPUT_DIR);
 		cycleRemoval.process();
