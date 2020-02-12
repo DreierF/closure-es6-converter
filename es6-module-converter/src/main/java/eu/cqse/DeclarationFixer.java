@@ -23,11 +23,10 @@ public class DeclarationFixer extends FixerBase {
 		adjustIn("google", "isObject(val: any): boolean", "isObject(val: any): val is object");
 		adjustIn("google", "isString(val: any): boolean", "isString(val: any): val is string");
 
-		adjustIn("array", "forEach(arr: any, f: any,", "forEach<T>(arr: T[], f: (item : T, index : number) => void,");
-		adjustIn("array", "map(arr: any, f: any,", "map<T>(arr: any, f: (item : T, index : number) => any,");
 		adjustIn("asserts/asserts",
 				"assertObject(value: any, opt_message?: string, ...args: any[]): any;",
 				"assertObject<T>(value: T, opt_message?: string, ...args: any[]): T extends NonNullable<T> ? NonNullable<T> : never;");
+		adjustIn("asserts/asserts", "fail(opt_message?: string, ...args: any[]): void;", "fail(opt_message?: string, ...args: any[]): never;");
 
 		adjustIn("zippy", "role_: Role<string>;", " role_: Role;");
 		adjustIn("tooltip", "elements_: StructsSet | null;", "elements_: StructsSet<any> | null;");
@@ -61,5 +60,10 @@ public class DeclarationFixer extends FixerBase {
 		adjustIn("safehtml", Pattern.compile("import from = htmlEscape;\r?\n\\s+export \\{ from };"), "export const htmlEscape: (textOrHtml: TextOrHtml_) => SafeHtml;");
 		adjustIn("timer", Pattern.compile("export const defaultTimerObject: \\{\n\\s+setTimeout;\n\\s+clearTimeout;\n\\s+};"), "export const defaultTimerObject: any;");
 		adjustIn("ac/renderer", Pattern.compile("customRenderer_: \\([^)]+[^;]+;"), "customRenderer_: any;");
+
+		adjustIn("positioning/positioning", "opt_preferredSize?: Size): {", "opt_preferredSize?: Size): number|null {");
+		adjustIn("storage/mechanism/html5webstorage", "constructor(storage: Storage);", "constructor(storage: Storage|null);");
+
+		adjustIn("events/eventhandler", "listener: (this: T, arg1: EVENTOBJ) => any", "listener: (this: T, arg1: EVENTOBJ) => boolean|void");
 	}
 }

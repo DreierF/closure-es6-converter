@@ -12,6 +12,7 @@ public class SpecificFixesApplierForDeclaration extends FixerBase {
 	public void fix() {
 		adjustInAll("@record", "@interface");
 		adjustInAll(Pattern.compile("@(type|param|return)\\s+\\{([A-Z]\\w+)}"), "@$1 {?$2}");
+		adjustInAll("IArrayLike", "ArrayLike");
 		adjustIn("debug/tracer", "Trace_.TracerCallbacks", "TracerCallbacks");
 		adjustIn("ui/palette", "Palette.CurrentCell_", "CurrentCell_");
 		adjustIn("ui/palette", "CurrentCell_ = class ", "class CurrentCell_ ");
@@ -24,6 +25,7 @@ public class SpecificFixesApplierForDeclaration extends FixerBase {
 		adjustIn("positioning/positioning", "@enum {number}", "");
 		adjustIn("positioning/positioning", "let Corner =", "class Corner ");
 		adjustIn("positioning/positioning", Pattern.compile("(?m)((?:TOP|BOTTOM)_(?:LEFT|RIGHT|CENTER|START|END)):\\s*([^,}]*),?"), "$1 = 0;");
+
 
 		adjustIn("ui/dialog", Pattern.compile("([A-Z]+): Dialog\\.(?:[^,}]*)"), "$1: ''");
 		adjustIn("ui/dialog", Pattern.compile("([A-Z]+): \\{\r?\n"), "$1 = {\n");

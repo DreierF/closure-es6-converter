@@ -165,8 +165,8 @@ class ConvertingPass {
 			content = content.replace("goog.LOCALE.", "google.LOCALE.");
 
 
-			content = content.replaceAll("(?:let|const|var)\\s+([" + JsCodeUtils.IDENTIFIER_PATTERN + "]+) = class ", "class $1 ");
-			content = content.replaceAll("(?:let|const|var)\\s+([" + JsCodeUtils.IDENTIFIER_PATTERN + "]+) = function\\(", "function $1(");
+			content = content.replaceAll("(?:let|const|var)\\s+([" + JsCodeUtils.IDENTIFIER_PATTERN + "]+)\\s*=\\s*class ", "class $1 ");
+			content = content.replaceAll("(?:let|const|var)\\s+([" + JsCodeUtils.IDENTIFIER_PATTERN + "]+)\\s*=\\s*function\\(", "function $1(");
 
 			content = replaceFunctionDelegations(content);
 

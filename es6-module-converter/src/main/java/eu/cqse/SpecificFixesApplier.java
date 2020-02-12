@@ -19,10 +19,10 @@ public class SpecificFixesApplier extends FixerBase {
 		adjustIn("net/xhrio", "goog.scope(function() {", "");
 		adjustIn("net/xhrio", Pattern.compile("var ResponseType = goog\\.net\\.XhrIo\\.ResponseType;\r?\n"), "");
 		adjustIn("net/xhrio", Pattern.compile("ResponseType\\.[A-Z_]+"), "goog.net.XhrIo.$0");
-		adjustIn("net/xhrio", Pattern.compile("var XhrIo = goog.net.XhrIo;(\r)?\n"), "");
+		adjustIn("net/xhrio", Pattern.compile("var XhrIo = goog\\.net\\.XhrIo;(\r)?\n"), "");
 		adjustIn("net/xhrio", "XhrIo.base", "goog.net.XhrIo.base");
 		adjustIn("net/xhrio", "});  // goog.scope", "");
-		adjustIn("events/events", Pattern.compile("\\*/\r?\ngoog.events.unlistenByKey"),
+		adjustIn("events/events", Pattern.compile("\\*/\r?\ngoog\\.events\\.unlistenByKey"),
 				" * @suppress {checkTypes}\r\n */\r\ngoog.events.unlistenByKey");
 		adjustIn("iter/iter", "var product", "var productVar");
 		adjustIn("iter/iter", "product,", "productVar,");
@@ -31,7 +31,7 @@ public class SpecificFixesApplier extends FixerBase {
 		adjustIn("net/xmlhttp", Pattern.compile("goog\\.net\\.XmlHttp\\.ASSUME_NATIVE_XHR =\r?\n" +
 				" {4}goog\\.define\\('goog\\.net\\.XmlHttp\\.ASSUME_NATIVE_XHR', false\\);"), "");
 		adjustIn("net/xmlhttp", "goog.net.XmlHttp.ASSUME_NATIVE_XHR", "goog.net.XmlHttpDefines.ASSUME_NATIVE_XHR");
-		adjustIn("i18n/datetimesymbols", Pattern.compile("/\\*\\* @type \\{!goog\\.i18n\\.DateTimeSymbolsType\\} \\*/\r?\n" +
+		adjustIn("i18n/datetimesymbols", Pattern.compile("/\\*\\* @type \\{!goog\\.i18n\\.DateTimeSymbolsType} \\*/\r?\n" +
 				"goog\\.i18n\\.DateTimeSymbols;\r?\n" +
 				"\r?\n" +
 				"\r?\n" +
@@ -41,6 +41,27 @@ public class SpecificFixesApplier extends FixerBase {
 				" * Selected date/time formatting symbols by locale.\r\n" +
 				" * @type {!goog.i18n.DateTimeSymbolsType}\r\n" +
 				" */");
+
+		adjustInAll(Pattern.compile("(goog\\.inherits[^;]+;)[\r\n]goog\\.addSingletonGetter\\(([^)]+)\\);"), "$1\n" +
+				"/** @type {?$2} @suppress {underscore,checkTypes} @override */\n" +
+				"$2.instance_ = undefined;\n" +
+				"/** @override @return {!$2} @suppress {checkTypes} */\n" +
+				"$2.getInstance = function() {\n" +
+				"  if ($2.instance_) {\n" +
+				"    return /** @type {!$2} */ ($2.instance_);\n" +
+				"  }\n" +
+				"  return /** @type {!$2} */ ($2.instance_) = new $2();\n" +
+				"};");
+
+		adjustInAll(Pattern.compile("goog\\.addSingletonGetter\\(([^)]+)\\);"), "/** @type {undefined|!$1} @suppress {underscore,checkTypes}*/\n" +
+				"$1.instance_ = undefined;\n" +
+				"/** @return {!$1} @suppress {checkTypes} */\n" +
+				"$1.getInstance = function() {\n" +
+				"  if ($1.instance_) {\n" +
+				"    return /** @type {!$1} */ ($1.instance_);\n" +
+				"  }\n" +
+				"  return /** @type {!$1} */ ($1.instance_) = new $1();\n" +
+				"};");
 
 
 		// Add an empty doc comment so that the commented out code is not attributed to the export statement

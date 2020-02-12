@@ -57,7 +57,12 @@ public class ClassMember {
 	public String getDeclaration(GoogInheritsInfo googInheritsInfo) {
 		String declaration = this.declaration;
 		if (hasNoInitializer(declaration) || isExplicitAbstractMethod(declaration)) {
-			return memberName + "(" + getInferredParameterList() + ") {}";
+			if (hasNoInitializer(declaration) && docComment.contains("@override")) {
+				// Special case in BaseNode where getChildAt is redeclared
+				return memberName + "(" + getInferredParameterList() + ") {\r\n  return super." + memberName + "(" + getInferredParameterList() + ");\r\n}";
+			} else {
+				return memberName + "(" + getInferredParameterList() + ") {}";
+			}
 		} else if (isFunctionDelegation(declaration)) {
 			Matcher matcher = METHOD_DELEGATION_PATTERN.matcher(declaration);
 			if (matcher.find()) {
