@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 public class JsCodeUtils {
 	private static final ImmutableList<Character> OPENING = ImmutableList.of('(', '[', '{');
 	private static final ImmutableList<Character> CLOSING = ImmutableList.of(')', ']', '}');
+
 	static final String IDENTIFIER_PATTERN = "\\w_$";
 
 	public static String safeReplaceString(String methodOrConstantName) {
@@ -56,8 +57,17 @@ public class JsCodeUtils {
 				case IN_REGEX:
 					if (currentChar == '\\') {
 						end++;
+					} else if (currentChar == '[') {
+						state = EScannerState.IN_REGEX_CHARACTER_GROUP;
 					} else if (currentChar == '/') {
 						state = EScannerState.TOP_LEVEL;
+					}
+					break;
+				case IN_REGEX_CHARACTER_GROUP:
+					if (currentChar == '\\') {
+						end++;
+					} else if (currentChar == ']') {
+						state = EScannerState.IN_REGEX;
 					}
 					break;
 				case IN_BLOCK_COMMENT:
@@ -90,7 +100,7 @@ public class JsCodeUtils {
 							state = EScannerState.IN_SINGLE_LINE_COMMENT;
 						} else if (content.charAt(end + 1) == '*') {
 							state = EScannerState.IN_BLOCK_COMMENT;
-						} else if (content.charAt(end + 1) == '[') {
+						} else if (isRegexStart(content, end)) {
 							state = EScannerState.IN_REGEX;
 						}
 					} else if (currentChar == '\'') {
@@ -107,12 +117,25 @@ public class JsCodeUtils {
 			}
 			end++;
 			if (end >= content.length()) {
-				throw new IllegalArgumentException("Did not find definition end in: " + content.substring(matcherEnd - 10));
+				throw new IllegalArgumentException("Did not find definition end in: " + content.substring(matcherEnd - 30));
 			}
 		}
 	}
 
+	private static boolean isRegexStart(String content, int end) {
+		if(content.charAt(end+1) == '=') { // /=
+			return false;
+		}
+		String startContent = content.substring(end+1);
+		if (Pattern.compile("\\s+\\(?\\d.*").matcher(startContent).lookingAt()) {
+			return false;
+		} else if (Pattern.compile("\\s+\\(?\\w+.*").matcher(startContent).lookingAt()) {
+			return false;
+		}
+		return !startContent.startsWith(" this.");
+	}
+
 	private enum EScannerState {
-		TOP_LEVEL, IN_REGEX, IN_BLOCK_COMMENT, IN_SINGLE_QUOTED_STRING, IN_DOUBLE_QUOTED_STRING, IN_SINGLE_LINE_COMMENT
+		TOP_LEVEL, IN_REGEX, IN_REGEX_CHARACTER_GROUP, IN_BLOCK_COMMENT, IN_SINGLE_QUOTED_STRING, IN_DOUBLE_QUOTED_STRING, IN_SINGLE_LINE_COMMENT
 	}
 }

@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
 import static eu.cqse.JsCodeUtils.multilineSafeNamespacePattern;
 
 public class ClassMember {
-	private static final Pattern METHOD_DELEGATION_PATTERN = Pattern.compile("(?m)\\s*=\\s*[\\w_.\\s]+" + multilineSafeNamespacePattern(".prototype.") + "([\\w_]+);");
-	private static final Pattern FUNCTION_DELEGATION_PATTERN = Pattern.compile("(?m)\\s*=\\s*[\\w_.\\s]+\\.([\\w_]+);");
+	private static final Pattern METHOD_DELEGATION_PATTERN = Pattern.compile("(?m)\\s*=\\s*(?:/\\*\\*[^*]+\\*/\\s*\\(\\s*)?[\\w_.\\s]+" + multilineSafeNamespacePattern(".prototype.") + "([\\w_]+)\\)?;");
+	private static final Pattern FUNCTION_DELEGATION_PATTERN = Pattern.compile("(?m)\\s*=\\s*(?:/\\*\\*[^*]+\\*/\\s*\\(\\s*)?([\\w_.\\s]+\\.[\\w_]+(\\('[^']+'\\))?)\\)?;");
 	private static final Pattern TYPE_UNION_WITH_UNDEFINED = Pattern.compile("@type \\{.*undefined(?!>).*}");
 	private static final Pattern PRIMITIVE_NON_NULLABLE_TYPE = Pattern.compile("@type \\{(number|boolean|string|KeyCodes)}");
 
@@ -18,13 +18,15 @@ public class ClassMember {
 	public final String classNamespace;
 	public final String memberName;
 	public final String declaration;
+	private final boolean isStatic;
 
-	public ClassMember(String fullMatch, String docComment, String classNamespace, String memberName, String declaration) {
+	public ClassMember(String fullMatch, String docComment, String classNamespace, String memberName, String declaration, boolean isStatic) {
 		this.fullMatch = fullMatch;
 		this.docComment = docComment;
 		this.classNamespace = classNamespace;
 		this.memberName = memberName;
 		this.declaration = declaration;
+		this.isStatic = isStatic;
 	}
 
 	public boolean isMethod() {
@@ -56,27 +58,38 @@ public class ClassMember {
 
 	public String getDeclaration(GoogInheritsInfo googInheritsInfo) {
 		String declaration = this.declaration;
+		String methodHeader = memberName + "(" + getInferredParameterList() + ") {";
+		if (isStatic) {
+			methodHeader = "static " + methodHeader;
+		}
 		if (hasNoInitializer(declaration) || isExplicitAbstractMethod(declaration)) {
 			if (hasNoInitializer(declaration) && docComment.contains("@override")) {
 				// Special case in BaseNode where getChildAt is redeclared
-				return memberName + "(" + getInferredParameterList() + ") {\r\n  return super." + memberName + "(" + getInferredParameterList() + ");\r\n}";
+				return methodHeader +"{\r\n  return super." + memberName + "(" + getInferredParameterList() + ");\r\n}";
 			} else {
-				return memberName + "(" + getInferredParameterList() + ") {}";
+				return methodHeader + "}";
 			}
 		} else if (isFunctionDelegation(declaration)) {
 			Matcher matcher = METHOD_DELEGATION_PATTERN.matcher(declaration);
 			if (matcher.find()) {
 				String delegate = matcher.group(1);
-				return memberName + "(" + getInferredParameterList() + ") {\r\n  return this." + delegate + "(" + getInferredParameterList() + ");\r\n}";
+				return methodHeader+"\r\n  return this." + delegate + "(" + getInferredParameterList() + ");\r\n}";
 			} else {
-				String delegate = declaration.replaceFirst("\\s*=\\s*(.*);", "$1");
+				Matcher functionMatcher = FUNCTION_DELEGATION_PATTERN.matcher(declaration);
+				functionMatcher.find();
+				String delegate = functionMatcher.group(1);
 				if (delegate.equals("goog.nullFunction")) {
-					return memberName + "(" + getInferredParameterList() + ") {\r\n}";
+					return methodHeader+"}";
 				}
-				return memberName + "(" + getInferredParameterList() + ") {\r\n  return " + delegate + "(" + getInferredParameterList() + ");\r\n}";
+				return methodHeader + "\r\n  return " + delegate + "(" + getInferredParameterList() + ");\r\n}";
 			}
 		} else {
-			declaration = declaration.replaceFirst("\\s?=\\s*function", memberName);
+			Pattern functionAssignmentPattern = Pattern.compile("\\s?=\\s*function");
+			if(functionAssignmentPattern.matcher(declaration).lookingAt()) {
+				declaration = functionAssignmentPattern.matcher(declaration).replaceFirst(memberName);
+			} else {
+				throw new IllegalArgumentException("Unexpected declaration: "+declaration);
+			}
 			if (googInheritsInfo != null) {
 				declaration = declaration
 						.replaceAll(multilineSafeNamespacePattern(googInheritsInfo.fullClassNamespace + ".base")
@@ -87,6 +100,9 @@ public class ClassMember {
 				declaration = declaration
 						.replaceAll(multilineSafeNamespacePattern(googInheritsInfo.fullClassNamespace + ".superClass_.")
 								+ "([\\w_]+)\\s*\\.\\s*call\\s*\\(\\s*this,?\\s*", "super.$1(");
+			}
+			if (isStatic) {
+				declaration = "static " + declaration;
 			}
 			return declaration;
 		}
@@ -143,5 +159,9 @@ public class ClassMember {
 		}
 		declaration = declaration.replaceFirst("\\s?=\\s*", Matcher.quoteReplacement("this." + memberName) + "$0");
 		return docComment + declaration;
+	}
+
+	public boolean isStatic() {
+		return isStatic;
 	}
 }

@@ -81,12 +81,18 @@ public abstract class FixerBase {
 		fileContentSafe = searchPattern.matcher(fileContentSafe).replaceAll(replace);
 	}
 
-	protected void adjustInAll(String s, String $1) {
-		fileContentSafe = fileContentSafe.replaceAll(s, $1);
+	protected void adjustInAll(String search, String replace) {
+		fileContentSafe = fileContentSafe.replace(search, replace);
 	}
 
 	protected void adjustInAll(Pattern search, String replace) {
 		fileContentSafe = search.matcher(fileContentSafe).replaceAll(replace);
+	}
+
+	protected void prependIn(String s, String content) {
+		if (filePath.endsWith(s + "." + extension)) {
+			fileContentSafe = content + fileContentSafe;
+		}
 	}
 
 	protected void appendIn(String s, String content) {

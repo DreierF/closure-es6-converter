@@ -3,6 +3,7 @@
         "declaration": true,
         "emitDeclarationOnly": true,
         "allowJs": true,
+        "strictNullChecks": true,
         "declarationDir": "typings",
         "removeComments": false,
         // Don't use any third-party typings from the above directories

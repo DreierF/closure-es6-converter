@@ -11,7 +11,7 @@ public class Constructor extends ClassMember {
 	public final String constLetVar;
 
 	public Constructor(String fullMatch, String docComment, String classNamespace, String declaration, String constLetVar) {
-		super(fullMatch, docComment, classNamespace, "constructor", declaration);
+		super(fullMatch, docComment, classNamespace, "constructor", declaration, false);
 		this.constLetVar = constLetVar;
 	}
 

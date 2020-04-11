@@ -52,7 +52,7 @@ public class ReaderPass {
 
 		List<GoogProvideOrModule> providesOrModules = getProvidedNamespaces(content);
 		if (providesOrModules.isEmpty()) {
-			if (!jsFile.getName().endsWith("Externs.js") && !jsFile.getName().equals("Index.js")) {
+			if (!shouldIgnoreMissingProvide(jsFile)) {
 				System.out.println(
 						"INFO: " + jsFile.getAbsolutePath() + " does not seem to goog.provide or goog.module anything");
 			}
@@ -62,6 +62,11 @@ public class ReaderPass {
 		List<GoogRequireOrForwardDeclare> googRequires = parseGoogRequires(content);
 		addImplicitTypeOnlyGoogRequires(googRequires, content);
 		insertProvidesAndRequiresForFile(jsFile, providesOrModules, googRequires);
+	}
+
+	private boolean shouldIgnoreMissingProvide(File jsFile) {
+		return jsFile.getName().endsWith("Externs.js") ||
+				jsFile.getName().equals("Index.js");
 	}
 
 	private void addImplicitTypeOnlyGoogRequires(List<GoogRequireOrForwardDeclare> googRequires, String content) {
@@ -134,21 +139,23 @@ public class ReaderPass {
 		while (defaultExportMatcher.find()) {
 			String rawContent = defaultExportMatcher.group(1).replaceAll("/\\**[^/]*(?<=\\*)/", "").replaceAll("//.*", "");
 			List<AliasedElement> exportedNames = new ArrayList<>();
-			if (rawContent.contains(",")) {
+			if (!defaultExportMatcher.group(0).contains("{")) {
+				exportedNames.add(new AliasedElement(StringUtils.getLastPart(module, '.'), rawContent.trim()));
+			} else if (rawContent.contains(",")) {
 				exportedNames.addAll(Arrays.stream(rawContent.split(",")).filter(e -> !e.isBlank())
-						.map(ns -> normalizeExportEntry(ns, module)).collect(Collectors.toList()));
+						.map(ReaderPass::normalizeExportEntry).collect(Collectors.toList()));
 			} else {
-				exportedNames.add(normalizeExportEntry(rawContent, module));
+				exportedNames.add(normalizeExportEntry(rawContent));
 			}
 			exportedNames.forEach(exportedName -> googExports.add(new GoogModuleExport(exportedName, false, defaultExportMatcher.group())));
 		}
 		return googExports;
 	}
 
-	private static AliasedElement normalizeExportEntry(String ns, String module) {
+	private static AliasedElement normalizeExportEntry(String ns) {
 		String[] split = ns.split(":");
 		if (split.length == 1) {
-			return new AliasedElement(StringUtils.getLastPart(module, '.'), split[0].trim());
+			return new AliasedElement(split[0].trim());
 		}
 		return new AliasedElement(split[0].trim(), split[1].trim());
 	}

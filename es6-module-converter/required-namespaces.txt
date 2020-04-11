@@ -3,6 +3,7 @@ goog.Timer
 goog.Uri
 goog.array
 goog.asserts
+goog.asserts.dom
 goog.async.Delay
 goog.color
 goog.color.Rgb
@@ -46,7 +47,6 @@ goog.fx.DragDropGroup
 goog.fx.DragEvent
 goog.fx.Dragger
 goog.fx.Dragger.EventType
-goog.fx.dom.FadeOut
 goog.history.EventType
 goog.history.Html5History
 goog.html.SafeHtml

@@ -18,7 +18,7 @@ public class Es6ClassConversionPass {
 
 	private static final Pattern GOOG_INHERITS_PATTERN = Pattern.compile("(?m)^goog\\.inherits\\(\\s*([^,]+),\\s*([^)]+)\\);");
 	private static final Pattern CONSTRUCTOR_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/|@(?:constructor|interface)).)*@(?:constructor|interface)((?!\\*/).)*\\*/\\s*)((?:const|var|let)\\s+)?([\\w.]+)(\\s?=\\s*function)", Pattern.DOTALL);
-	private static final Pattern CLASS_MEMBER_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/).)*\\*/\\s*)([\\w.]+)\\.prototype\\.(\\w+)" +
+	private static final Pattern CLASS_MEMBER_PATTERN = Pattern.compile("(?m)^(/\\*\\*((?!\\*/).)*\\*/\\s*)((?:(?!prototype\\.)[\\w.])+)\\.(prototype\\.)?([_a-z]\\w+)" +
 			"(;|\\s?=\\s*)", Pattern.DOTALL);
 
 	public void process(File inputDir) throws IOException {
@@ -69,10 +69,14 @@ public class Es6ClassConversionPass {
 		ListMultimap<String, ClassMember> classMembers = ArrayListMultimap.create();
 		Matcher matcher = CLASS_MEMBER_PATTERN.matcher(content);
 		while (matcher.find()) {
-			String definition = JsCodeUtils.getDefinition(content, matcher, 5);
+			String definition = JsCodeUtils.getDefinition(content, matcher, 6);
 			String fullMatch = matcher.group();
-			fullMatch = fullMatch.substring(0, fullMatch.length() - matcher.group(5).length()) + definition;
-			ClassMember classMember = new ClassMember(fullMatch, matcher.group(1), matcher.group(3), matcher.group(4), definition);
+			fullMatch = fullMatch.substring(0, fullMatch.length() - matcher.group(6).length()) + definition;
+			ClassMember classMember = new ClassMember(fullMatch, matcher.group(1), matcher.group(3), matcher.group(5), definition, !"prototype.".equals(matcher.group(4)));
+			if (classMember.isStatic() && classMember.isField()) {
+				// Static fields are not yet supported in JS
+				continue;
+			}
 			classMembers.put(classMember.classNamespace, classMember);
 		}
 		return classMembers;

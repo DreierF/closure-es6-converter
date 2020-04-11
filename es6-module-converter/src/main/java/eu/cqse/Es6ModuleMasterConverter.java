@@ -38,22 +38,10 @@ public class Es6ModuleMasterConverter {
 	private static final File INPUT_DIR = new File("../closure-library");
 	private static final File OUTPUT_DIR = new File("../closure-library-converted/lib");
 	private static final File TEMP_DIR = new File("../temp");
-	private static final File TEAMSCALE_UI_DIR = new File("/Users/florian/Documents/CQSE/Teamscale/engine/com.teamscale.ui");
-	//    public static final File TEAMSCALE_UI_DIR_CONVERTED = new File(TEAMSCALE_UI_DIR.getAbsolutePath() + ".converted");
 	private static final boolean INCLUDE_TESTS = false;
 	private static final File REQUIRED_NAMESPACES = new File("required-namespaces.txt");
 
-	private static File[] getUiDirFiles(File teamscaleUiDir) {
-		return new File[]{new File(teamscaleUiDir, "src-js"),
-				new File(teamscaleUiDir, "generated-src-js/typedefs"),
-				new File(teamscaleUiDir, "resources/third_party"),
-				new File(teamscaleUiDir, "build/generated/soy")};
-	}
-
 	public static void main(String[] args) throws IOException, InterruptedException {
-		// Uncomment the below line to update the required-namespaces.txt
-		//updateRequiredNamespaces()
-
 		convert();
 
 		generateTSDeclarationFiles();
@@ -186,10 +174,6 @@ public class Es6ModuleMasterConverter {
 		});
 
 		Files.copy(INPUT_DIR.toPath().resolve("closure/goog/base.js"), OUTPUT_DIR.toPath().resolve("google.js"));
-//		if (INCLUDE_TESTS) {
-//			//TODO copy actual tests
-//			FileUtils.copyFolder(new File(INPUT_DIR, "scripts").toPath(), new File(OUTPUT_DIR, "scripts").toPath());
-//		}
 
 		new SpecificFixesApplier(OUTPUT_DIR.toPath()).fixAllInPlace();
 
@@ -210,16 +194,6 @@ public class Es6ModuleMasterConverter {
 
 	private static HashSet<String> getTsRequiredNamespaces() throws IOException {
 		return new HashSet<>(com.google.common.io.Files.asCharSource(REQUIRED_NAMESPACES, Charsets.UTF_8).readLines());
-	}
-
-	private static void updateRequiredNamespaces() throws IOException {
-		ReaderPass readTs = new ReaderPass();
-		readTs.process(getUiDirFiles(TEAMSCALE_UI_DIR));
-		Set<String> tsRequiredNamespaces = getTsRequiredNamespaces(readTs);
-		com.google.common.io.Files.asCharSink(REQUIRED_NAMESPACES, Charsets.UTF_8)
-				.writeLines(tsRequiredNamespaces.stream().sorted());
-
-		System.exit(0);
 	}
 
 	private static Set<String> getTsRequiredNamespaces(ReaderPass teamscaleUiDirs) {
