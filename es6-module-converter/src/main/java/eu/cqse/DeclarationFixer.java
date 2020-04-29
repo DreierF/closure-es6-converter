@@ -77,5 +77,7 @@ public class DeclarationFixer extends FixerBase {
 
 		prependIn("asserts/dom", "type Include<T, U> = T extends U ? T : never;\n");
 		adjustIn("asserts/dom", Pattern.compile("Element\\(value: any\\): ([^;]+);"), "Element(value: any): Include<typeof value, $1>;");
+
+		adjustIn("object/object", "getValues<K, V>(obj: any): V[];", "getValues<T = unknown>(obj: Record<string, T> | ArrayLike<T> | object): T[];");
 	}
 }
