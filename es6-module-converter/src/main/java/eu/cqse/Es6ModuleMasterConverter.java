@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.lang.String.join;
 import static java.nio.file.FileVisitResult.CONTINUE;
@@ -183,24 +182,14 @@ public class Es6ModuleMasterConverter {
 		Es6ClassConversionPass es6Conversion = new Es6ClassConversionPass();
 		es6Conversion.process(OUTPUT_DIR);
 
-//        FileUtils.safeDeleteDir(TEAMSCALE_UI_DIR_CONVERTED.toPath());
-//        FileUtils.copyFolder(TEAMSCALE_UI_DIR.toPath(), TEAMSCALE_UI_DIR_CONVERTED.toPath());
-
 		ReaderPass readInPass = new ReaderPass();
-		readInPass.process(OUTPUT_DIR/*ObjectArrays.concat(OUTPUT_DIR, getUiDirFiles(TEAMSCALE_UI_DIR_CONVERTED))*/);
+		readInPass.process(OUTPUT_DIR);
 		validateProvideRequires(readInPass);
 		new ConvertingPass().process(readInPass);
 	}
 
 	private static HashSet<String> getTsRequiredNamespaces() throws IOException {
 		return new HashSet<>(com.google.common.io.Files.asCharSource(REQUIRED_NAMESPACES, Charsets.UTF_8).readLines());
-	}
-
-	private static Set<String> getTsRequiredNamespaces(ReaderPass teamscaleUiDirs) {
-		return teamscaleUiDirs.requiresByFile.values().stream()
-				.filter(r -> r.requireType != GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_LENIENT)
-				.map(require -> require.requiredNamespace)
-				.filter(namespace -> namespace.startsWith("goog.")).collect(Collectors.toSet());
 	}
 
 	private static void validateProvideRequires(ReaderPass pass1) {
