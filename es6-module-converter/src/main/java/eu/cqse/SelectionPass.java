@@ -10,7 +10,6 @@ public class SelectionPass {
 
 	public Set<File> process(ReaderPass depsFile, boolean includeTests, Set<String> tsRequiredNamespaces) {
 		HashMap<String, ClosureDependency> depsByProvide = getStringClosureDependencies(depsFile);
-
 		return calculateTransitiveClosure(depsByProvide, includeTests, tsRequiredNamespaces);
 	}
 

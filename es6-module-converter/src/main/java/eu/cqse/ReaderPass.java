@@ -37,9 +37,6 @@ public class ReaderPass {
 
 	void process(File... inputDirPaths) throws IOException {
 		FileUtils.processRelevantJsFiles(this::processJsFile, inputDirPaths);
-//		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "closure/goog/goog.js"), List.of(new GoogProvideOrModule("goog", true, List.of(), null)), List.of());
-//		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/dojo/dom/query.js"), List.of(new GoogProvideOrModule("goog.dom.query", true, List.of(), null)), List.of());
-//		insertProvidesAndRequiresForFile(new File(inputDirPaths[0], "third_party/closure/goog/mochikit/async/deferred.js"), List.of(new GoogProvideOrModule("goog.async.Deferred", true, List.of(), null)), List.of());
 	}
 
 	private void processJsFile(File jsFile) {

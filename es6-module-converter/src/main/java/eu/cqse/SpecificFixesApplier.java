@@ -13,7 +13,6 @@ public class SpecificFixesApplier extends FixerBase {
 	private static final String DOCUMENTED_PATTERN = "(?ms)^(/\\*\\*((?!\\*/).)*\\*/\\s*)";
 
 	public void fix() {
-//		adjustIn("db/error", "goog.provide('goog.db.DomErrorLike')", "goog.provide('goog.db.DOMErrorLike')");
 		adjustIn("events/browserfeature", "goog.scope(function() {", "");
 		adjustIn("events/browserfeature", "});  // goog.scope", "");
 		adjustIn("net/xhrio", "goog.scope(function() {", "");
@@ -68,9 +67,6 @@ public class SpecificFixesApplier extends FixerBase {
 		adjustIn("crypt/md5", Pattern.compile("];\r?\n \\*/"), "];\r\n */\r\n/***/");
 
 		// Unused code
-//		removeDeclaration("color/color", "goog.color.isNormalizedHexColor_");
-//		removeDeclaration("color/color", "goog.color.normalizedHexColorRe_");
-//		removeDeclaration("html/sanitizer/htmlsanitizer", "goog.html.sanitizer.HTML_SANITIZER_TEMPLATE_SUPPORTED");
 		removeDeclaration("async/delay", "goog.Delay");
 		adjustIn("async/delay", Pattern.compile("goog\\.provide\\('goog\\.Delay'\\);\r?\n"), "");
 		adjustIn("events/eventhandler", Pattern.compile("@template\\s+EVENTOBJ,\\s*THIS"), "@template EVENTOBJ, THIS\r\n \\* @suppress{checkTypes}");

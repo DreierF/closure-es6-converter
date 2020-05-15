@@ -65,7 +65,8 @@ public abstract class FixerBase {
 			return;
 		}
 		if (!fileContentSafe.contains(search)) {
-			throw new IllegalStateException(search + " not contained in " + fileName + " " + filePath);
+//			throw new IllegalStateException(search + " not contained in " + fileName + " " + filePath);
+			System.err.println(search + " not contained in " + fileName + " " + filePath);
 		}
 		fileContentSafe = fileContentSafe.replace(search, replace);
 	}

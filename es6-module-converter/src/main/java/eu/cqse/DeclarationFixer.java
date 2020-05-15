@@ -31,32 +31,23 @@ public class DeclarationFixer extends FixerBase {
 		adjustIn("asserts/asserts", "fail(opt_message?: string | undefined, ...args: any[]): void;", "fail(opt_message?: string, ...args: any[]): never;");
 		adjustIn("asserts/asserts", "assert<T>(condition: T, opt_message?: string | undefined, ...args: any[]): T;", "assert<T>(condition: T, opt_message?: string | undefined, ...args: any[]): asserts condition;");
 
-//		adjustIn("modalpopup", "(arg0: ...?)", "()");
-//		adjustIn("tagname", "export const ISINDEX: TagName<HTMLIsIndexElement>;", "");
-//		adjustIn("tagname", "export const MENUITEM: TagName<HTMLMenuItemElement>;", "");
-//		adjustIn("events/event", "target: Object | undefined;", "target: Object | null | undefined;");
-//		adjustIn("events/event", "currentTarget: Object | undefined;", "currentTarget: Object | null | undefined;");
 		adjustIn("eventhandler", "export type ListenableType = EventTarget | Listenable | null;", "export type ListenableType = EventTarget | Listenable;");
 		adjustIn("xhrio", "headers: StructsMap;", "headers: StructsMap<string, string>;");
 
 		appendIn("xhrio", "import {Logger as DebugLogger} from \"../debug/logger\";\n\n");
 
 		appendIn("combobox", "import {Logger as DebugLogger} from \"../debug/logger\";\n\n");
-//		adjustIn("dialog", "set(key: any,", "// @ts-ignore\n    set(key: any,");
-//		adjustIn("paletterenderer", "decorate(palette: Control<any> | null, element: Element | null): null;", "decorate(palette: UiPalette | null, element: Element | null): null;");
 		adjustIn("events/eventtype", Pattern.compile("import MOUSE(.*)_1 = MOUSE([^;]+);"), "import MOUSE$1_1 = EventType.MOUSE$2;");
 		adjustIn("events/eventtype", Pattern.compile("import MOUSE(.*)_2 = POINTER([^;]+);"), "import MOUSE$1_2 = PointerFallbackEventType.POINTER$2;");
 		adjustIn("events/eventtype", Pattern.compile("import TOUCH(.*)_1 = POINTER([^;]+);"), "import TOUCH$1_1 = PointerTouchFallbackEventType.POINTER$2;");
 		adjustIn("browserevent", Pattern.compile("import IE_BUTTON_MAP = IEButtonMap;\r?\n\\s+export \\{ IE_BUTTON_MAP };"), "export const IE_BUTTON_MAP: Array<number>;");
 
-//		adjustIn("events/eventhandler", "listener: (this: T, arg1: EVENTOBJ) => any", "listener: (this: T, arg1: EVENTOBJ) => boolean|void");
 		adjustIn("events/eventhandler", "<EVENTOBJ>(", "<EVENTOBJ = BrowserEvent>(");
 		adjustIn("events/eventhandler", "<T, EVENTOBJ>(", "<T = any, EVENTOBJ = BrowserEvent>(");
 		appendIn("events/eventhandler", "\nimport { BrowserEvent } from './browserevent';");
 		adjustIn("events/keycodes", Pattern.compile(" {4}([A-Z_]+)"), "    static $1");
 
 		adjustIn("dom/dom", "NodeList<Element>", "NodeListOf<Element>");
-//		adjustIn("dom/dom", "getElementsByTagName<T, R>(tagName: TagName<T>, opt_parent?: Element | Document | undefined): any;", "getElementsByTagName<T>(tagName: TagName<T>, opt_parent?: Element | Document): HTMLCollectionOf<T>;");
 
 		adjustIn("dom/dom", Pattern.compile("export ([^<]+)<T, R>\\((.*)string \\| TagName<T>(.*)\\): R( \\| null)?;"), "export $1($2string$3): Element$4;\nexport $1<T>($2TagName<T>$3): T$4;");
 		adjustIn("dom/dom", Pattern.compile("export ([^<]+)<T, R>\\((.*)string \\| TagName<T>(.*)\\): (Array(?:Like)?)<R>( \\| null)?;"), "export $1($2string$3): $4<Element>$5;\nexport $1<T>($2TagName<T>$3): $4<T>$5;");
