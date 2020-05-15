@@ -63,7 +63,16 @@ public class ReaderPass {
 
 	private boolean shouldIgnoreMissingProvide(File jsFile) {
 		return jsFile.getName().endsWith("Externs.js") ||
-				jsFile.getName().equals("Index.js");
+				jsFile.getName().equals("Index.js") ||
+				jsFile.getPath().contains("demos") ||
+				jsFile.getPath().contains("closure-deps") ||
+				jsFile.getPath().contains("generate_closure_unit_tests") ||
+				jsFile.getPath().contains("bootstrap") ||
+				jsFile.getParent().endsWith("closure-library") ||
+				jsFile.getParent().endsWith("goog") ||
+				jsFile.getName().equals("base.js") ||
+				jsFile.getName().equals("article.js") ||
+				jsFile.getName().equals("deps.js") ;
 	}
 
 	private void addImplicitTypeOnlyGoogRequires(List<GoogRequireOrForwardDeclare> googRequires, String content) {

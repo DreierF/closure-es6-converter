@@ -30,3 +30,5 @@ This repository contains a submodule, which is a [fork of the Closure Library](h
 # How to run the Converter
 
 - Run `yarn install` to download Typescript
+- Ensure you have Java 11 installed and JAVA_HOME points to it
+- Run `cd es6-module-converter && ./gradlew run`
