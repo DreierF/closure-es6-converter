@@ -26,11 +26,8 @@ import static java.util.stream.Collectors.toSet;
 
 /**
  * HOWTO:
- * - Adjust TEAMSCALE_UI_DIR to point to a clone of the TS repo.
- * - Make sure you have checked out the branch "experimental/webpack"
- * - Run "./gradlew generateJavascriptDataClasses compileSoy" in this repo
- * <p>
- * Run yarn install to install tsc
+ * - Ensure that the Closure library submodule was checked out with this commit:  https://github.com/cqse/closure-library/tree/minimal_fixes_on_20191111
+ * - execute 'cd es6-module-converter && ./gradlew run'
  */
 public class Es6ModuleMasterConverter {
 
