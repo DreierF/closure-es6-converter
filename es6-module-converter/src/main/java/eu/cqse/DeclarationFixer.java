@@ -52,6 +52,12 @@ public class DeclarationFixer extends FixerBase {
 		adjustIn("dom/dom", Pattern.compile("export ([^<]+)<T, R>\\((.*)string \\| TagName<T>(.*)\\): R( \\| null)?;"), "export $1($2string$3): Element$4;\nexport $1<T>($2TagName<T>$3): T$4;");
 		adjustIn("dom/dom", Pattern.compile("export ([^<]+)<T, R>\\((.*)string \\| TagName<T>(.*)\\): (Array(?:Like)?)<R>( \\| null)?;"), "export $1($2string$3): $4<Element>$5;\nexport $1<T>($2TagName<T>$3): $4<T>$5;");
 
+		adjustIn("positioning", Pattern.compile("(\\s{2,}[A-Z_]+): number;"), "$1,");
+		adjustIn("positioning", Pattern.compile("export const ([A-Z_]+): number;"), "$1,");
+		adjustIn("positioning","export class ", "export enum ");
+		adjustIn("positioning","}\n" +
+				"export namespace OverflowStatus {", "");
+
 		prependIn("asserts/dom", "type Include<T, U> = T extends U ? T : never;\n");
 		adjustIn("asserts/dom", Pattern.compile("Element\\(value: any\\): ([^;]+);"), "Element(value: any): Include<typeof value, $1>;");
 
