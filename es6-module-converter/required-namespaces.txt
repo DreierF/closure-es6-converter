@@ -38,7 +38,6 @@ goog.events.KeyCodes
 goog.events.KeyEvent
 goog.events.WheelHandler
 goog.format
-goog.fs.FileReader
 goog.fs.url
 goog.fx.AbstractDragDrop.EventType
 goog.fx.DragDrop
