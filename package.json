@@ -2,6 +2,6 @@
   "name": "ts-closure-library",
   "version": "20200101.0",
   "devDependencies": {
-    "typescript": "^3.9.2"
+    "typescript": "^4.0.2"
   }
 }

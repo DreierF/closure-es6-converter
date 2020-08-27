@@ -37,9 +37,6 @@ public class DeclarationFixer extends FixerBase {
 		appendIn("xhrio", "import {Logger as DebugLogger} from \"../debug/logger\";\n\n");
 
 		appendIn("combobox", "import {Logger as DebugLogger} from \"../debug/logger\";\n\n");
-		adjustIn("events/eventtype", Pattern.compile("import MOUSE(.*)_1 = MOUSE([^;]+);"), "import MOUSE$1_1 = EventType.MOUSE$2;");
-		adjustIn("events/eventtype", Pattern.compile("import MOUSE(.*)_2 = POINTER([^;]+);"), "import MOUSE$1_2 = PointerFallbackEventType.POINTER$2;");
-		adjustIn("events/eventtype", Pattern.compile("import TOUCH(.*)_1 = POINTER([^;]+);"), "import TOUCH$1_1 = PointerTouchFallbackEventType.POINTER$2;");
 		adjustIn("browserevent", Pattern.compile("import IE_BUTTON_MAP = IEButtonMap;\r?\n\\s+export \\{ IE_BUTTON_MAP };"), "export const IE_BUTTON_MAP: Array<number>;");
 
 		adjustIn("events/eventhandler", "<EVENTOBJ>(", "<EVENTOBJ = BrowserEvent>(");
@@ -53,7 +50,7 @@ public class DeclarationFixer extends FixerBase {
 		adjustIn("dom/dom", Pattern.compile("export ([^<]+)<T, R>\\((.*)string \\| TagName<T>(.*)\\): (Array(?:Like)?)<R>( \\| null)?;"), "export $1($2string$3): $4<Element>$5;\nexport $1<T>($2TagName<T>$3): $4<T>$5;");
 
 		adjustIn("positioning", Pattern.compile("(\\s{2,}[A-Z_]+): number;"), "$1,");
-		adjustIn("positioning", Pattern.compile("export const ([A-Z_]+): number;"), "$1,");
+		adjustIn("positioning", Pattern.compile("const ([A-Z_]+): number;"), "$1,");
 		adjustIn("positioning","export class ", "export enum ");
 		adjustIn("positioning","}\n" +
 				"export namespace OverflowStatus {", "");
