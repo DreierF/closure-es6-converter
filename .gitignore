@@ -5,3 +5,4 @@ node_modules/
 es6-module-converter/compiled.js
 /temp/
 /typings/
+closure-library-converted
