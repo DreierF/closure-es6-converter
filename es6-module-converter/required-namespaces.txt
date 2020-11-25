@@ -17,8 +17,6 @@ goog.dom.NodeType
 goog.dom.TagName
 goog.dom.ViewportSizeMonitor
 goog.dom.asserts
-goog.dom.classes
-goog.dom.classlist
 goog.dom.dataset
 goog.dom.forms
 goog.dom.fullscreen
@@ -64,7 +62,6 @@ goog.i18n.DateTimeParse
 goog.i18n.NumberFormat
 goog.i18n.NumberFormat.Format
 goog.i18n.bidi
-goog.json
 goog.math
 goog.math.Box
 goog.math.Coordinate
