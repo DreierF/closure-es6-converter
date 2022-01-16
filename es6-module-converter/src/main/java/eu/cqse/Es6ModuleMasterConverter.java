@@ -32,7 +32,7 @@ import static java.util.stream.Collectors.toSet;
 public class Es6ModuleMasterConverter {
 
 	private static final File INPUT_DIR = new File("../closure-library");
-	private static final File OUTPUT_DIR = new File("../closure-library-converted/lib");
+	private static final File OUTPUT_DIR = new File("../ts-closure-library/lib");
 	private static final File TEMP_DIR = new File("../temp");
 	private static final boolean INCLUDE_TESTS = false;
 	private static final File REQUIRED_NAMESPACES = new File("required-namespaces.txt");
