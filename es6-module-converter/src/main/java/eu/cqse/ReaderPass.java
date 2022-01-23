@@ -33,7 +33,7 @@ public class ReaderPass {
 	private static final Pattern DEFAULT_EXPORT_PATTERN = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?(([$\\w_,\\s+:*]|//.*|/\\**[^/]*(?<=\\*)/)+)}?;?");
 	private static final Pattern DOTTED_EXPORT = Pattern.compile("(?m)^\\s*exports\\.([\\w_]+)\\s*=");
 	private static final Pattern REQUIRE_PATTERN = Pattern.compile(
-			"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|forwardDeclare)[\\s\\r\\n]*\\(\\s*['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
+			"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|requireType|forwardDeclare)[\\s\\r\\n]*\\(\\s*['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
 
 	void process(File... inputDirPaths) throws IOException {
 		FileUtils.processRelevantJsFiles(this::processJsFile, inputDirPaths);

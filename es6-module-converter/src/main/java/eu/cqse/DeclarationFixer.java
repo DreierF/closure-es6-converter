@@ -17,13 +17,7 @@ public class DeclarationFixer extends FixerBase {
 		adjustInAll(", var_args: any", ", ...var_args: any");
 
 		adjustIn("google", "isArray(val: unknown): boolean", "isArray(val: unknown): val is unknown[]");
-		adjustIn("google", "isBoolean(val: unknown): boolean", "isBoolean(val: unknown): val is boolean");
-		adjustIn("google", "isDef(val: unknown): boolean", "isDef<T>(val: T): val is Exclude<typeof val, undefined>");
-		adjustIn("google", "isDefAndNotNull(val: unknown): boolean", "isDefAndNotNull<T>(val: T): val is Exclude<typeof val, (undefined | null)>");
-		adjustIn("google", "isNull(val: unknown): boolean", "isNull(val: unknown): val is null");
-		adjustIn("google", "isNumber(val: unknown): boolean", "isNumber(val: unknown): val is number");
 		adjustIn("google", "isObject(val: unknown): boolean", "isObject(val: unknown): val is object");
-		adjustIn("google", "isString(val: unknown): boolean", "isString(val: unknown): val is string");
 
 		adjustIn("asserts/asserts",
 				"assertObject(value: any, opt_message?: string | undefined, ...args: any[]): any;",

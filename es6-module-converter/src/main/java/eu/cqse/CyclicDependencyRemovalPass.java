@@ -42,7 +42,7 @@ public class CyclicDependencyRemovalPass {
 		Matcher matcher = ReaderPass.PROVIDE_OR_MODULE_PATTERN.matcher(content);
 		while (matcher.find()) {
 			String ns = matcher.group(1);
-			content = content.replaceAll("goog\\.(?:require|forwardDeclare)\\('" + ns + "'\\);", "");
+			content = content.replaceAll("goog\\.(?:require|requireType|forwardDeclare)\\('" + ns + "'\\);", "");
 		}
 
 		for (File file : files) {

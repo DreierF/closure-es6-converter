@@ -111,6 +111,7 @@ class ConvertingPass {
 	private static final Set<String> GOOG_IMPORTED_ELEMENTS = new HashSet<>(Set.of(
 			"goog.global",
 			"goog.require",
+			"goog.requireType",
 			"goog.tagUnsealableClass",
 			"goog.COMPILED"
 	));
