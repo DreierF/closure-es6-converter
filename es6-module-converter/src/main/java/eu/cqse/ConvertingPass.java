@@ -47,7 +47,7 @@ class ConvertingPass {
 			"goog.html.sanitizer.CssPropertySanitizer", "goog.debug.entryPointRegistry", "goog.userAgent",
 			"goog.i18n.uChar", "goog.dom.animationFrame", "goog.dom.BrowserFeature");
 
-	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "goog.dispose", "goog.async.run");
+	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "goog.dispose", "goog.async.run", "goog.memoize");
 	private static final Pattern ASSIGNED_GOOG_DEFINE_PATTERN = Pattern.compile("(?:let\\s+)?([" + JsCodeUtils.IDENTIFIER_PATTERN + ".]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(\\s*'([^']+\\.([^'.]+))',\\s*([^)]+)\\);?");
 	private static final Set<String> GOOG_ELEMENTS_NEED_IMPORT = Set.of(
 			"goog.isString",
