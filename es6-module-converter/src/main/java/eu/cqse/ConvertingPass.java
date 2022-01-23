@@ -474,7 +474,7 @@ class ConvertingPass {
 			if (isPublicByConvention(typeName) && isProvided) {
 				exports.add(new AliasedElement(typeName));
 			}
-			content = content.replace(matcher.group(), "let " + typeName + ";");
+			content = content.replaceAll("(?m)^" + Pattern.quote(matcher.group()), "let " + typeName + ";");
 			content = replaceFullyQualifiedCallWith(content, namespace + "." + typeName,
 					typeName);
 		}
