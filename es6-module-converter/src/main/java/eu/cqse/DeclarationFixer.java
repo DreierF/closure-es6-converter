@@ -16,7 +16,6 @@ public class DeclarationFixer extends FixerBase {
 		adjustInAll(Pattern.compile("opt_(\\w+): "), "opt_$1?: ");
 		adjustInAll(", var_args: any", ", ...var_args: any");
 
-		adjustIn("google", "isArray(val: unknown): boolean", "isArray(val: unknown): val is unknown[]");
 		adjustIn("google", "isObject(val: unknown): boolean", "isObject(val: unknown): val is object");
 
 		adjustIn("asserts/asserts",
