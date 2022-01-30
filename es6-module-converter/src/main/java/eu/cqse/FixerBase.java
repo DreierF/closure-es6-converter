@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.function.Function;
+import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import static java.nio.file.FileVisitResult.CONTINUE;
@@ -80,6 +82,16 @@ public abstract class FixerBase {
 			throw new IllegalStateException(searchPattern.pattern() + " not contained in " + file);
 		}
 		fileContentSafe = searchPattern.matcher(fileContentSafe).replaceAll(replace);
+	}
+
+	protected void adjustIn(String file, Pattern searchPattern, Function<MatchResult, String> replacer) {
+		if (!filePath.endsWith(file + "." + extension)) {
+			return;
+		}
+		if (!searchPattern.matcher(fileContentSafe).find()) {
+			throw new IllegalStateException(searchPattern.pattern() + " not contained in " + file);
+		}
+		fileContentSafe = searchPattern.matcher(fileContentSafe).replaceAll(replacer);
 	}
 
 	protected void adjustInAll(String search, String replace) {

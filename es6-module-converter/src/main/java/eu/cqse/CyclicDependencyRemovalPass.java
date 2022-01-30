@@ -20,7 +20,6 @@ public class CyclicDependencyRemovalPass {
 	}
 
 	void process() throws IOException {
-		merge("date/date.js", "date/date.js", "date/datelike.js");
 		merge("events/eventhandler.js", "events/eventhandler.js", "events/events.js", "events/eventwrapper.js", "events/listenable.js", "events/eventtarget.js", "events/listener.js", "events/listenermap.js");
 		merge("ui/container.js", "ui/container.js", "ui/containerrenderer.js");
 		merge("ui/control.js", "ui/controlrenderer.js", "ui/registry.js", "ui/control.js");

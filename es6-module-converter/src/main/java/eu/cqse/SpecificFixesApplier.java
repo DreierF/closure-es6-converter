@@ -13,8 +13,9 @@ public class SpecificFixesApplier extends FixerBase {
 	private static final String DOCUMENTED_PATTERN = "(?ms)^(/\\*\\*((?!\\*/).)*\\*/\\s*)";
 
 	public void fix() {
-		adjustIn("events/browserfeature", "goog.scope(function() {", "");
-		adjustIn("events/browserfeature", "});  // goog.scope", "");
+		adjustIn("debug/tracer", Pattern.compile("(?ms)^goog\\.debug\\.Trace_ ="), "let Trace_ =");
+		adjustIn("debug/tracer", "goog.debug.Trace_", "Trace_");
+		adjustIn("promise/thenable", "goog.requireType('goog.Promise');", "");
 		adjustIn("net/xhrio", "goog.scope(function() {", "");
 		adjustIn("net/xhrio", Pattern.compile("var ResponseType = goog\\.net\\.XhrIo\\.ResponseType;\r?\n"), "");
 		adjustIn("net/xhrio", Pattern.compile("ResponseType\\.[A-Z_]+"), "goog.net.XhrIo.$0");
@@ -52,6 +53,8 @@ public class SpecificFixesApplier extends FixerBase {
 				"  return /** @type {!$2} */ ($2.instance_) = new $2();\n" +
 				"};");
 
+		adjustInAll(Pattern.compile("\\s+'use strict';"), "");
+
 		adjustInAll(Pattern.compile("goog\\.addSingletonGetter\\(([^)]+)\\);"), "/** @type {undefined|!$1} @suppress {underscore,checkTypes}*/\n" +
 				"$1.instance_ = undefined;\n" +
 				"/** @return {!$1} @suppress {checkTypes} */\n" +
@@ -62,13 +65,12 @@ public class SpecificFixesApplier extends FixerBase {
 				"  return /** @type {!$1} */ ($1.instance_) = new $1();\n" +
 				"};");
 
-
 		// Add an empty doc comment so that the commented out code is not attributed to the export statement
 		adjustIn("crypt/md5", Pattern.compile("];\r?\n \\*/"), "];\r\n */\r\n/***/");
 
 		// Unused code
-		removeDeclaration("async/delay", "goog.Delay");
-		adjustIn("async/delay", Pattern.compile("goog\\.provide\\('goog\\.Delay'\\);\r?\n"), "");
+//		removeDeclaration("async/delay", "goog.async.Delay");
+//		adjustIn("async/delay", Pattern.compile("goog\\.provide\\('goog\\.async\\.Delay'\\);\r?\n"), "");
 		adjustIn("events/eventhandler", Pattern.compile("@template\\s+EVENTOBJ,\\s*THIS"), "@template EVENTOBJ, THIS\r\n \\* @suppress{checkTypes}");
 		adjustIn("events/events", Pattern.compile("@template T,EVENTOBJ"), "@template T,EVENTOBJ\r\n \\* @suppress{checkTypes}");
 		adjustIn("events/events", "return listener;", "return /** @type {!Function} */ (listener);");
@@ -76,11 +78,12 @@ public class SpecificFixesApplier extends FixerBase {
 		adjustIn("uri/uri", "this.queryData_.setValues(key, values);", "this.queryData_.setValues(key, /** @type {!Array<?>} */ (values));");
 		adjustIn("ui/menuitem", Pattern.compile("@return \\{\\?string} The keyboard accelerator text, or null if the menu item\r?\n\\s*\\*\\s*doesn't have one\\."),  //
 				"@suppress {checkTypes}\r\n \\* @return {?string} The keyboard accelerator text, or null if the menu item doesn't have one.");
+
 		addSuppressCommmentToCommentBlock("dom/classes", "@deprecated Use goog.dom.classlist.addRemove instead.");
 		addSuppressCommmentToCommentBlock("a11y/aria/aria", "Sets the state or property of an element.");
 		addSuppressCommmentToCommentBlock("html/safehtml", "Gets value allowed in \"style\" attribute");
 		addSuppressCommmentToCommentBlock("html/safehtml", "Creates a new SafeHtml object by joining the parts with separator.");
-		addSuppressCommmentToCommentBlock("html/safestyle", "@throws {Error} If invalid name is provided.");
+		addSuppressCommmentToCommentBlock("html/safestyle", "@throws {!Error} If invalid name is provided.");
 		addSuppressCommmentToCommentBlock("html/safestyle", "Creates a new SafeStyle object by concatenating the values.");
 		addSuppressCommmentToCommentBlock("html/safestylesheet", "Creates a new SafeStyleSheet object by concatenating values.");
 		addSuppressCommmentToCommentBlock("events/events", "@return {?boolean} indicating whether the listener was there to remove.");

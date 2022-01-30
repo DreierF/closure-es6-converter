@@ -1,6 +1,8 @@
 package eu.cqse;
 
 import java.nio.file.Path;
+import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DeclarationFixer extends FixerBase {
@@ -11,7 +13,7 @@ public class DeclarationFixer extends FixerBase {
 
 	@Override
 	protected void fix() {
-		adjustInAll(Pattern.compile("(?<!\\w)(THIS|T|S|R|K|V|RESULT|VALUE|SCOPE|EVENTOBJ|TYPE|DEFAULT)_[123](?!\\w)"), "$1");
+		adjustInAll(Pattern.compile("(?<!\\w)(THIS|T|S|R|K|V|RESULT|VALUE|SCOPE|EVENTOBJ|TYPE|DEFAULT)_[0-9](?!\\w)"), "$1");
 		adjustInAll(Pattern.compile(" => ([);])"), " => void$1");
 		adjustInAll(Pattern.compile("opt_(\\w+): "), "opt_$1?: ");
 		adjustInAll(", var_args: any", ", ...var_args: any");
@@ -34,6 +36,7 @@ public class DeclarationFixer extends FixerBase {
 
 		adjustIn("events/eventhandler", "<EVENTOBJ>(", "<EVENTOBJ = BrowserEvent>(");
 		adjustIn("events/eventhandler", "<T, EVENTOBJ>(", "<T = any, EVENTOBJ = BrowserEvent>(");
+		adjustIn("events/eventhandler", "listener: (this: SCOPE, arg1: EVENTOBJ) => (boolean | undefined)", "listener: (this: SCOPE, arg1: EVENTOBJ) => (boolean | undefined | void)");
 		appendIn("events/eventhandler", "\nimport { BrowserEvent } from './browserevent';");
 		adjustIn("events/keycodes", Pattern.compile(" {4}([A-Z_]+)"), "    static $1");
 
@@ -41,11 +44,12 @@ public class DeclarationFixer extends FixerBase {
 
 		adjustIn("dom/dom", Pattern.compile("export ([^<]+)<T, R>\\((.*)string \\| TagName<T>(.*)\\): R( \\| null)?;"), "export $1($2string$3): Element$4;\nexport $1<T>($2TagName<T>$3): T$4;");
 		adjustIn("dom/dom", Pattern.compile("export ([^<]+)<T, R>\\((.*)string \\| TagName<T>(.*)\\): (Array(?:Like)?)<R>( \\| null)?;"), "export $1($2string$3): $4<Element>$5;\nexport $1<T>($2TagName<T>$3): $4<T>$5;");
+		adjustIn("dom/tagname", Pattern.compile(" {4}const ([A-Z0-9]+): any;"), m -> "    const $1: TagName<HTMLElementTagNameMap['" + m.group(1).toLowerCase(Locale.ROOT) + "']>;");
 
 		adjustIn("positioning", Pattern.compile("(\\s{2,}[A-Z_]+): number;"), "$1,");
 		adjustIn("positioning", Pattern.compile("const ([A-Z_]+): number;"), "$1,");
-		adjustIn("positioning","export class ", "export enum ");
-		adjustIn("positioning","}\n" +
+		adjustIn("positioning", "export class ", "export enum ");
+		adjustIn("positioning", "}\n" +
 				"export namespace OverflowStatus {", "");
 
 		prependIn("asserts/dom", "type Include<T, U> = T extends U ? T : never;\n");
@@ -63,7 +67,6 @@ public class DeclarationFixer extends FixerBase {
 		adjustIn("object/object", "getValues<K, V>(obj: any): V[];", "getValues<T = unknown>(obj: Record<string, T> | ArrayLike<T> | object): T[];");
 		adjustIn("ui/component", "forEachChild<T>(f: (this: T, arg1: unknown, arg2: number) => unknown, opt_obj?: T | undefined): void;", "forEachChild<T>(f: (this: T, arg1: Component, arg2: number) => unknown, opt_obj?: T | undefined): void;");
 		adjustIn("object/object", "forEach<T, K, V>(obj: any, f: (this: T, arg1: V, arg2: unknown, arg3: any) => unknown, opt_obj?: T | undefined): void;", "forEach<T = unknown, K = unknown, V = unknown>(obj: Record<K, V> | object, f: (this: T, arg1: V, arg2: K, arg3: any) => any, opt_obj?: T | undefined): void;");
-		adjustIn("events/eventhandler", "function unlisten<EVENTOBJ = BrowserEvent>(src: (EventTarget | Listenable) | null, type: string | string[] | EventId<EVENTOBJ> | EventId<EVENTOBJ>[], listener: (arg0: unknown) => unknown", "function unlisten<EVENTOBJ = BrowserEvent>(src: (EventTarget | Listenable) | null, type: string | string[] | EventId<EVENTOBJ> | EventId<EVENTOBJ>[], listener: (...arg0: any[]) => unknown");
 
 		adjustIn("fx/dragdropgroup", "export class DragDropGroup extends AbstractDragDrop {", "export class DragDropGroup extends AbstractDragDrop {\n" +
 				"    /**\n" +

@@ -17,7 +17,6 @@ goog.dom.NodeType
 goog.dom.TagName
 goog.dom.ViewportSizeMonitor
 goog.dom.asserts
-goog.dom.dataset
 goog.dom.forms
 goog.dom.fullscreen
 goog.dom.fullscreen.EventType

@@ -33,7 +33,7 @@ public class ReaderPass {
 	private static final Pattern DEFAULT_EXPORT_PATTERN = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?(([$\\w_,\\s+:*]|//.*|/\\**[^/]*(?<=\\*)/)+)}?;?");
 	private static final Pattern DOTTED_EXPORT = Pattern.compile("(?m)^\\s*exports\\.([\\w_]+)\\s*=");
 	private static final Pattern REQUIRE_PATTERN = Pattern.compile(
-			"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|requireType|forwardDeclare)[\\s\\r\\n]*\\(\\s*['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
+			"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_, ]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|requireType|forwardDeclare)[\\s\\r\\n]*\\(\\s*['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
 
 	void process(File... inputDirPaths) throws IOException {
 		FileUtils.processRelevantJsFiles(this::processJsFile, inputDirPaths);
@@ -43,7 +43,6 @@ public class ReaderPass {
 		String content = FileUtils.getFileContentSafe(jsFile);
 
 		if (content.contains("goog.setTestOnly();")) {
-			System.out.println("WARN: " + jsFile.getName() + " (" + jsFile.getAbsolutePath() + ") seems to be test-only, skipping file.");
 			return;
 		}
 
@@ -72,7 +71,7 @@ public class ReaderPass {
 				jsFile.getParent().endsWith("goog") ||
 				jsFile.getName().equals("base.js") ||
 				jsFile.getName().equals("article.js") ||
-				jsFile.getName().equals("deps.js") ;
+				jsFile.getName().equals("deps.js");
 	}
 
 	private void addImplicitTypeOnlyGoogRequires(List<GoogRequireOrForwardDeclare> googRequires, String content) {
@@ -92,7 +91,7 @@ public class ReaderPass {
 					namespace = "goog.net.XhrLike";
 				}
 				if (namespace.contains(".") && !requires.contains(namespace) && !namespace.equals("Array.")) {
-					googRequires.add(new GoogRequireOrForwardDeclare(null, namespace, null, null,
+					googRequires.add(new GoogRequireOrForwardDeclare(null, namespace, null, List.of(),
 							GoogRequireOrForwardDeclare.ERequireType.IMPLICIT_LENIENT));
 					requires.add(namespace);
 				}
@@ -182,15 +181,11 @@ public class ReaderPass {
 			String fullText = matcher.group();
 			String rawShortReference = matcher.group(1);
 			String shortReference = null;
-			String importedFunction = null;
+			List<String> importedFunctions = List.of();
 			if (rawShortReference != null && rawShortReference.contains("{")) {
-				if (rawShortReference.contains(",")) {
-					throw new RuntimeException(
-							"Found multiple function imports in '" + fullText + " ', which is unsupported.");
-				}
-				importedFunction = rawShortReference.replaceAll("[{}]", "");
-			} else {
-				shortReference = rawShortReference;
+				importedFunctions = Arrays.asList(rawShortReference.replaceAll("[{}\\s]", "").split(","));
+			} else if (rawShortReference != null) {
+				shortReference = rawShortReference.trim();
 			}
 			boolean containsForwardDeclare = fullText.contains(".forwardDeclare(");
 			GoogRequireOrForwardDeclare.ERequireType requireType;
@@ -199,7 +194,7 @@ public class ReaderPass {
 			} else {
 				requireType = GoogRequireOrForwardDeclare.ERequireType.GOOG_REQUIRE;
 			}
-			requires.add(new GoogRequireOrForwardDeclare(fullText, requiredNamespace, shortReference, importedFunction,
+			requires.add(new GoogRequireOrForwardDeclare(fullText, requiredNamespace, shortReference, importedFunctions,
 					requireType));
 		}
 
