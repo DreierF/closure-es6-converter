@@ -45,7 +45,6 @@ public class Es6ModuleMasterConverter {
 		CommandLineRunner.main(new String[]{"-O", "ADVANCED",
 				"--warning_level", "VERBOSE",
 				"--jscomp_error='*'",
-				"--jscomp_off=strictMissingRequire",
 				"--jscomp_off=extraRequire",
 				"--jscomp_off=deprecated",
 				"--jscomp_off=lintChecks",
