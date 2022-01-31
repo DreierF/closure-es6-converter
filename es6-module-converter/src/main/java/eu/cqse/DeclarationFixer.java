@@ -47,10 +47,7 @@ public class DeclarationFixer extends FixerBase {
 		adjustIn("dom/tagname", Pattern.compile(" {4}const ([A-Z0-9]+): any;"), m -> "    const $1: TagName<HTMLElementTagNameMap['" + m.group(1).toLowerCase(Locale.ROOT) + "']>;");
 
 		adjustIn("positioning", Pattern.compile("(\\s{2,}[A-Z_]+): number;"), "$1,");
-		adjustIn("positioning", Pattern.compile("const ([A-Z_]+): number;"), "$1,");
 		adjustIn("positioning", "export class ", "export enum ");
-		adjustIn("positioning", "}\n" +
-				"export namespace OverflowStatus {", "");
 
 		prependIn("asserts/dom", "type Include<T, U> = T extends U ? T : never;\n");
 		adjustIn("asserts/dom", Pattern.compile("Element\\(value: any\\): ([^;]+);"), "Element(value: any): Include<typeof value, $1>;");

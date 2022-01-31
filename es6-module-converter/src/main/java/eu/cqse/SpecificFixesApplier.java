@@ -69,12 +69,9 @@ public class SpecificFixesApplier extends FixerBase {
 		adjustIn("crypt/md5", Pattern.compile("];\r?\n \\*/"), "];\r\n */\r\n/***/");
 
 		// Unused code
-//		removeDeclaration("async/delay", "goog.async.Delay");
-//		adjustIn("async/delay", Pattern.compile("goog\\.provide\\('goog\\.async\\.Delay'\\);\r?\n"), "");
 		adjustIn("events/eventhandler", Pattern.compile("@template\\s+EVENTOBJ,\\s*THIS"), "@template EVENTOBJ, THIS\r\n \\* @suppress{checkTypes}");
 		adjustIn("events/events", Pattern.compile("@template T,EVENTOBJ"), "@template T,EVENTOBJ\r\n \\* @suppress{checkTypes}");
 		adjustIn("events/events", "return listener;", "return /** @type {!Function} */ (listener);");
-		adjustIn("debug/logger", "msg = msg();", "msg = /** @type{!Function} */ (msg);\r\n\tmsg = msg();");
 		adjustIn("uri/uri", "this.queryData_.setValues(key, values);", "this.queryData_.setValues(key, /** @type {!Array<?>} */ (values));");
 		adjustIn("ui/menuitem", Pattern.compile("@return \\{\\?string} The keyboard accelerator text, or null if the menu item\r?\n\\s*\\*\\s*doesn't have one\\."),  //
 				"@suppress {checkTypes}\r\n \\* @return {?string} The keyboard accelerator text, or null if the menu item doesn't have one.");
