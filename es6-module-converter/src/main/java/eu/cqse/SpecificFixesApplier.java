@@ -26,7 +26,7 @@ public class SpecificFixesApplier extends FixerBase {
 				" * @suppress {checkTypes}\r\n */\r\ngoog.events.unlistenByKey");
 		adjustIn("iter/iter", "var product", "var productVar");
 		adjustIn("iter/iter", "product,", "productVar,");
-		adjustIn("string/path", "var baseName", "var baseNameVar");
+		adjustIn("string/path", "const baseName", "const baseNameVar");
 		adjustIn("string/path", "baseName.", "baseNameVar.");
 		adjustIn("net/xmlhttp", Pattern.compile("goog\\.net\\.XmlHttp\\.ASSUME_NATIVE_XHR =\r?\n" +
 				" {4}goog\\.define\\('goog\\.net\\.XmlHttp\\.ASSUME_NATIVE_XHR', false\\);"), "");

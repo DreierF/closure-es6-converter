@@ -61,9 +61,9 @@ public class DeclarationFixer extends FixerBase {
 
 		adjustIn("classlist", "function get(element: Element | null): ArrayLike<unknown>;", "function get(element: Element | null): ArrayLike<string>;");
 
-		adjustIn("object/object", "getValues<K, V>(obj: any): V[];", "getValues<T = unknown>(obj: Record<string, T> | ArrayLike<T> | object): T[];");
+		adjustIn("object/object", "getValues<K, V>(obj: any | null): V[];", "getValues<T = unknown>(obj: Record<string, T> | ArrayLike<T> | object | null): T[];");
+		adjustIn("object/object", "forEach<T, K, V>(obj: any | null, f: (this: T, arg1: V, arg2: unknown, arg3: any | null) => unknown, opt_obj?: T | undefined): void;", "forEach<T = unknown, K = unknown, V = unknown>(obj: Record<K, V> | object | null, f: (this: T, arg1: V, arg2: K, arg3: any | null) => any, opt_obj?: T | undefined): void;");
 		adjustIn("ui/component", "forEachChild<T>(f: (this: T, arg1: unknown, arg2: number) => unknown, opt_obj?: T | undefined): void;", "forEachChild<T>(f: (this: T, arg1: Component, arg2: number) => unknown, opt_obj?: T | undefined): void;");
-		adjustIn("object/object", "forEach<T, K, V>(obj: any, f: (this: T, arg1: V, arg2: unknown, arg3: any) => unknown, opt_obj?: T | undefined): void;", "forEach<T = unknown, K = unknown, V = unknown>(obj: Record<K, V> | object, f: (this: T, arg1: V, arg2: K, arg3: any) => any, opt_obj?: T | undefined): void;");
 
 		adjustIn("fx/dragdropgroup", "export class DragDropGroup extends AbstractDragDrop {", "export class DragDropGroup extends AbstractDragDrop {\n" +
 				"    /**\n" +

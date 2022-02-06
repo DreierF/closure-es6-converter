@@ -7,10 +7,14 @@ import java.util.Objects;
 
 public class GoogRequireOrForwardDeclare {
 
+	/** The alias under which a whole namespace is imported
+	 * i.e. "const GoogIterable = goog.require('goog.iter.Iterable');"
+	 * => shortReference="GoogIterable"
+	 */
 	@Nullable
 	public String shortReference;
 
-	public final List<String> importedFunctions;
+	public final List<AliasedElement> importedFunctions;
 
 	@Nonnull
 	public final String requiredNamespace;
@@ -21,7 +25,7 @@ public class GoogRequireOrForwardDeclare {
 	final ERequireType requireType;
 
 	GoogRequireOrForwardDeclare(@Nullable String fullText, @Nonnull String requiredNamespace,
-								@Nullable String shortReference, List<String> importedFunctions, ERequireType requireType) {
+								@Nullable String shortReference, List<AliasedElement> importedFunctions, ERequireType requireType) {
 		this.fullText = fullText;
 		this.shortReference = shortReference;
 		this.importedFunctions = importedFunctions;

@@ -287,8 +287,8 @@ class ConvertingPass {
 			String relativePath = getRequirePathFor(file.getAbsolutePath(), requiredFile.getAbsolutePath());
 
 			if (!require.importedFunctions.isEmpty()) {
-				content = replaceOrInsert(content, require.fullText, "import {" + String.join(", ", require.importedFunctions) + "} from '" + relativePath + "';");
-				usedShortReferencesInFile.addAll(require.importedFunctions);
+				content = replaceOrInsert(content, require.fullText, "import {" +  require.importedFunctions.stream().map(AliasedElement::toEs6Fragment).collect(Collectors.joining(", ")) + "} from '" + relativePath + "';");
+				usedShortReferencesInFile.addAll(require.importedFunctions.stream().map(aliasedElement -> aliasedElement.externalName).collect(toSet()));
 				continue;
 			}
 

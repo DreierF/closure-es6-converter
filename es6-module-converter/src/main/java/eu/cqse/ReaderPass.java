@@ -33,7 +33,7 @@ public class ReaderPass {
 	private static final Pattern DEFAULT_EXPORT_PATTERN = Pattern.compile("(?m)^\\s*exports\\s*=\\s*\\{?(([$\\w_,\\s+:*]|//.*|/\\**[^/]*(?<=\\*)/)+)}?;?");
 	private static final Pattern DOTTED_EXPORT = Pattern.compile("(?m)^\\s*exports\\.([\\w_]+)\\s*=");
 	private static final Pattern REQUIRE_PATTERN = Pattern.compile(
-			"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_, ]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|requireType|forwardDeclare)[\\s\\r\\n]*\\(\\s*['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
+			"(?m)^(?:(?:const|let|var)\\s+(\\{?[\\w_, :]+}?)\\s*=\\s*)?goog\\s*\\.\\s*(?:require|requireType|forwardDeclare)[\\s\\r\\n]*\\(\\s*['\"]([\\w_.]+)['\"]\\s*\\)\\s*;?");
 
 	void process(File... inputDirPaths) throws IOException {
 		FileUtils.processRelevantJsFiles(this::processJsFile, inputDirPaths);
@@ -181,9 +181,17 @@ public class ReaderPass {
 			String fullText = matcher.group();
 			String rawShortReference = matcher.group(1);
 			String shortReference = null;
-			List<String> importedFunctions = List.of();
+			List<AliasedElement> importedFunctions = new ArrayList<>();
 			if (rawShortReference != null && rawShortReference.contains("{")) {
-				importedFunctions = Arrays.asList(rawShortReference.replaceAll("[{}\\s]", "").split(","));
+				String[] importedFunctionStrings = rawShortReference.replaceAll("[{}\\s]", "").split(",");
+				for (String importedFunctionString : importedFunctionStrings) {
+					if (importedFunctionString.contains(":")) {
+						String[] elements = importedFunctionString.split(":");
+						importedFunctions.add(new AliasedElement(elements[1], elements[0]));
+					} else {
+						importedFunctions.add(new AliasedElement(importedFunctionString));
+					}
+				}
 			} else if (rawShortReference != null) {
 				shortReference = rawShortReference.trim();
 			}

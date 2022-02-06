@@ -34,7 +34,8 @@ public class FileUtils {
 		String lowerCaseFileName = file.getName().toLowerCase();
 		Set<String> absolutePathSegments = Sets.newHashSet(Splitter.on(File.separatorChar).split(file.getAbsolutePath()));
 		return lowerCaseFileName.endsWith(".js")
-				&& !(absolutePathSegments.contains("less") || absolutePathSegments.contains("js-cache") || absolutePathSegments.contains("testing"))
+				&& !(absolutePathSegments.contains("less") || absolutePathSegments.contains("js-cache")
+				|| absolutePathSegments.contains("testing") || absolutePathSegments.contains("scripts"))
 				&& StringUtils.containsOneOf(file.getAbsolutePath(), "closure-library", "src-js",
 				"third_party", "generated-typedefs", "soy")
 				&& !StringUtils.endsWithOneOf(lowerCaseFileName, "_test.js", "_perf.js", "tester.js",
