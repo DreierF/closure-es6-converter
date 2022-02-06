@@ -13,6 +13,7 @@ public class SpecificFixesApplier extends FixerBase {
 	private static final String DOCUMENTED_PATTERN = "(?ms)^(/\\*\\*((?!\\*/).)*\\*/\\s*)";
 
 	public void fix() {
+		adjustIn("i18n/localefeature", Pattern.compile("(?ms)(?<!^)exports\\."), "");
 		adjustIn("debug/tracer", Pattern.compile("(?ms)^goog\\.debug\\.Trace_ ="), "let Trace_ =");
 		adjustIn("debug/tracer", "goog.debug.Trace_", "Trace_");
 		adjustIn("promise/thenable", "goog.requireType('goog.Promise');", "");
@@ -24,7 +25,7 @@ public class SpecificFixesApplier extends FixerBase {
 		adjustIn("net/xhrio", "});  // goog.scope", "");
 		adjustIn("events/events", Pattern.compile("\\*/\r?\ngoog\\.events\\.unlistenByKey"),
 				" * @suppress {checkTypes}\r\n */\r\ngoog.events.unlistenByKey");
-		adjustIn("iter/iter", "var product", "var productVar");
+		adjustIn("iter/iter", "const product", "var productVar");
 		adjustIn("iter/iter", "product,", "productVar,");
 		adjustIn("string/path", "const baseName", "const baseNameVar");
 		adjustIn("string/path", "baseName.", "baseNameVar.");
@@ -54,6 +55,7 @@ public class SpecificFixesApplier extends FixerBase {
 				"};");
 
 		adjustInAll(Pattern.compile("\\s+'use strict';"), "");
+		adjustInAll(Pattern.compile("(\\{[?!]?)goog\\.global\\.Intl"), "$1Intl");
 
 		adjustInAll(Pattern.compile("goog\\.addSingletonGetter\\(([^)]+)\\);"), "/** @type {undefined|!$1} @suppress {underscore,checkTypes}*/\n" +
 				"$1.instance_ = undefined;\n" +

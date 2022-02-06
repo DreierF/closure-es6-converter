@@ -35,7 +35,7 @@ class ConvertingPass {
 			"Date", "Error", "File", "LogRecord", "Logger", "Map", "Notification", "Object", "ServiceWorker", "Set", "array",
 			"console", "document", "localStorage", "number", "parseInt", "string", "window", "Element", "Event",
 			"MouseEvent", "BrowserEvent", "EventTarget", "Node", "Document", "FileReader", "ProgressEvent",
-			"XmlHttpFactory", "Promise");
+			"XmlHttpFactory", "Promise", "Iterator");
 
 	private static final Map<String, String> DEFAULT_REPLACEMENTS = ImmutableMap.of(
 			"string", "strings",
@@ -45,10 +45,11 @@ class ConvertingPass {
 	private static final Set<String> IMPORT_WHOLE_MODULE_EXCEPTIONS = ImmutableSet.of("goog.i18n.GraphemeBreak",
 			"goog.html.CssSpecificity", "goog.html.sanitizer.CssSanitizer", "goog.ui.ComponentUtil",
 			"goog.html.sanitizer.CssPropertySanitizer", "goog.debug.entryPointRegistry", "goog.userAgent",
-			"goog.i18n.uChar", "goog.dom.animationFrame", "goog.dom.BrowserFeature", "goog.events.BrowserFeature");
+			"goog.i18n.uChar", "goog.dom.animationFrame", "goog.dom.BrowserFeature", "goog.events.BrowserFeature",
+			"goog.i18n.NumberFormatSymbolsType", "goog.i18n.LocaleFeature", "goog.i18n.NativeLocaleDigits");
 
-	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("ts.dom", "goog.dispose", "goog.async.run", "goog.memoize");
-	private static final Pattern ASSIGNED_GOOG_DEFINE_PATTERN = Pattern.compile("(?:let\\s+)?([" + JsCodeUtils.IDENTIFIER_PATTERN + ".]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(\\s*'([^']+\\.([^'.]+))',\\s*([^)]+)\\);?");
+	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("goog.dispose", "goog.async.run", "goog.memoize");
+	private static final Pattern ASSIGNED_GOOG_DEFINE_PATTERN = Pattern.compile("(?:let|const\\s+)?([" + JsCodeUtils.IDENTIFIER_PATTERN + ".]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(\\s*'([^']+\\.([^'.]+))',\\s*([^)]+)\\);?");
 	private static final Set<String> GOOG_ELEMENTS_NEED_IMPORT = Set.of(
 			"goog.isString",
 			"goog.isBoolean",
@@ -302,11 +303,9 @@ class ConvertingPass {
 			String importedElement = StringUtils.getLastPart(require.requiredNamespace, ".");
 
 			if (shouldImportAsModule(require, importedElement)) {
-				content = replaceOrInsert(content, require.fullText, "import * as " + require.shortReference + " from '" + relativePath + "';"
-				);
+				content = replaceOrInsert(content, require.fullText, "import * as " + require.shortReference + " from '" + relativePath + "';");
 			} else if (importedElement.equals(require.shortReference)) {
-				content = replaceOrInsert(content, require.fullText, "import {" + require.shortReference + "} from '" + relativePath + "';"
-				);
+				content = replaceOrInsert(content, require.fullText, "import {" + require.shortReference + "} from '" + relativePath + "';");
 			} else {
 				content = replaceOrInsert(content,
 						require.fullText, "import {" + importedElement + " as " + require.shortReference + "} from '" + relativePath + "';");
