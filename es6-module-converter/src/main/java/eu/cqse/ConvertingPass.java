@@ -48,7 +48,7 @@ class ConvertingPass {
 			"goog.i18n.uChar", "goog.dom.animationFrame", "goog.dom.BrowserFeature", "goog.events.BrowserFeature",
 			"goog.i18n.NumberFormatSymbolsType", "goog.i18n.LocaleFeature", "goog.i18n.NativeLocaleDigits");
 
-	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("goog.dispose", "goog.async.run", "goog.memoize");
+	private static final Set<String> IMPORT_CLASS_EXCEPTIONS = ImmutableSet.of("goog.dispose", "goog.async.run", "goog.memoize", "goog.color.names");
 	private static final Pattern ASSIGNED_GOOG_DEFINE_PATTERN = Pattern.compile("(?:let|const\\s+)?([" + JsCodeUtils.IDENTIFIER_PATTERN + ".]+)\\s*=[\\s\\n]*goog\\s*\\.\\s*define\\s*\\(\\s*'([^']+\\.([^'.]+))',\\s*([^)]+)\\);?");
 	private static final Set<String> GOOG_ELEMENTS_NEED_IMPORT = Set.of(
 			"goog.isString",
