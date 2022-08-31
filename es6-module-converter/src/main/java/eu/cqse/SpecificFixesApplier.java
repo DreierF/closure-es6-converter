@@ -14,6 +14,8 @@ public class SpecificFixesApplier extends FixerBase {
 
 	public void fix() {
 		adjustIn("i18n/localefeature", Pattern.compile("(?ms)(?<!^)exports\\."), "");
+		adjustIn("asserts/asserts", Pattern.compile("(?ms)(?<!^)exports\\."), "");
+
 		adjustIn("debug/tracer", Pattern.compile("(?ms)^goog\\.debug\\.Trace_ ="), "let Trace_ =");
 		adjustIn("debug/tracer", "goog.debug.Trace_", "Trace_");
 		adjustIn("promise/thenable", "goog.requireType('goog.Promise');", "");
